@@ -1,0 +1,4 @@
+# Optional: PDF rendering only, not required to run Intern.
+markdown==3.11
+reportlab==5.0.1
+beautifulsoup4==4.15.0

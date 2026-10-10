@@ -1,0 +1,2 @@
+# Generated PDF deliverables must be regenerated, not merged as text.
+*.pdf binary
