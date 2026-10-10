@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { apiRequest } from '../lib/api'
+import { authError } from '../auth/errors'
 import { Link, useLocation, useParams } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft01Icon, ArrowUpRight01Icon, Location01Icon } from '@hugeicons/core-free-icons'
@@ -39,7 +42,7 @@ export function OfferDetail() {
       </header>
         <aside className="offer-application-panel" aria-labelledby="offer-application-title">
           <h2 id="offer-application-title">Votre prochaine étape</h2>
-          {primary ? <><p>Candidatez directement auprès de l’entreprise.</p><a href={primary.url} target="_blank" rel="noopener noreferrer" className="dashboard-button dashboard-button--primary offer-primary-apply">Postuler sur {providerNames[primary.provider.toLowerCase()] ?? primary.provider}<HugeiconsIcon icon={ArrowUpRight01Icon} size={18} aria-hidden="true" /></a><span className="offer-external-hint">S’ouvre dans un nouvel onglet</span></> : <p>Aucun lien de candidature disponible pour le moment.</p>}
+          {offer.recruiter_job_id ? <DirectApply jobId={offer.recruiter_job_id} /> : primary ? <><p>Candidatez directement auprès de l’entreprise.</p><a href={primary.url} target="_blank" rel="noopener noreferrer" className="dashboard-button dashboard-button--primary offer-primary-apply">Postuler sur {providerNames[primary.provider.toLowerCase()] ?? primary.provider}<HugeiconsIcon icon={ArrowUpRight01Icon} size={18} aria-hidden="true" /></a><span className="offer-external-hint">S’ouvre dans un nouvel onglet</span></> : <p>Aucun lien de candidature disponible pour le moment.</p>}
           {sources.length > 1 && <details className="offer-other-sources"><summary>Autres liens de candidature ({sources.length - 1})</summary>{sources.slice(1).map(source => <a key={source.id} href={source.url} target="_blank" rel="noopener noreferrer">Postuler sur {source.provider} ↗</a>)}</details>}
           {offer.stale && <p className="offer-stale-note">Cette offre est à revérifier. Vérifiez sa disponibilité sur le site de recrutement.</p>}
         </aside>
@@ -53,4 +56,18 @@ export function OfferDetail() {
       </div>
     </article> : <p role="status">Chargement de l’offre…</p>}
   </main>
+}
+
+
+function DirectApply({ jobId }: { jobId: number }) {
+  const [pending, setPending] = useState(false)
+  const [applicationId, setApplicationId] = useState<number | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  async function apply() {
+    setPending(true); setError(null)
+    try { const result = await apiRequest<{ application_id: number }>(`/recruiter/jobs/${jobId}/apply/`, { method: 'POST', body: {} }); setApplicationId(result.application_id) }
+    catch (cause) { setError(authError(cause)) }
+    finally { setPending(false) }
+  }
+  return applicationId ? <p role="status">Candidature transmise. <Link to={`/applications/${applicationId}`}>Voir mon suivi</Link></p> : <><p>Transmettez votre CV actuel, votre profil professionnel et votre e-mail à cette entreprise.</p><button className="dashboard-button dashboard-button--primary" disabled={pending} onClick={apply}>{pending ? 'Envoi…' : 'Envoyer ma candidature'}</button>{error && <p role="alert">{error}</p>}</>
 }

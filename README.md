@@ -2,6 +2,8 @@
 
 API candidat Django 6.1 / Django REST framework 3.18 / PostgreSQL 16. Le schéma, le contrat de livraison et les décisions sont dans [docs/BACKEND_SPEC.md](docs/BACKEND_SPEC.md). Le [frontend React](frontend/README.md) propose la connexion, l’inscription, la réinitialisation du mot de passe et l’ajout du CV après inscription ; les autres espaces métier restent provisoires.
 
+L’[espace recruteur](docs/RECRUITER_WORKSPACE.md) ajoute le choix du rôle avant inscription, la vérification entreprise, les offres et le suivi des candidatures. Les routes `/api/v1/recruiter/` partagent l’authentification et les conventions v1 du candidat.
+
 ## Démarrer en local
 
 Les [pages entreprise](docs/COMPANY_PAGES.md) regroupent présentation sourcée, informations employeur, stages publiés et recommandations propres à l’entreprise. Le [comparatif concurrentiel](docs/research/company-pages-2026-10-01.md) décrit les choix et les données encore manquantes.

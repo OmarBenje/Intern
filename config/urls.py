@@ -6,6 +6,7 @@ from jobboard.api.health import live, ready
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/", include("jobboard.api.auth")),
+    path("api/v1/recruiter/", include("jobboard.api.recruiters")),
     path("api/v1/", include("jobboard.api.onboarding")),
     path("api/v1/", include("jobboard.api.catalogue")),
     path("api/v1/", include("jobboard.api.taxonomy")),

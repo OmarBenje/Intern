@@ -68,7 +68,12 @@ def fresh_sources(now=None):
     return (
         OfferSource.objects.filter(source_status="active", board__enabled=True)
         .annotate(fresh_cutoff=Least(Value(now - timedelta(hours=24)), cadence_cutoff))
-        .filter(last_checked_at__gte=F("fresh_cutoff"))
+        .filter(
+            Q(last_checked_at__gte=F("fresh_cutoff"))
+            | Q(board__provider="intern", offer__recruiter_job__status="active",
+                offer__recruiter_job__owner__verification_status="verified",
+                offer__recruiter_job__owner__user__is_active=True)
+        )
     )
 
 

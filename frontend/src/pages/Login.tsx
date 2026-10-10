@@ -18,7 +18,7 @@ export function Login() {
   const busy = useRef(false)
   // Only restore known internal destinations after authentication.
   const returnTo = ['/dashboard', '/onboarding/resume', '/stages', '/a-valider', '/candidatures', '/tracker', '/profil'].includes(location.state?.from) ? location.state.from : '/dashboard'
-  if (session.user) return <Navigate to={returnTo} replace />
+  if (session.user) return <Navigate to={session.user.role === 'recruiter' ? '/recruiter/dashboard' : returnTo} replace />
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()

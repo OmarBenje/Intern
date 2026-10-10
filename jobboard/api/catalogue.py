@@ -82,6 +82,9 @@ def serialize_offer(offer, detail=False, serializer=None):
         serializer_class = r.OfferDetailSerializer if detail else r.OfferSerializer
         serializer = serializer_class()
     data = serializer.to_representation(offer)
+    if detail:
+        from jobboard.models import RecruiterJob
+        data["recruiter_job_id"] = RecruiterJob.objects.filter(offer=offer, status="active").values_list("pk", flat=True).first()
     subdomain = offer.job_subdomain
     data["taxonomy"] = {
         "status": offer.taxonomy_status,
@@ -283,6 +286,9 @@ def offer_detail(request, pk):
         ),
         detail=True,
     )
+    if data.get("recruiter_job_id"):
+        from jobboard.models import RecruiterJob
+        RecruiterJob.objects.filter(pk=data["recruiter_job_id"]).exclude(owner__user_id=request.user.pk).update(views=F("views") + 1)
     if alias:
         data["redirected_from_offer_id"] = pk
     return Response(data)

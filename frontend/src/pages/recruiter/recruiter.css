@@ -1,0 +1,50 @@
+.recruiter-page { display: grid; gap: var(--space-6); }
+.recruiter-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); }
+.recruiter-heading h1 { margin: var(--space-2) 0; font-size: var(--font-size-display); letter-spacing: var(--tracking-heading); }
+.recruiter-heading p { color: var(--dashboard-muted); }
+.recruiter-eyebrow, .recruiter-workspace-label { font-size: var(--font-size-xs); color: var(--dashboard-accent-text); }
+.recruiter-eyebrow { letter-spacing: var(--tracking-eyebrow); }
+.recruiter-workspace-label { padding-bottom: var(--space-3); }
+.recruiter-card { padding: var(--space-6); border: var(--border-width) solid var(--dashboard-rule); border-radius: var(--radius-card); background: var(--dashboard-card); min-width: 0; }
+.recruiter-card h2, .recruiter-card h3 { margin-top: 0; }
+.recruiter-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
+.recruiter-metrics p { color: var(--dashboard-muted); }
+.recruiter-metric { font-size: var(--font-size-display); letter-spacing: var(--tracking-heading); }
+.recruiter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-5); }
+.recruiter-notice { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-4); border-radius: var(--radius-notice); background: var(--dashboard-subtle); line-height: var(--line-height-normal); }
+.recruiter-badge { display: inline-flex; align-items: center; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--dashboard-active); color: var(--dashboard-accent-text); font-size: var(--font-size-xs); white-space: nowrap; }
+.recruiter-empty { text-align: center; padding: var(--space-12) var(--space-4); }
+.recruiter-shortcut { color: inherit; text-decoration: none; }
+.recruiter-shortcut span { color: var(--dashboard-accent-text); }
+.recruiter-activity { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); padding: var(--space-4) 0; border-bottom: var(--border-width) solid var(--dashboard-rule); color: inherit; text-decoration: none; }
+.recruiter-activity small, .recruiter-table small { display: block; color: var(--dashboard-muted); margin-top: var(--space-2); }
+.recruiter-form-card { max-width: var(--content-width); width: 100%; justify-self: center; }
+.recruiter-form, .recruiter-form fieldset { display: grid; gap: var(--space-5); }
+.recruiter-form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.recruiter-form label, .recruiter-toolbar label { display: grid; align-content: start; gap: var(--space-2); font-size: var(--font-size-sm); }
+.recruiter-form input, .recruiter-form textarea, .recruiter-form select, .recruiter-toolbar input, .recruiter-toolbar select { width: 100%; min-width: 0; padding: var(--space-3); border: var(--border-width) solid var(--dashboard-rule); border-radius: var(--radius-control); background: var(--dashboard-card); color: var(--dashboard-ink); font: inherit; }
+.recruiter-form textarea { resize: vertical; }
+.recruiter-form :is(input, select, textarea):focus-visible, .recruiter-toolbar :is(input, select):focus-visible { outline: var(--focus-width) solid var(--dashboard-accent-text); outline-offset: var(--focus-offset); }
+.recruiter-steps { display: flex; flex-wrap: wrap; gap: var(--space-4); list-style: none; padding: 0 0 var(--space-5); color: var(--dashboard-muted); border-bottom: var(--border-width) solid var(--dashboard-rule); font-size: var(--font-size-sm); }
+.recruiter-steps [aria-current] { color: var(--dashboard-accent-text); font-weight: var(--font-weight-semibold); }
+.recruiter-toolbar, .recruiter-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.recruiter-toolbar { align-items: end; }
+.recruiter-toolbar label { flex: 1; min-width: var(--space-22); }
+.recruiter-table-wrap { overflow-x: auto; border: var(--border-width) solid var(--dashboard-rule); border-radius: var(--radius-card); }
+.recruiter-table { width: 100%; border-collapse: collapse; text-align: left; font-size: var(--font-size-sm); }
+.recruiter-table :is(th, td) { padding: var(--space-4); border-bottom: var(--border-width) solid var(--dashboard-rule); }
+.recruiter-table th { background: var(--dashboard-subtle); color: var(--dashboard-muted); font-weight: var(--font-weight-medium); white-space: nowrap; }
+.recruiter-table a { color: inherit; }
+.recruiter-prose { white-space: pre-wrap; overflow-wrap: anywhere; }
+.recruiter-kanban { display: grid; grid-template-columns: repeat(6, minmax(var(--sidebar-width), 1fr)); gap: var(--space-4); overflow-x: auto; padding-bottom: var(--space-4); }
+.recruiter-column { border-radius: var(--radius-card); background: var(--dashboard-subtle); padding: var(--space-3); min-height: var(--onboarding-stage-height); }
+.recruiter-column h2 { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); font-size: var(--font-size-sm); margin-bottom: var(--space-5); }
+.recruiter-applicant { display: grid; gap: var(--space-3); width: 100%; margin-bottom: var(--space-3); padding: var(--space-4); text-align: left; border: var(--border-width) solid var(--dashboard-rule); border-radius: var(--radius-card); background: var(--dashboard-card); color: var(--dashboard-ink); cursor: pointer; font: inherit; }
+.recruiter-applicant > span:not(.workspace-avatar, .recruiter-badge), .recruiter-column-empty { font-size: var(--font-size-sm); color: var(--dashboard-muted); }
+.recruiter-drawer { position: fixed; inset: 0 0 0 auto; margin: 0; height: 100dvh; max-height: 100dvh; width: min(100%, var(--recruiter-drawer-width)); max-width: 100%; border: 0; border-left: var(--border-width) solid var(--dashboard-rule); padding: var(--space-6); color: var(--dashboard-ink); background: var(--dashboard-card); overflow: auto; }
+.recruiter-drawer::backdrop { background: var(--job-taxonomy-backdrop); }
+.recruiter-drawer > * { margin-bottom: var(--space-5); }
+.recruiter-close { float: right; }
+.recruiter-resume { width: 100%; height: var(--recruiter-resume-height); border: var(--border-width) solid var(--dashboard-rule); border-radius: var(--radius-card); }
+@media (max-width: 800px) { .recruiter-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .recruiter-grid { grid-template-columns: minmax(0, 1fr); } .recruiter-heading h1 { font-size: var(--font-size-xl); } }
+@media (max-width: 400px) { .recruiter-card { padding: var(--space-4); } .recruiter-metrics { gap: var(--space-2); } }
