@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Navigate } from 'react-router'
+import { Navigate, useLocation } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft02Icon, ArrowRight02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { useSession } from '../auth/session-context'
@@ -27,7 +27,7 @@ function registrationErrors(cause: unknown): FieldErrors {
     errors[field] = entries.map((entry: unknown) => {
       const code = entry && typeof entry === 'object' && 'code' in entry ? String(entry.code) : ''
       if (field === 'password') return passwordMessages[code] ?? 'Vérifiez les règles du mot de passe ci-dessous.'
-      return field === 'email' ? code === 'unavailable' ? 'Cette adresse e-mail est déjà utilisée. Connectez-vous ou utilisez une autre adresse.' : 'Saisissez une adresse e-mail valide.' : 'Saisissez votre nom complet.'
+      return field === 'email' ? code === 'professional_email_required' ? 'Utilisez votre adresse e-mail professionnelle.' : code === 'unavailable' ? 'Cette adresse e-mail est déjà utilisée. Connectez-vous ou utilisez une autre adresse.' : 'Saisissez une adresse e-mail valide.' : 'Saisissez votre nom complet.'
     }).filter((value, index, values) => values.indexOf(value) === index).join(' ')
   }
   return errors
@@ -35,8 +35,10 @@ function registrationErrors(cause: unknown): FieldErrors {
 
 export function Register() {
   const session = useSession()
+  const location = useLocation()
+  const [role, setRole] = useState<'candidate' | 'recruiter'>(location.pathname.startsWith('/recruiter') ? 'recruiter' : 'candidate')
   const [values, setValues] = useState<Registration>({ full_name: '', email: '', password: '' })
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(-1)
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fields, setFields] = useState<FieldErrors>({})
@@ -49,15 +51,19 @@ export function Register() {
     else if (previousStep.current !== step) heading.current?.focus()
     previousStep.current = step
   }, [error, fields, pending, step])
-  if (session.user) return <Navigate to={session.user.onboarding_step && session.user.onboarding_step !== 'complete' ? `/onboarding/${session.user.onboarding_step}` : '/stages'} replace />
+  if (session.user) return <Navigate to={session.user.role === 'recruiter' ? '/recruiter/dashboard' : session.user.onboarding_step && session.user.onboarding_step !== 'complete' ? `/onboarding/${session.user.onboarding_step}` : '/stages'} replace />
   const update = (field: keyof Registration, value: string) => setValues(previous => ({ ...previous, [field]: value }))
   function back() {
-    setError(null); setFields({}); setStep(current => Math.max(0, current - 1))
+    setError(null); setFields({}); setStep(current => Math.max(-1, current - 1))
   }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (busy.current || session.loading) return
+    if (step === -1) { setStep(0); return }
     if (step === 0) {
+      if (role === 'recruiter' && /@(gmail\.com|googlemail\.com|yahoo\.(com|fr)|hotmail\.(com|fr)|outlook\.(com|fr)|live\.(com|fr)|icloud\.com|proton\.me|protonmail\.com|orange\.fr|wanadoo\.fr|laposte\.net|free\.fr|aol\.com)$/i.test(values.email.trim())) {
+        setFields({ email: 'Utilisez votre adresse e-mail professionnelle.' }); return
+      }
       busy.current = true; setPending(true); setError(null); setFields({})
       try {
         const result = await apiRequest<{ available: boolean }>('/auth/email-availability/', { method: 'POST', body: { email: values.email.trim() } })
@@ -79,7 +85,7 @@ export function Register() {
     }
     busy.current = true; setPending(true); setError(null); setFields({})
     try {
-      await session.register({ full_name: values.full_name.trim(), email: values.email.trim(), password: values.password })
+      await session.register({ full_name: values.full_name.trim(), email: values.email.trim(), password: values.password, role })
     } catch (cause) {
       const next = registrationErrors(cause)
       setFields(next)
@@ -93,16 +99,21 @@ export function Register() {
   return <AuthLayout mode="register">
     <div className="auth-onboarding">
       <div className="auth-registration-nav">
-        <span className="auth-kicker">Créer un compte · {step + 1} / 3</span>
-        {step > 0 && <button className="auth-previous" type="button" onClick={back} disabled={pending || session.loading}><HugeiconsIcon icon={ArrowLeft02Icon} size={16} strokeWidth={1.5} aria-hidden="true" />Retour</button>}
+        <span className="auth-kicker">Créer un compte · {step + 2} / 4</span>
+        {step >= 0 && <button className="auth-previous" type="button" onClick={back} disabled={pending || session.loading}><HugeiconsIcon icon={ArrowLeft02Icon} size={16} strokeWidth={1.5} aria-hidden="true" />Retour</button>}
       </div>
       <ol className="auth-registration-progress" aria-label="Étapes de création du compte">
-        {['E-mail', 'Votre nom', 'Mot de passe'].map((label, index) => <li key={label} aria-current={index === step ? 'step' : undefined} data-complete={index < step || undefined}><span className="auth-progress-line" /><span>{index < step && <HugeiconsIcon icon={Tick02Icon} size={14} strokeWidth={2} aria-hidden="true" />}{label}</span></li>)}
+        {['Votre rôle', 'E-mail', 'Votre nom', 'Mot de passe'].map((label, position) => <li key={label} aria-current={position - 1 === step ? 'step' : undefined} data-complete={position - 1 < step || undefined}><span className="auth-progress-line" /><span>{position - 1 < step && <HugeiconsIcon icon={Tick02Icon} size={14} strokeWidth={2} aria-hidden="true" />}{label}</span></li>)}
       </ol>
       <div key={step} className="auth-stage">
-        <header className="auth-heading"><h1 ref={heading} tabIndex={-1}>{titles[step]}</h1></header>
+        <header className="auth-heading"><h1 ref={heading} tabIndex={-1}>{step === -1 ? <>Votre aventure<br /><em>commence ici.</em></> : titles[step]}</h1></header>
         <form ref={form} className="auth-form" onSubmit={submit} aria-label="Inscription" aria-busy={pending}>
           <fieldset disabled={pending || session.loading}>
+            {step === -1 && <div className="auth-role-options" role="radiogroup" aria-label="Votre rôle">
+              <label className="auth-role-option"><input type="radio" name="role" value="candidate" checked={role === 'candidate'} onChange={() => setRole('candidate')} /><span><strong>Je suis candidat</strong><small>Trouver un stage et préparer la suite.</small></span></label>
+              <label className="auth-role-option"><input type="radio" name="role" value="recruiter" checked={role === 'recruiter'} onChange={() => setRole('recruiter')} /><span><strong>Je suis recruteur</strong><small>Publier des offres et rencontrer vos talents.</small></span></label>
+            </div>}
+            {step === 0 && role === 'recruiter' && <p className="auth-kicker">Espace recruteur · Utilisez votre e-mail professionnel.</p>}
             {step === 0 && <AuthField floatingLabel label="Adresse e-mail" name="email" type="email" placeholder="vous@exemple.fr" autoComplete="email" autoCapitalize="none" spellCheck={false} required maxLength={254} value={values.email} onChange={e => update('email', e.target.value)} error={fields.email} />}
             {step === 1 && <AuthField floatingLabel label="Nom complet" name="full_name" placeholder="Prénom Nom" autoComplete="name" required maxLength={240} value={values.full_name} onChange={e => update('full_name', e.target.value)} error={fields.full_name} />}
             {step === 2 && <>

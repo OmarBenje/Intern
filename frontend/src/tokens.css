@@ -221,3 +221,8 @@
   --job-taxonomy-group-height: 3.5rem;
   --job-taxonomy-backdrop: rgb(0 0 0 / 40%);
 }
+
+:root {
+  --recruiter-drawer-width: 42rem;
+  --recruiter-resume-height: 28rem;
+}

@@ -99,6 +99,7 @@ class LoginSerializer(StrictSerializer):
 
 
 class RegisterSerializer(LoginSerializer):
+    role = serializers.ChoiceField(choices=["candidate", "recruiter"], default="candidate")
     username = TextField(max_length=150, required=False)
     email = TextField(max_length=254)
     full_name = TextField(max_length=240)

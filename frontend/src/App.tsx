@@ -19,6 +19,9 @@ import { Dashboard } from './pages/Dashboard'
 import { Offers, OfferDetail } from './pages/Offers'
 import { ApplicationDetail } from './pages/ApplicationDetail'
 import { CompanyDetail } from './pages/CompanyDetail'
+import { RecruiterDashboard, CompanyVerification, ATSIntegrations } from './pages/recruiter/Recruiter'
+import { RecruiterJobs, JobWizard } from './pages/recruiter/Jobs'
+import { Applicants } from './pages/recruiter/Applicants'
 import './App.css'
 
 function Section({ title, description }: { title: string; description: string }) {
@@ -48,6 +51,12 @@ function PrivateLayout() {
     catch (error) { setLogoutError(authError(error)) }
     finally { setLoggingOut(false) }
   }
+  if (session.user.role === 'recruiter') {
+    if (!location.pathname.startsWith('/recruiter/')) return <Navigate to="/recruiter/dashboard" replace />
+    if (session.user.onboarding_step === 'verify' && location.pathname !== '/recruiter/verify') return <Navigate to="/recruiter/verify" replace />
+    return <Workspace recruiter logout={logout} loggingOut={loggingOut} logoutError={logoutError} />
+  }
+  if (location.pathname.startsWith('/recruiter/')) return <Navigate to="/dashboard" replace />
   const remaining = session.user.onboarding_step
   if (remaining && remaining !== 'complete') {
     const allowed = ['/onboarding/resume', '/onboarding/address', '/onboarding/work-eligibility']
@@ -73,10 +82,20 @@ function App() {
     <a className="skip-link" href="#main-content">Aller au contenu</a>
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/recruiter/signup" element={<Register />} />
       <Route path="/register" element={<Register />} />
       <Route path="/login" element={<Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<PrivateLayout />}>
+        <Route path="/recruiter/dashboard" element={<RecruiterDashboard />} />
+        <Route path="/recruiter/verify" element={<CompanyVerification />} />
+        <Route path="/recruiter/integrations" element={<ATSIntegrations />} />
+        <Route path="/recruiter/jobs" element={<RecruiterJobs />} />
+        <Route path="/recruiter/jobs/new" element={<JobWizard />} />
+        <Route path="/recruiter/jobs/:id/edit" element={<JobWizard />} />
+        <Route path="/recruiter/jobs/:id/applicants" element={<Applicants />} />
+        <Route path="/recruiter/candidates" element={<Applicants />} />
+        <Route path="/recruiter/candidates/:candidateId" element={<Applicants />} />
         <Route path="/onboarding/resume" element={<Resume onboarding />} />
         <Route path="/onboarding/address" element={<Onboarding key="address" step="address" />} />
         <Route path="/onboarding/work-eligibility" element={<Onboarding key="eligibility" step="work-eligibility" />} />

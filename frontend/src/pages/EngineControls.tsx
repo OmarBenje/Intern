@@ -13,7 +13,7 @@ import './EngineControls.css'
 import { JobTaxonomyPicker, type JobSelection, type JobTaxonomy } from '../components/offers/JobTaxonomyPicker'
 import { durationLabel, temporalLabel, type OfferContent, type OfferFact } from '../lib/offerContent'
 
-export type EngineOffer = Offer & { quality?: { classification: string; europe_status: string; domain: string }; last_verified_at?: string; stale?: boolean; published_at?: string | null; employment_schedule?: string; compensation_bands?: { minimum: string | null; maximum: string | null; currency: string; period: string }[]; facts?: Record<string, OfferFact>; content?: OfferContent }
+export type EngineOffer = Offer & { recruiter_job_id?: number | null; quality?: { classification: string; europe_status: string; domain: string }; last_verified_at?: string; stale?: boolean; published_at?: string | null; employment_schedule?: string; compensation_bands?: { minimum: string | null; maximum: string | null; currency: string; period: string }[]; facts?: Record<string, OfferFact>; content?: OfferContent }
 type Search = { id: number; name: string; criteria: Record<string, unknown>; frequency: string }
 type Alert = { id: number; offer_id: number; payload: { title?: string }; read_at: string | null }
 type External = { id: number; title: string; url: string; status: string; error_code: string }

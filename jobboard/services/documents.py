@@ -234,7 +234,8 @@ def delete_document(user, pk):
                 "upload_in_progress", "This document is still uploading.", status=409
             )
         if (
-            document.current_for_profiles.exists()
+            document.recruiterapplicant_set.exists()
+            or document.current_for_profiles.exists()
             or document.revision_links.exists()
             or document.evidence_for_runs.exists()
             or document.variants.exists()

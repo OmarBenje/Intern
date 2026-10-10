@@ -204,3 +204,8 @@ identifiant privé ou curseur détaillé n’est exposé par cette réponse publ
 Les totaux des pays/providers ne sont pas additifs ; les doublons non résolus
 restent possibles. Les détails d’exploitation sont dans la commande locale
 `audit_coverage`, pas dans l’API publique.
+
+
+## Espace recruteur
+
+L’inscription accepte désormais le champ optionnel `role` (`candidate` par défaut, ou `recruiter`). Les réponses d’identité exposent ce rôle. Voir le [contrat recruteur](RECRUITER_WORKSPACE.md) pour les routes `/api/v1/recruiter/`, les contrôles d’accès, le cycle de vérification et les limites des intégrations externes.

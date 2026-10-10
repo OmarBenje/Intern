@@ -29,19 +29,32 @@ from rest_framework.response import Response
 
 from jobboard.api import serializers as s
 from jobboard.api.core import APIError, lock_user
-from jobboard.models import CandidateProfile
+from jobboard.models import CandidateProfile, RecruiterProfile
 from jobboard.services.auth import throttle
 
 
 def identity(user):
     from jobboard.api.onboarding import next_step
 
+    recruiter = RecruiterProfile.objects.filter(user=user).first()
+    if recruiter:
+        return {
+            "id": user.pk,
+            "username": user.username,
+            "email": user.email,
+            "full_name": recruiter.full_name,
+            "role": "recruiter",
+            "onboarding_step": "verify"
+            if recruiter.verification_status == "unverified"
+            else "complete",
+        }
     profile = CandidateProfile.objects.filter(user=user).first()
     return {
         "id": user.pk,
         "username": user.username,
         "email": user.email,
         "onboarding_step": next_step(profile),
+        "role": "candidate",
     }
 
 
@@ -84,8 +97,13 @@ def register(request):
     data = s.validated(request, s.RegisterSerializer)
     email = text(data, "email").strip().casefold()
     validate_email(email)
+    role = data["role"]
+    if role == "recruiter":
+        from jobboard.services.recruiters import validate_professional_email
+
+        validate_professional_email(email)
     username = (
-        data.get("username") or "candidate_" + sha256(email.encode()).hexdigest()[:40]
+        data.get("username") or role + "_" + sha256(email.encode()).hexdigest()[:40]
     )
     rate(request, "register", email)
     if get_user_model().objects.filter(email__iexact=email).exists():
@@ -109,7 +127,10 @@ def register(request):
         user = form.save(commit=False)
         user.email = email
         user.save()
-        CandidateProfile.objects.create(user=user, full_name=name)
+        if role == "recruiter":
+            RecruiterProfile.objects.create(user=user, full_name=name)
+        else:
+            CandidateProfile.objects.create(user=user, full_name=name)
     login(request, user)
     return Response({"user": identity(user), "csrf_token": get_token(request)})
 
