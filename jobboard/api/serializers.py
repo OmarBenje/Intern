@@ -107,6 +107,7 @@ class RegisterSerializer(LoginSerializer):
 
 class EmailAvailabilitySerializer(StrictSerializer):
     email = serializers.EmailField(max_length=254)
+    role = serializers.ChoiceField(choices=["candidate", "recruiter"], default="candidate")
 
 
 class PasswordChangeSerializer(StrictSerializer):

@@ -10,6 +10,7 @@ import re
 from html import unescape
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 EXTRACTOR_VERSION = "rules-18"
@@ -127,6 +128,15 @@ DOMAIN_RULES = {
 }
 
 
+def recruiter_offers_visible(queryset):
+    """A direct offer is private as soon as its owner's validation is revoked."""
+    from jobboard.services.recruiters import publication_conditions
+
+    return queryset.filter(
+        Q(recruiter_job__isnull=True) | Q(**publication_conditions("recruiter_job__"))
+    )
+
+
 def published_offers(queryset):
     """Publication policy: confirmed European internships only.
 
@@ -134,7 +144,7 @@ def published_offers(queryset):
     retained for audit and future extraction, never falsely marked closed.
     Freshness and expiry are applied by the catalogue API on top of this policy.
     """
-    return queryset.filter(
+    return recruiter_offers_visible(queryset).filter(
         status="open",
         enrichment__classification="confirmed",
         enrichment__europe_status="in_scope",

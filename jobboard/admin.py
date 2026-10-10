@@ -198,7 +198,15 @@ class RecruiterProfileAdmin(admin.ModelAdmin):
     list_filter = ("verification_status", "email_verified")
     search_fields = ("company_name", "siren", "user__email")
     fields = ("user", "full_name", "company", "company_name", "siren", "website_url", "linkedin_url", "email_verified", "verification_status")
-    readonly_fields = ("user", "email_verified", "company")
+    readonly_fields = ("user", "email_verified")
+    autocomplete_fields = ("company",)
+
+    def get_readonly_fields(self, request, obj=None):
+        # Associate verified accounts with a shared catalogue company before
+        # publication. Published offers retain their original company identity.
+        if obj and obj.jobs.filter(offer__isnull=False).exists():
+            return (*self.readonly_fields, "company")
+        return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)

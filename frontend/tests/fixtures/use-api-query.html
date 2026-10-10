@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>API query regression fixture</title></head>
+<body>
+<div id="query-test"></div>
+<script type="module">
+  import { createElement, useState } from 'react'
+  import { createRoot } from 'react-dom/client'
+  import { useApiQuery } from '/src/lib/useApiQuery.ts'
+
+  function QueryProbe() {
+    const [path, setPath] = useState(null)
+    const query = useApiQuery(path)
+    return createElement('main', {},
+      createElement('button', { onClick: () => setPath('/query-test/first/') }, 'First query'),
+      createElement('button', { onClick: () => setPath('/query-test/second/') }, 'Second query'),
+      createElement('button', { onClick: () => setPath(null) }, 'Disable query'),
+      createElement('button', { onClick: query.reload }, 'Reload query'),
+      createElement('output', { 'aria-label': 'Query state' }, JSON.stringify({
+        data: query.data, error: query.error, loading: query.loading,
+      })),
+    )
+  }
+  createRoot(document.getElementById('query-test')).render(createElement(QueryProbe))
+</script>
+</body>
+</html>

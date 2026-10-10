@@ -86,6 +86,10 @@ def email_availability(request):
     data = s.validated(request, s.EmailAvailabilitySerializer)
     email = data["email"].strip().casefold()
     throttle("email-availability:identity", email)
+    if data["role"] == "recruiter":
+        from jobboard.services.recruiters import validate_professional_email
+
+        validate_professional_email(email)
     return Response(
         {"available": not get_user_model().objects.filter(email__iexact=email).exists()}
     )

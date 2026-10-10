@@ -11,8 +11,12 @@ class RecruiterProfile(models.Model):
         related_name="recruiter_profile",
     )
     full_name = models.CharField(max_length=240)
-    company = models.OneToOneField(
-        "Company", on_delete=models.PROTECT, null=True, blank=True
+    company = models.ForeignKey(
+        "Company",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="recruiter_profiles",
     )
     company_name = models.CharField(max_length=240, blank=True)
     siren = models.CharField(max_length=9, blank=True)
