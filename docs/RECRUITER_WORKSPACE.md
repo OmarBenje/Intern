@@ -25,11 +25,11 @@ La navigation horizontale, les boutons, les formulaires et les tokens de couleur
 
 Le compte recruteur possède un `RecruiterProfile`, sans profil candidat. Les principales routes privées candidat lui sont refusées côté serveur. Un candidat reçoit un refus sur les ressources recruteur, sauf l’action explicite de candidature directe. Les lectures publiques du catalogue restent publiques.
 
-Chaque offre, candidat et configuration ATS est recherché dans le workspace du compte connecté. Un identifiant d’une autre entreprise renvoie 404. Partager un domaine d’e-mail ne donne jamais accès au workspace d’un autre compte. Cette livraison représente **un workspace par compte**, sans invitations d’équipe ni changement de rôle à la volée.
+Chaque offre, candidat et configuration ATS est recherché dans le workspace du compte connecté. Un identifiant d’une autre entreprise renvoie 404. Partager un domaine d’e-mail ne donne jamais accès au workspace d’un autre compte. Cette livraison représente **un workspace par compte**, sans invitations d’équipe ni changement de rôle à la volée. Plusieurs comptes peuvent référencer la même entreprise du catalogue via `Company.recruiter_profiles`, sans partager leurs offres privées ni leurs candidatures. L’opérateur peut sélectionner une entreprise existante dans l’administration avant la première publication ; cette association reste ensuite protégée pour conserver l’identité des offres déjà publiées.
 
 ## Vérification
 
-1. L’inscription recruteur refuse les principaux domaines personnels, avec le même contrôle dans le formulaire et sur le serveur.
+1. L’inscription recruteur refuse les principaux domaines personnels. Le formulaire transmet `role` à `POST /api/v1/auth/email-availability/` dès l’étape e-mail ; cette route et l’inscription finale utilisent la même validation serveur et le code `professional_email_required`. La liste des domaines est conservée uniquement côté serveur. Pour les anciens clients qui omettent `role`, la vérification d’adresse reste celle du candidat.
 2. `POST /recruiter/verify/send-code/` avec `{}` envoie un code à six chiffres à l’adresse de la session. Le code est haché, valable dix minutes, à usage unique. Envoi et essais sont limités.
 3. `POST /recruiter/verify/code/` avec `{ "code": "123456" }` valide l’e-mail.
 4. `POST /recruiter/verify/` reçoit `company_name`, `siren`, `website_url` HTTPS et `linkedin_url` facultatif. Le contrôle SIREN porte sur le format et la clé ; il ne prouve pas l’existence ou l’appartenance de l’entreprise.
@@ -43,7 +43,7 @@ Les offres supportent `draft`, `active`, `paused`, `archived`. Les brouillons so
 
 Les filtres sont `q`, `status`, `contract_type`, `location`, `origin`, avec `page`/`page_size` suivant le contrat v1. Les champs d’origine, propriétaire, statistiques et identifiants du catalogue ne sont pas modifiables par le client.
 
-La publication crée ou met à jour une `Offer` et une source `intern` dans le catalogue existant. Les compétences, langues, formation et salaire complètent la description publique. **La règle existante des stages confirmés en Europe reste appliquée** : les contrats alternance/CDI ou offres hors Europe peuvent être gérés dans le workspace mais ne sont pas présentés dans le moteur candidat. Les offres directes restent fraîches tant que le compte vérifié et l’offre sont actifs ; elles n’attendent pas un collecteur ATS externe. Suspendre/archiver masque la publication.
+La publication crée ou met à jour une `Offer` et une source `intern` dans le catalogue existant. Les compétences, langues, formation et salaire complètent la description publique. **La règle existante des stages confirmés en Europe reste appliquée** : les contrats alternance/CDI ou offres hors Europe peuvent être gérés dans le workspace mais ne sont pas présentés dans le moteur candidat. Les offres directes restent fraîches tant que l’offre est active, l’entreprise vérifiée, l’e-mail validé et le compte actif ; elles n’attendent pas un collecteur ATS externe. La révocation d’une de ces conditions retire immédiatement l’offre des listes et de sa fiche publique, même si sa source vient d’être vérifiée. Suspendre/archiver masque la publication.
 
 La fiche publique porte `recruiter_job_id`. Son bouton décrit les données transmises avant l’action explicite `POST /recruiter/jobs/:id/apply/` avec `{}`. Le serveur crée la candidature habituelle, un instantané du profil professionnel et une référence au CV courant. Les renvois sont idempotents. Il faut un compte candidat et un PDF prêt. Un recruteur ne peut pas parcourir librement les profils candidats ni leurs documents privés.
 
@@ -62,7 +62,7 @@ Cette livraison ne comprend pas les invitations d’équipe, rôles internes Adm
 # A implémenter
 
 connexions ATS/OAuth et calculs IA. Les configurations ATS sont enregistrées en attente.
-aussi la vérification de mail pro : à corriger.
+La validation des e-mails professionnels est centralisée dans l’API, dès l’étape e-mail et lors de la création du compte.
 
 ## Installation et validation
 
@@ -86,4 +86,4 @@ npm run lint
 npm run test:e2e -- tests/recruiter.spec.ts tests/register.spec.ts tests/login.spec.ts tests/onboarding.spec.ts
 ```
 
-La migration additive `0031_recruiter_workspace` crée les quatre modèles. Les tests serveur utilisent PostgreSQL et des e-mails en mémoire ; les tests navigateur contrôlent l’API avec des réponses de test et ne valident donc pas une connexion à un ATS réel.
+La migration additive `0031_recruiter_workspace` crée les quatre modèles. La migration `0032_recruiter_company_memberships` permet le rattachement de plusieurs recruteurs à une entreprise et conserve les associations existantes. Les tests serveur utilisent PostgreSQL et des e-mails en mémoire ; les tests navigateur contrôlent l’API avec des réponses de test et ne valident donc pas une connexion à un ATS réel.

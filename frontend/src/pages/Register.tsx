@@ -61,12 +61,9 @@ export function Register() {
     if (busy.current || session.loading) return
     if (step === -1) { setStep(0); return }
     if (step === 0) {
-      if (role === 'recruiter' && /@(gmail\.com|googlemail\.com|yahoo\.(com|fr)|hotmail\.(com|fr)|outlook\.(com|fr)|live\.(com|fr)|icloud\.com|proton\.me|protonmail\.com|orange\.fr|wanadoo\.fr|laposte\.net|free\.fr|aol\.com)$/i.test(values.email.trim())) {
-        setFields({ email: 'Utilisez votre adresse e-mail professionnelle.' }); return
-      }
       busy.current = true; setPending(true); setError(null); setFields({})
       try {
-        const result = await apiRequest<{ available: boolean }>('/auth/email-availability/', { method: 'POST', body: { email: values.email.trim() } })
+        const result = await apiRequest<{ available: boolean }>('/auth/email-availability/', { method: 'POST', body: { email: values.email.trim(), role } })
         if (result.available === false) {
           setFields({ email: 'Cette adresse e-mail est déjà utilisée. Connectez-vous ou utilisez une autre adresse.' })
         } else if (result.available === true) setStep(1)

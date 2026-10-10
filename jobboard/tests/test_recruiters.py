@@ -1,5 +1,6 @@
 import hashlib
 import re
+from datetime import timedelta
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
@@ -7,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
+from django.utils import timezone
 
 from jobboard import models as m
 from jobboard.tests.test_documents_api import pdf_bytes
@@ -364,3 +366,135 @@ class RecruiterTests(TestCase):
             ).status_code,
             404,
         )
+
+    def test_professional_email_rules_are_shared_by_availability_and_registration(self):
+        # Changing only the server policy must affect both registration steps.
+        with patch(
+            "jobboard.services.recruiters.PERSONAL_DOMAINS", {"personal.example"}
+        ):
+            email = " Person@PERSONAL.EXAMPLE "
+            early = self.send(
+                "auth/email-availability/", {"email": email, "role": "recruiter"}
+            )
+            final = self.send(
+                "auth/register/",
+                {
+                    "email": email,
+                    "role": "recruiter",
+                    "full_name": "Person",
+                    "password": "Long-secret-password-239!",
+                },
+            )
+            for response in (early, final):
+                self.assertEqual(response.status_code, 400, response.content)
+                self.assertEqual(
+                    response.json()["error"]["code"], "professional_email_required"
+                )
+                self.assertEqual(
+                    response.json()["error"]["details"]["email"][0]["code"],
+                    "professional_email_required",
+                )
+            candidate = self.send(
+                "auth/email-availability/", {"email": email, "role": "candidate"}
+            )
+            self.assertEqual(candidate.status_code, 200, candidate.content)
+            self.assertEqual(candidate.json(), {"available": True})
+            self.assertEqual(
+                self.send("auth/email-availability/", {"email": email}).status_code, 200
+            )
+            self.assertEqual(
+                self.send(
+                    "auth/email-availability/", {"email": email, "role": "admin"}
+                ).status_code,
+                400,
+            )
+
+    def test_shared_company_preserves_separate_workspaces(self):
+        from django.contrib import admin
+
+        self.verified()
+        company = m.Company.objects.create(name="Shared Company", domain="company.test")
+        for owner in (self.owner, self.other):
+            owner.company = company
+            owner.company_name = company.name
+            owner.verification_status = "verified"
+            owner.email_verified = True
+            owner.website_url = "https://company.test"
+            owner.save()
+        self.assertEqual(company.recruiter_profiles.count(), 2)
+        profile_admin = admin.site._registry[m.RecruiterProfile]
+        self.assertNotIn("company", profile_admin.get_readonly_fields(None, self.owner))
+        first = self.create_job(active=True)
+        self.assertEqual(first.offer.company_id, company.pk)
+        self.assertIn("company", profile_admin.get_readonly_fields(None, self.owner))
+        self.client.force_login(self.other_user)
+        self.assertEqual(self.client.get("/api/v1/recruiter/jobs/").json()["count"], 0)
+        self.assertEqual(
+            self.client.get(f"/api/v1/recruiter/jobs/{first.pk}/").status_code, 404
+        )
+        second = self.create_job(active=True)
+        self.assertEqual(second.offer.company_id, company.pk)
+        self.assertEqual(m.Company.objects.count(), 1)
+        self.assertEqual(
+            [
+                job["id"]
+                for job in self.client.get("/api/v1/recruiter/jobs/").json()["results"]
+            ],
+            [second.pk],
+        )
+
+    def test_revocation_removes_recent_and_old_direct_offers_immediately(self):
+        from jobboard.api.catalogue import open_offers
+        from jobboard.services.engine_filters import fresh_sources
+        from jobboard.services.engine_quality import published_offers
+
+        self.verified()
+        job = self.create_job(active=True)
+        source = m.OfferSource.objects.get(offer_id=job.offer_id)
+        public = Client()
+        for age in (timedelta(minutes=1), timedelta(days=7)):
+            m.OfferSource.objects.filter(pk=source.pk).update(
+                last_checked_at=timezone.now() - age
+            )
+            for field, value in (
+                ("email_verified", False),
+                ("verification_status", "pending"),
+                ("is_active", False),
+                ("status", "paused"),
+            ):
+                with self.subTest(age=age, field=field):
+                    m.RecruiterProfile.objects.filter(pk=self.owner.pk).update(
+                        email_verified=True, verification_status="verified"
+                    )
+                    get_user_model().objects.filter(pk=self.user.pk).update(
+                        is_active=True
+                    )
+                    m.RecruiterJob.objects.filter(pk=job.pk).update(status="active")
+                    self.assertTrue(fresh_sources().filter(pk=source.pk).exists())
+                    self.assertTrue(open_offers().filter(pk=job.offer_id).exists())
+                    if field == "is_active":
+                        get_user_model().objects.filter(pk=self.user.pk).update(
+                            is_active=value
+                        )
+                    elif field == "status":
+                        m.RecruiterJob.objects.filter(pk=job.pk).update(status=value)
+                    else:
+                        m.RecruiterProfile.objects.filter(pk=self.owner.pk).update(
+                            **{field: value}
+                        )
+                    self.assertFalse(fresh_sources().filter(pk=source.pk).exists())
+                    self.assertFalse(
+                        published_offers(m.Offer.objects.all())
+                        .filter(pk=job.offer_id)
+                        .exists()
+                    )
+                    self.assertFalse(open_offers().filter(pk=job.offer_id).exists())
+                    self.assertEqual(
+                        public.get(f"/api/v1/offers/{job.offer_id}/").status_code, 404
+                    )
+                    listing = public.get("/api/v1/offers/")
+                    self.assertEqual(listing.status_code, 200, listing.content)
+                    self.assertNotIn(
+                        job.offer_id,
+                        [offer["id"] for offer in listing.json()["results"]],
+                    )

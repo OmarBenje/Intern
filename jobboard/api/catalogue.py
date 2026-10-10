@@ -267,6 +267,7 @@ def offer_suggestions(request):
 @permission_classes([AllowAny])
 def offer_detail(request, pk):
     from jobboard.models import OfferMergeDecision
+    from jobboard.services.engine_quality import recruiter_offers_visible
 
     alias = (
         OfferMergeDecision.objects.filter(duplicate_offer_id=pk, status="merged")
@@ -276,7 +277,7 @@ def offer_detail(request, pk):
     target = alias.canonical_offer_id if alias else pk
     data = serialize_offer(
         get_object_or_404(
-            offer_queryset()
+            recruiter_offers_visible(offer_queryset())
             .exclude(status="hidden")
             .filter(
                 enrichment__classification="confirmed",

@@ -50,6 +50,16 @@ def workspace(user):
     return profile
 
 
+def publication_conditions(prefix=""):
+    """Conditions shared by direct offer visibility, freshness and applications."""
+    return {
+        prefix + "status": "active",
+        prefix + "owner__verification_status": "verified",
+        prefix + "owner__email_verified": True,
+        prefix + "owner__user__is_active": True,
+    }
+
+
 def publish(job):
     """A verified owner can publish; the existing catalogue scope still applies."""
     owner = job.owner
@@ -168,10 +178,7 @@ def apply_direct(user, pk):
         raise APIError("candidate_required", "Un compte candidat est nécessaire.", 403)
     job = m.RecruiterJob.objects.select_for_update(of=("self",)).get(
         pk=pk,
-        status="active",
-        owner__verification_status="verified",
-        owner__email_verified=True,
-        owner__user__is_active=True,
+        **publication_conditions(),
     )
     existing = m.RecruiterApplicant.objects.filter(
         job=job, application__user=user

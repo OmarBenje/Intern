@@ -19,7 +19,14 @@ async function session(page: Page, current = user) {
 test('role choice precedes every identity field and recruiter registration persists its role', async ({ page }, info) => {
   await page.route('**/api/v1/auth/me/', route => route.fulfill({ status: 401, json: { error: { code: 'authentication_required' } } }))
   await page.route('**/api/v1/auth/csrf/', route => route.fulfill({ json: { csrf_token: 'role-csrf' } }))
-  await page.route('**/api/v1/auth/email-availability/', route => route.fulfill({ json: { available: true } }))
+  await page.route('**/api/v1/auth/email-availability/', async route => {
+    const body = route.request().postDataJSON()
+    expect(body.role).toBe('recruiter')
+    expect(route.request().headers()['x-csrftoken']).toBe('role-csrf')
+    await route.fulfill(body.email === 'alice@gmail.com'
+      ? { status: 400, json: { error: { code: 'professional_email_required', message: 'Utilisez votre adresse e-mail professionnelle.', details: { email: [{ code: 'professional_email_required' }] } } } }
+      : { json: { available: true } })
+  })
   await page.route('**/api/v1/recruiter/verify/', route => route.fulfill({ json: { ...company, verification_status: 'unverified', email_verified: false } }))
   await page.route('**/api/v1/auth/register/', async route => {
     expect(route.request().postDataJSON()).toEqual({ role: 'recruiter', email: 'alice@example.test', full_name: 'Alice Martin', password: 'StrongPassword-987!' })

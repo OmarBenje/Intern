@@ -15,6 +15,6 @@ export function useApiQuery<T>(path: `/${string}` | null) {
       .catch(cause => { if (!controller.signal.aborted) setResult({ key, data: null, error: authError(cause) }) })
     return () => controller.abort()
   }, [path, key])
-  const current = result?.key === key ? result : null
-  return { data: current?.data ?? null, error: current?.error ?? null, loading: !current, reload: () => setVersion(value => value + 1) }
+  const current = path !== null && result?.key === key ? result : null
+  return { data: current?.data ?? null, error: current?.error ?? null, loading: path !== null && !current, reload: () => setVersion(value => value + 1) }
 }
