@@ -122,7 +122,3 @@ __all__ += ["DiscoveryQuery", "DiscoveryResult"]
 from .ats_probe import AtsProbe
 
 __all__ += ["AtsProbe"]
-
-from .recruiters import RecruiterApplicant, RecruiterIntegration, RecruiterJob, RecruiterProfile
-
-__all__ += ["RecruiterApplicant", "RecruiterIntegration", "RecruiterJob", "RecruiterProfile"]

@@ -6,8 +6,6 @@ async function prepare(page: Page) {
   await page.route('**/api/v1/auth/email-availability/', route => route.fulfill({ json: { available: true } }))
   await page.goto('/register')
   await expect(page.getByRole('button', { name: 'Continuer' })).toBeEnabled()
-  await page.getByRole('radio', { name: /Je suis candidat/ }).check()
-  await page.getByRole('button', { name: 'Continuer' }).click()
 }
 async function fill(page: Page) {
   await page.getByLabel('Adresse e-mail').fill('ada@example.test')
@@ -22,7 +20,7 @@ test('email first, back preserves data, final registration sends contract and CS
   await page.route('**/api/v1/auth/register/', async route => {
     calls++
     expect(route.request().headers()['x-csrftoken']).toBe('registration-csrf')
-    expect(route.request().postDataJSON()).toEqual({ full_name: 'Ada Lovelace', email: 'ada@example.test', password: 'A unique passphrase 482!', role: 'candidate' })
+    expect(route.request().postDataJSON()).toEqual({ full_name: 'Ada Lovelace', email: 'ada@example.test', password: 'A unique passphrase 482!' })
     await route.fulfill({ json: { user: { id: 1, username: 'candidate_123', email: 'ada@example.test', onboarding_step: 'resume' }, csrf_token: 'registered-csrf' } })
   })
   await page.route('**/api/v1/auth/logout/', async route => {

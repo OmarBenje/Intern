@@ -190,28 +190,3 @@ class InternshipReviewAdmin(OperationalReadOnlyAdmin):
             "danish_placement_period": "Période de stage précisée en danois",
             "title_and_contract": "Titre et contrat concordants",
         }.get(reason, reason or "—")
-
-
-@admin.register(m.RecruiterProfile)
-class RecruiterProfileAdmin(admin.ModelAdmin):
-    list_display = ("company_name", "full_name", "siren", "email_verified", "verification_status")
-    list_filter = ("verification_status", "email_verified")
-    search_fields = ("company_name", "siren", "user__email")
-    fields = ("user", "full_name", "company", "company_name", "siren", "website_url", "linkedin_url", "email_verified", "verification_status")
-    readonly_fields = ("user", "email_verified")
-    autocomplete_fields = ("company",)
-
-    def get_readonly_fields(self, request, obj=None):
-        # Associate verified accounts with a shared catalogue company before
-        # publication. Published offers retain their original company identity.
-        if obj and obj.jobs.filter(offer__isnull=False).exists():
-            return (*self.readonly_fields, "company")
-        return self.readonly_fields
-
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        if obj.verification_status != "verified":
-            offers = obj.jobs.values("offer_id")
-            m.Offer.objects.filter(pk__in=offers).update(status="hidden")
-            m.OfferSource.objects.filter(offer_id__in=offers).update(source_status="closed")
-            obj.jobs.filter(status="active").update(status="paused")
