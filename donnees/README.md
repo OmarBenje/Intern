@@ -145,7 +145,7 @@ createdb "$PGDATABASE"
 psql -X -v ON_ERROR_STOP=1 -f donnees/schema.sql
 psql -X -v ON_ERROR_STOP=1 -f donnees/data.sql
 psql -X -v ON_ERROR_STOP=1 -f donnees/requetes.sql
-.venv/bin/python donnees/verifier.py
+metier/.venv/bin/python donnees/verifier.py
 ```
 
 Chaque import est transactionnel. La création échoue si les tables existent ;
@@ -180,9 +180,9 @@ export POSTGRES_USER="$PGUSER"
 # Définir POSTGRES_PASSWORD comme PGPASSWORD si nécessaire.
 export PRIVATE_STORAGE_BACKEND=local
 export PRIVATE_STORAGE_ROOT=/tmp/intern-dev3-cv
-.venv/bin/python manage.py migrate --noinput
-.venv/bin/python manage.py seed_dev
-.venv/bin/python donnees/exporter.py
+metier/.venv/bin/python metier/app/manage.py migrate --noinput
+metier/.venv/bin/python metier/app/manage.py seed_dev
+metier/.venv/bin/python donnees/exporter.py
 ```
 
 Choisir un répertoire privé neuf pour éviter les collisions de fichiers.

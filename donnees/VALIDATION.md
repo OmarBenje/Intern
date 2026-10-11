@@ -49,7 +49,7 @@ Depuis la racine d'Intern, configurer les variables `PG*` pour une base
 isolée, puis suivre [l'installation SQL](README.md). Pour le vérificateur :
 
 ```sh
-.venv/bin/python donnees/verifier.py
+metier/.venv/bin/python donnees/verifier.py
 ```
 
 Pour les tests Django, configurer les variables `POSTGRES_*` vers cette même
@@ -57,10 +57,10 @@ base et un nom de base de test distinct :
 
 ```sh
 export TEST_DATABASE_NAME=test_intern_dev3
-.venv/bin/python manage.py check
-.venv/bin/python manage.py makemigrations --check --dry-run
-.venv/bin/python manage.py migrate --check
-.venv/bin/python manage.py test \
+metier/.venv/bin/python metier/app/manage.py check
+metier/.venv/bin/python metier/app/manage.py makemigrations --check --dry-run
+metier/.venv/bin/python metier/app/manage.py migrate --check
+metier/.venv/bin/python metier/app/manage.py test \
   jobboard.tests.test_schema \
   jobboard.tests.test_migrations \
   jobboard.tests.test_recruiters --noinput

@@ -5,7 +5,7 @@ import { prepareDashboard } from './fixtures/dashboard'
 
 // The complete vocabulary exercises long labels and a genuinely scrollable list.
 // Counts are fixed so this layout check does not depend on a running database.
-const vocabulary = JSON.parse(readFileSync(new URL('../../jobboard/data/job-taxonomy-v1.json', import.meta.url), 'utf8')) as JobTaxonomy
+const vocabulary = JSON.parse(readFileSync(new URL('../../metier/app/jobboard/data/job-taxonomy-v1.json', import.meta.url), 'utf8')) as JobTaxonomy
 const taxonomy = { ...vocabulary, domains: vocabulary.domains.map((domain, index) => ({ ...domain, count: 298 - index * 11, subdomains: domain.subdomains.map((sub, index) => ({ ...sub, count: index + 1 })) })) }
 
 for (const view of [

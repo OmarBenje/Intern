@@ -11,7 +11,7 @@ nécessaires à sa revue.
 | 1 — Analyse | Livrables préparés | [Analyse à remettre (PDF)](analyse/cas_d_usage.pdf), [source de l'analyse](analyse/cas_d_usage.md), [procédure de génération](analyse/README.md) |
 | 2 — Prototype Figma | Livrables préparés | [Liens Figma](maquette/figma_link.txt), [capture de l'écran zéro](maquette/ecran_zero.jpg), [descriptif](maquette/README.md), [manifest du prototype](maquette/figma_manifest.json) |
 | 3 — Couche données | Livrables préparés et vérifiés localement | [Schéma SQL](donnees/schema.sql), [jeu fictif](donnees/data.sql), [requêtes](donnees/requetes.sql), [modèle et règles](donnees/MODELE.md), [installation](donnees/README.md), [rapport de validation](donnees/VALIDATION.md) |
-| 4 — Couche métier | À vérifier | API Python, dépendances, configuration externe et exemples `curl` ; code existant à examiner à cette étape |
+| 4 — Couche métier | Livrables préparés et vérifiés localement | [code de l'API](metier/app/), [démarrage et architecture](metier/README.md), [exemples HTTP](metier/api.http), [dépendances](metier/requirements.txt), [configuration](metier/.env.example), [rapport de validation](metier/VALIDATION.md) |
 | 5 — Couche présentation | À vérifier | Frontend et démonstration par vidéo ou captures ; code existant à examiner à cette étape |
 | 6 — Intégration et tests | À réaliser | Tableau des tests, guide d'installation et dépôt final |
 
@@ -45,8 +45,22 @@ Les informations du manifest ne remplacent pas une revue interactive du Figma.
 
 ### Lancer la base de démonstration
 
-Depuis la racine d'Intern, avec PostgreSQL démarré et les dépendances Python
-installées, configurer la connexion puis lancer :
+Depuis la racine d'Intern, installer d'abord les dépendances Python :
+
+```sh
+uv sync --project metier --frozen
+```
+
+PostgreSQL doit ensuite être démarré et accessible sur le port `5433`. Avec
+Docker Compose, lancer le service de base de données :
+
+```sh
+docker compose up -d db
+```
+
+Si PostgreSQL est déjà installé localement, cette commande n'est pas
+nécessaire : il suffit de démarrer le serveur et de vérifier ses paramètres de
+connexion. Configurer ensuite la connexion puis lancer :
 
 ```sh
 export PGHOST=127.0.0.1
@@ -93,5 +107,71 @@ contraintes et des tables complémentaires figurent dans [le modèle](donnees/MO
 Le schéma est issu des migrations actuelles ; le jeu fictif est reproductible
 avec `seed_dev`. Les choix de conception (PK technique avec
 unicité composée, scrypt et colonne de hash générée) sont expliqués dans
-[le modèle](donnees/MODELE.md). Prochaine étape : **4 — Couche métier**.
+[le modèle](donnees/MODELE.md).
 
+## Étape 4 — Couche métier
+
+### Lancer l'API
+
+Depuis la racine d'Intern :
+
+Prérequis : PostgreSQL doit être démarré et accessible avec les paramètres
+indiqués dans `metier/.env.example` (notamment la base `intern`, l'utilisateur
+`intern_user` et le port `5433`). Sans PostgreSQL actif, la migration, les tests
+et le démarrage de l'API échouent car Django ne peut pas se connecter à la base.
+
+```sh
+cd metier
+cp .env.example .env
+uv sync --frozen
+uv run --env-file .env app/manage.py migrate
+```
+
+Pour vérifier la couche métier avant de démarrer le serveur, exécuter aussi :
+
+```sh
+uv run --env-file .env app/manage.py check
+uv run --env-file .env app/manage.py makemigrations --check --dry-run
+uv run --env-file .env app/manage.py test \
+   jobboard.tests.test_auth_api \
+   jobboard.tests.test_recruiters \
+   jobboard.tests.test_workflow \
+   --noinput
+uv run ruff check app/jobboard app/config --select E4,E7,E9,F,I
+```
+
+Une fois ces contrôles terminés, démarrer l'API avec :
+
+```sh
+uv run --env-file .env app/manage.py runserver 127.0.0.1:8000
+```
+
+La procédure complète et les commandes de contrôle figurent dans le
+[guide de la couche métier](metier/README.md). Le scénario
+[api.http](metier/api.http) permet de visualiser les réponses `201`, `403`,
+`200`, `404` et `401` dans un client HTTP compatible.
+
+### Visuel des échanges
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as API
+    participant B as PostgreSQL
+    C->>A: GET /auth/csrf/
+    A-->>C: Cookie + jeton CSRF
+    C->>A: POST /auth/login/
+    A->>B: Vérification du compte actif
+    B-->>A: Compte autorisé
+    A-->>C: Session authentifiée
+    C->>A: GET /applications/999999/
+    A->>B: Recherche limitée au propriétaire
+    A-->>C: 404
+```
+
+Le code de l'API est regroupé sous `metier/app`. L'inscription crée un compte
+en attente de validation, l'authentification repose sur une session serveur et
+les recherches de ressources privées sont limitées au propriétaire connecté.
+Les contrôles locaux ont réussi : **41 tests Django/PostgreSQL**, vérification
+des migrations, contrôle Django et analyse statique. Le détail et les limites
+sont consignés dans le [rapport de validation](metier/VALIDATION.md).

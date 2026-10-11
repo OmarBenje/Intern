@@ -15,7 +15,9 @@ services:
       timeout: 5s
       retries: 10
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
     ports:
       - "127.0.0.1:8000:8000"
@@ -42,9 +44,11 @@ services:
       db:
         condition: service_healthy
   worker:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
-    command: [".venv/bin/python", "manage.py", "run_worker"]
+    command: [".venv/bin/python", "app/manage.py", "run_worker"]
     environment: *app_environment
     volumes:
       - intern_media:/app/.private-media
@@ -52,10 +56,12 @@ services:
       db:
         condition: service_healthy
   catalogue-worker:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
     restart: unless-stopped
-    command: [".venv/bin/python", "manage.py", "run_catalogue_worker", "--imports-only", "--limit", "20", "--poll-interval", "2"]
+    command: [".venv/bin/python", "app/manage.py", "run_catalogue_worker", "--imports-only", "--limit", "20", "--poll-interval", "2"]
     environment: *app_environment
     volumes:
       - intern_media:/app/.private-media
@@ -63,72 +69,86 @@ services:
       db:
         condition: service_healthy
   catalogue-maintenance:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
     restart: unless-stopped
     volumes:
       - intern_media:/app/.private-media
-    command: [".venv/bin/python", "manage.py", "run_catalogue_worker", "--maintenance-only", "--limit", "5", "--poll-interval", "60"]
+    command: [".venv/bin/python", "app/manage.py", "run_catalogue_worker", "--maintenance-only", "--limit", "5", "--poll-interval", "60"]
     environment: *app_environment
     depends_on:
       db:
         condition: service_healthy
 
   jobspy-worker:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
     restart: unless-stopped
-    command: [".venv/bin/python", "manage.py", "run_jobspy_worker", "--poll-interval", "30", "--limit", "1"]
+    command: [".venv/bin/python", "app/manage.py", "run_jobspy_worker", "--poll-interval", "30", "--limit", "1"]
     environment: *app_environment
     depends_on:
       db:
         condition: service_healthy
 
   eures-worker:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
     restart: unless-stopped
-    command: [".venv/bin/python", "manage.py", "run_eures_worker", "--poll-interval", "30", "--limit", "1"]
+    command: [".venv/bin/python", "app/manage.py", "run_eures_worker", "--poll-interval", "30", "--limit", "1"]
     environment: *app_environment
     depends_on:
       db:
         condition: service_healthy
 
   wttj-worker:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
     restart: unless-stopped
-    command: [".venv/bin/python", "manage.py", "run_wttj_worker", "--poll-interval", "30", "--limit", "1"]
+    command: [".venv/bin/python", "app/manage.py", "run_wttj_worker", "--poll-interval", "30", "--limit", "1"]
     environment: *app_environment
     depends_on:
       db:
         condition: service_healthy
 
   jobtech-worker:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
     restart: unless-stopped
-    command: [".venv/bin/python", "manage.py", "run_jobtech_worker", "--poll-interval", "30", "--limit", "1"]
+    command: [".venv/bin/python", "app/manage.py", "run_jobtech_worker", "--poll-interval", "30", "--limit", "1"]
     environment: *app_environment
     depends_on:
       db:
         condition: service_healthy
 
   bundesagentur-worker:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
     restart: unless-stopped
-    command: [".venv/bin/python", "manage.py", "run_bundesagentur_worker", "--poll-interval", "30", "--limit", "1"]
+    command: [".venv/bin/python", "app/manage.py", "run_bundesagentur_worker", "--poll-interval", "30", "--limit", "1"]
     environment: *app_environment
     depends_on:
       db:
         condition: service_healthy
 
   nav-worker:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
     restart: unless-stopped
-    command: [".venv/bin/python", "manage.py", "run_nav_worker", "--poll-interval", "10", "--limit", "1"]
+    command: [".venv/bin/python", "app/manage.py", "run_nav_worker", "--poll-interval", "10", "--limit", "1"]
     environment:
       <<: *app_environment
       NAV_FEED_TOKEN: ${NAV_FEED_TOKEN:-}
@@ -137,10 +157,12 @@ services:
         condition: service_healthy
 
   ats-probe-worker:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     profiles: [app]
     restart: unless-stopped
-    command: [".venv/bin/python", "manage.py", "run_ats_probe_worker", "--poll-interval", "60", "--limit", "1"]
+    command: [".venv/bin/python", "app/manage.py", "run_ats_probe_worker", "--poll-interval", "60", "--limit", "1"]
     environment: *app_environment
     depends_on:
       db:

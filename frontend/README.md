@@ -15,7 +15,7 @@ npm run dev
 Ouvrir <http://127.0.0.1:5173/login>. Vite transmet `/api` et `/health` au backend sur `127.0.0.1:8000`. Pour les mutations protégées par CSRF, lancer Django avec l'origine du serveur Vite autorisée :
 
 ```bash
-CSRF_TRUSTED_ORIGINS=http://127.0.0.1:5173 uv run manage.py runserver 127.0.0.1:8000
+CSRF_TRUSTED_ORIGINS=http://127.0.0.1:5173 uv run --project ../metier ../metier/app/manage.py runserver 127.0.0.1:8000
 ```
 
 Utiliser la même adresse (`127.0.0.1`) dans le navigateur. Le backend, PostgreSQL et le worker se démarrent suivant le [README principal](../README.md). En production, servir le build et l'API sous une même origine ; le proxy Vite ne fonctionne qu'en développement.
@@ -80,7 +80,7 @@ placeholders imposée par WCAG.
 
 Le navigateur envoie le PDF à Django (`POST /documents/`), puis associe le document au profil (`PUT /profile/resume/`). Les secrets R2 restent côté serveur. Le bucket reste privé ; aucun CORS R2 ni domaine public n’est nécessaire. Si l’association échoue après l’envoi, le bouton de reprise conserve l’ID du document sans réenvoyer son contenu. Après rechargement, le CV courant est relu depuis le profil.
 
-Pour activer la configuration R2 locale : `uv run --env-file .env manage.py runserver 127.0.0.1:8000` depuis la racine. Utiliser aussi `--env-file .env` pour le worker. Le PDF est limité à 10 Mio et contrôlé côté serveur. L’extraction IA n’est pas incluse dans ce parcours.
+Pour activer la configuration R2 locale : `uv run --project ../metier --env-file ../metier/.env ../metier/app/manage.py runserver 127.0.0.1:8000` depuis la racine. Utiliser aussi `--env-file .env` pour le worker. Le PDF est limité à 10 Mio et contrôlé côté serveur. L’extraction IA n’est pas incluse dans ce parcours.
 
 ## Onboarding obligatoire
 

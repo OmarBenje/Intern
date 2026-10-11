@@ -1,0 +1,59 @@
+@baseUrl = http://127.0.0.1:8000/api/v1
+@email = camille.demo@example.test
+@password = Mot-de-passe-fictif-2026!
+
+### 1. Obtenir le cookie CSRF et mémoriser le jeton
+# @name csrf
+GET {{baseUrl}}/auth/csrf/
+
+### 2. Créer un compte candidat inactif — réponse attendue : 201 pending
+POST {{baseUrl}}/auth/register/
+Content-Type: application/json
+X-CSRFToken: {{csrf.response.body.csrf_token}}
+
+{
+  "email": "{{email}}",
+  "full_name": "Camille Exemple",
+  "password": "{{password}}",
+  "role": "candidate"
+}
+
+### 3. Avant activation — réponse attendue : 403 account_inactive
+POST {{baseUrl}}/auth/login/
+Content-Type: application/json
+X-CSRFToken: {{csrf.response.body.csrf_token}}
+
+{
+  "username": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Activer ensuite le compte dans /admin/, puis rejouer la connexion.
+# @name login
+POST {{baseUrl}}/auth/login/
+Content-Type: application/json
+X-CSRFToken: {{csrf.response.body.csrf_token}}
+
+{
+  "username": "{{email}}",
+  "password": "{{password}}"
+}
+
+### 4. L'identité vient de la session — réponse attendue : 200
+GET {{baseUrl}}/auth/me/
+
+### 5. Ressources du compte connecté — réponse attendue : 200
+GET {{baseUrl}}/applications/
+
+### 6. Ressource absente ou appartenant à un autre compte — réponse attendue : 404
+GET {{baseUrl}}/applications/999999/
+
+### 7. Fermer la session
+POST {{baseUrl}}/auth/logout/
+Content-Type: application/json
+X-CSRFToken: {{login.response.body.csrf_token}}
+
+{}
+
+### 8. Après déconnexion — réponse attendue : 401
+GET {{baseUrl}}/auth/me/

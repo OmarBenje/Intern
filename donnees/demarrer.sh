@@ -17,11 +17,11 @@ for tool in createdb psql; do
         exit 1
     }
 done
-if [[ ! -x .venv/bin/python ]]; then
-    printf '%s\n' "Installer les dépendances Python du projet : uv sync --frozen" >&2
+if [[ ! -x metier/.venv/bin/python ]]; then
+    printf '%s\n' "Installer les dépendances Python : uv sync --project metier --frozen" >&2
     exit 1
 fi
-.venv/bin/python -c 'import psycopg'
+metier/.venv/bin/python -c 'import psycopg'
 
 printf '%s\n' "Création d'une base dédiée : $PGDATABASE"
 # createdb refuses an existing database before any import is attempted.
@@ -30,5 +30,5 @@ for file in schema data requetes; do
     printf '%s\n' "Exécution de donnees/$file.sql"
     psql -X -v ON_ERROR_STOP=1 -f "donnees/$file.sql"
 done
-.venv/bin/python donnees/verifier.py
+metier/.venv/bin/python donnees/verifier.py
 printf '%s\n' "Base prête. Connexion interactive : psql -X" 
