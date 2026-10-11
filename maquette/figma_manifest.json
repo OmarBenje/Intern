@@ -1,0 +1,29 @@
+{
+  "fileKey": "2zB64zoXsnJQ24R1yysJ72",
+  "designNode": "129:2",
+  "screenZeroNode": "142:38134",
+  "authors": ["Hicham", "Omar"],
+  "institution": "Polytech Marseille",
+  "academicYear": "2026-2027",
+  "prototype": {
+    "frameCount": 27,
+    "reactionCount": 41,
+    "starts": {
+      "candidate": "170:4",
+      "administrator": "170:1633",
+      "recruiter": "170:2668"
+    },
+    "reachableFrames": {
+      "candidate": 10,
+      "administrator": 4,
+      "recruiter": 13
+    }
+  },
+  "requirements": {
+    "clickableJourneys": true,
+    "screenZero": true,
+    "errorStates": true,
+    "emptyStates": true,
+    "plausibleData": true
+  }
+}
