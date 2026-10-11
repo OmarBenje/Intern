@@ -8,6 +8,7 @@ from django.http.request import RequestDataTooBig
 from rest_framework import exceptions
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
@@ -129,3 +130,15 @@ def paginate(queryset, request, serialize):
     paginator = ContractPagination()
     page = paginator.paginate_queryset(queryset, request)
     return paginator.get_paginated_response([serialize(item) for item in page])
+
+
+class WorkspacePermission(IsAuthenticated):
+    """Recruiter accounts cannot create candidate data through alternate API routes."""
+
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+        if request.path.startswith(("/api/v1/auth/", "/api/v1/account/", "/api/v1/recruiter/")):
+            return True
+        from jobboard.models import RecruiterProfile
+        return not RecruiterProfile.objects.filter(user=request.user).exists()

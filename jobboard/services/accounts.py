@@ -63,6 +63,10 @@ def export_account(user):
                 "export_too_large", "Account export exceeds 100 MiB.", status=413
             )
         data = {
+            "recruiter_profile": rows(m.RecruiterProfile.objects.filter(user=user), ("email_code_hash", "email_code_expires_at")),
+            "recruiter_jobs": rows(m.RecruiterJob.objects.filter(owner__user=user)),
+            "recruiter_integrations": rows(m.RecruiterIntegration.objects.filter(owner__user=user)),
+            "recruiter_applications": rows(m.RecruiterApplicant.objects.filter(application__user=user)),
             "schema_version": 1,
             "exported_at": timezone.now(),
             "account": {
@@ -180,6 +184,9 @@ def request_deletion(user, password):
         user = lock_user(user)
         if not isinstance(password, str) or not user.check_password(password):
             raise APIError("invalid_password", "The password is incorrect.", status=400)
+        recruiter_offers = m.RecruiterJob.objects.filter(owner__user=user).values("offer_id")
+        m.Offer.objects.filter(pk__in=recruiter_offers).update(status="hidden")
+        m.OfferSource.objects.filter(offer_id__in=recruiter_offers).update(source_status="closed")
         user.is_active = False
         user.save(update_fields=["is_active"])
         now = timezone.now()

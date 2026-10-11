@@ -245,7 +245,7 @@ if PRIVATE_STORAGE_BACKEND == "r2" and R2_BUCKET == "local":
 # The browser frontend shares Django sessions; public views opt into AllowAny.
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["jobboard.api.drf.CsrfSessionAuthentication"],
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_PERMISSION_CLASSES": ["jobboard.api.drf.WorkspacePermission"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
     "DEFAULT_RENDERER_CLASSES": ["jobboard.api.drf.ContractJSONRenderer"],
     "DEFAULT_PAGINATION_CLASS": "jobboard.api.drf.ContractPagination",

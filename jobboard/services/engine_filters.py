@@ -56,6 +56,8 @@ class CatalogueFilters(StrictSerializer):
 
 
 def fresh_sources(now=None):
+    from jobboard.services.recruiters import publication_conditions
+
     now = now or timezone.now()
     interval = ExpressionWrapper(
         Coalesce(F("board__engine_schedule__interval_minutes"), Value(120))
@@ -68,7 +70,13 @@ def fresh_sources(now=None):
     return (
         OfferSource.objects.filter(source_status="active", board__enabled=True)
         .annotate(fresh_cutoff=Least(Value(now - timedelta(hours=24)), cadence_cutoff))
-        .filter(last_checked_at__gte=F("fresh_cutoff"))
+        .filter(
+            (~Q(board__provider="intern") & Q(last_checked_at__gte=F("fresh_cutoff")))
+            | Q(
+                board__provider="intern",
+                **publication_conditions("offer__recruiter_job__"),
+            )
+        )
     )
 
 

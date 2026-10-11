@@ -64,7 +64,7 @@
 .auth-layout .auth-submit-icon { transition: transform var(--duration-fast) var(--ease-interactive), opacity var(--duration-fast) var(--ease-interactive); }
 .auth-registration-nav { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); min-height: var(--target-size); }
 .auth-layout .auth-previous { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--font-size-xs); padding: 0 var(--space-2); margin-right: calc(-1 * var(--space-2)); border-radius: var(--auth-editorial-radius); }
-.auth-registration-progress { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); margin: var(--space-2) 0 var(--space-8); padding: 0; }
+.auth-registration-progress { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-3); margin: var(--space-2) 0 var(--space-8); padding: 0; }
 .auth-registration-progress li { display: grid; gap: var(--space-2); color: var(--auth-muted); font-size: var(--auth-caption-size); }
 .auth-registration-progress li > span:last-child { display: flex; align-items: center; gap: var(--space-1); }
 .auth-progress-line { height: var(--auth-progress-thickness); background: var(--auth-rule); }
@@ -205,3 +205,10 @@
 }
 .auth-logo-credit { margin-block-start: var(--space-6); font-size: var(--font-size-xs); color: var(--auth-muted); }
 .auth-logo-credit a { color: inherit; }
+
+.auth-role-options { display: grid; gap: var(--space-3); }
+.auth-role-option { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border: var(--border-width) solid var(--border); border-radius: var(--radius-control); cursor: pointer; }
+.auth-role-option:has(input:checked) { border-color: var(--accent); background: var(--dashboard-active); }
+.auth-role-option input { accent-color: var(--accent); }
+.auth-role-option span { display: grid; gap: var(--space-1); }
+.auth-role-option small { color: var(--dashboard-muted); line-height: var(--line-height-normal); }
