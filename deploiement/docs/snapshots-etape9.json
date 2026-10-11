@@ -1,0 +1,14 @@
+{
+  "vm-donnees": {
+    "name": "avant donnees",
+    "uuid": "80fd6183-7cb4-4bc6-af85-6fa230d4e1e4"
+  },
+  "vm-metier": {
+    "name": "avant metier",
+    "uuid": "a41085f3-dec4-46ae-95ed-c38feaf406fe"
+  },
+  "vm-proxy": {
+    "name": "avant proxy",
+    "uuid": "6e396d1f-f0d8-42de-b701-4c2016a56d38"
+  }
+}

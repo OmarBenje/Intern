@@ -16,6 +16,7 @@ nécessaires à sa revue.
 | 6 — Intégration et tests | Recette locale réussie ; vérifications externes restantes | [cahier de tests PDF](tests/cahier_de_tests.pdf), [source du tableau](tests/cahier_de_tests.html), [guide d'installation](README.md#installer-et-démarrer-en-local), [procédure de recette](tests/README.md), [script reproductible](tests/recette_navigateur.mjs) |
 | 7 — Préparation des VM | Trois machines nommées et dimensionnées, snapshots initiaux et capture vérifiés | [Capture VirtualBox](deploiement/docs/virtualbox-machines.png), [Procédure CLI](deploiement/scripts/PROCEDURE.md), [rapport de vérification](deploiement/docs/etape7.md), [preuves CLI](deploiement/docs/preuves-etape7.txt), [identités et snapshots](deploiement/docs/identites-etape7.json) |
 | 8 — Réseau et adressage | Réseau interne configuré et vérifié sur les trois VM ; six pings réussis | [Plan et procédure](deploiement/reseau/README.md), [Netplan proxy](deploiement/reseau/vm-proxy.yaml), [Netplan métier](deploiement/reseau/vm-metier.yaml), [Netplan données](deploiement/reseau/vm-donnees.yaml), [rapport](deploiement/docs/etape8.md), [sorties de vérification](deploiement/docs/preuves-etape8.txt) |
+| 9 — Déploiement des couches | Services installés et vérifiés après redémarrage ; huit contrôles navigateur réussis | [Configurations et procédure](deploiement/DEPLOIEMENT.md), [rapport](deploiement/docs/etape9.md), [preuves VM](deploiement/docs/preuves-etape9.txt), [recette navigateur](deploiement/docs/recette-etape9.txt), [capture réelle](deploiement/docs/etape9-tableau-de-bord.png) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -276,3 +277,30 @@ et [données](deploiement/reseau/vm-donnees.yaml),
 Les paquets de l'étape suivante seront installés avec une ouverture NAT
 ponctuelle, retirée avant les vérifications. La réponse HTTP et l'isolation des
 services applicatifs restent à vérifier après leur déploiement.
+
+## Étape 9 — Déploiement des trois couches
+
+PostgreSQL, Django/Gunicorn et Nginx sont installés respectivement sur
+`vm-donnees`, `vm-metier` et `vm-proxy`. Chaque couche dispose de son snapshot
+avant installation. Le code applicatif est inchangé ; les configurations réseau,
+base, environnement, service systemd et serveur web sont rassemblées dans
+la [procédure de déploiement](deploiement/DEPLOIEMENT.md).
+
+Après redémarrage complet, les services démarrent automatiquement et
+l'application est accessible sur **http://127.0.0.1:8080/login**.
+Les **34 vérifications SQL** et les **huit contrôles navigateur réels** ont réussi.
+Les empreintes des fichiers déployés correspondent aux sources et au build.
+Les NAT temporaires du métier et des données ainsi que l'accès SSH temporaire
+du proxy sont retirés ; seule la redirection HTTP est conservée.
+
+![Application réelle sur les trois VM](deploiement/docs/etape9-tableau-de-bord.png)
+
+Livrables : [rapport](deploiement/docs/etape9.md),
+[preuves des services et de la topologie](deploiement/docs/preuves-etape9.txt),
+[résultats navigateur](deploiement/docs/recette-etape9.txt),
+[empreintes des artefacts](deploiement/docs/artefacts-etape9.json),
+[snapshots](deploiement/docs/snapshots-etape9.json) et
+[capture de connexion](deploiement/docs/etape9-connexion.png).
+
+La matrice complète de joignabilité, les mesures répétées et les exports OVA
+restent à réaliser à l'étape 10.

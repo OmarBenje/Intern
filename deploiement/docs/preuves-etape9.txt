@@ -1,0 +1,162 @@
+Étape 9 — contrôles réels sur les trois VM
+Redémarrage complet effectué=True
+
+=== vm-donnees ===
+$ psql --version
+psql (PostgreSQL) 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)
+
+$ systemctl is-active postgresql@16-main nftables
+active
+active
+
+$ systemctl is-enabled postgresql nftables
+enabled
+enabled
+
+$ sudo ss -tlnp
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                                               
+LISTEN 0      4096      127.0.0.54:53        0.0.0.0:*    users:(("systemd-resolve",pid=521,fd=17))            
+LISTEN 0      4096         0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=828,fd=3),("systemd",pid=1,fd=93))
+LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*    users:(("systemd-resolve",pid=521,fd=15))            
+LISTEN 0      200      10.10.10.30:5432      0.0.0.0:*    users:(("postgres",pid=711,fd=6))                    
+LISTEN 0      4096            [::]:22           [::]:*    users:(("sshd",pid=828,fd=4),("systemd",pid=1,fd=94))
+
+$ sudo -u postgres psql -X -d intern -c "SHOW listen_addresses; SHOW password_encryption; SELECT count(*) AS comptes FROM auth_user; SELECT count(*) AS offres FROM jobboard_offer; SELECT rolname, rolsuper, rolcreatedb, rolcreaterole FROM pg_roles WHERE rolname='intern_user';"
+listen_addresses 
+------------------
+ 10.10.10.30
+(1 row)
+
+ password_encryption 
+---------------------
+ scram-sha-256
+(1 row)
+
+ comptes 
+---------
+       8
+(1 row)
+
+ offres 
+--------
+      4
+(1 row)
+
+   rolname   | rolsuper | rolcreatedb | rolcreaterole 
+-------------+----------+-------------+---------------
+ intern_user | f        | f           | f
+(1 row)
+
+$ sudo nft list table inet intern_db
+table inet intern_db {
+	chain input {
+		type filter hook input priority filter; policy accept;
+		tcp dport 5432 ip saddr 10.10.10.20 accept
+		tcp dport 5432 drop
+	}
+}
+
+$ ip route
+10.10.10.0/24 dev enp0s3 proto kernel scope link src 10.10.10.30
+
+=== vm-metier ===
+$ python3 --version
+Python 3.12.3
+
+$ systemctl is-active intern
+active
+
+$ systemctl is-enabled intern
+enabled
+
+$ sudo ss -tlnp
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                                                                               
+LISTEN 0      2048     10.10.10.20:8000      0.0.0.0:*    users:(("gunicorn",pid=773,fd=5),("gunicorn",pid=769,fd=5),("gunicorn",pid=698,fd=5))
+LISTEN 0      4096      127.0.0.54:53        0.0.0.0:*    users:(("systemd-resolve",pid=513,fd=17))                                            
+LISTEN 0      4096         0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=799,fd=3),("systemd",pid=1,fd=93))                                
+LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*    users:(("systemd-resolve",pid=513,fd=15))                                            
+LISTEN 0      4096            [::]:22           [::]:*    users:(("sshd",pid=799,fd=4),("systemd",pid=1,fd=94))
+
+$ sudo stat -c '%U:%G %a' /etc/intern/intern.env
+root:intern 640
+
+$ /opt/intern/metier/.venv/bin/python -c 'import django, gunicorn, rest_framework; print("Django", django.get_version()); print("Gunicorn", gunicorn.__version__); print("DRF", rest_framework.VERSION)'
+Django 6.1.1
+Gunicorn 23.0.0
+DRF 3.18.1
+
+$ curl -fsS http://10.10.10.20:8000/health/ready/
+{"status": "ok"}
+
+$ ip route
+10.10.10.0/24 dev enp0s3 proto kernel scope link src 10.10.10.20
+
+=== vm-proxy ===
+$ sudo nginx -v
+nginx version: nginx/1.24.0 (Ubuntu)
+
+$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+$ systemctl is-active nginx
+active
+
+$ systemctl is-enabled nginx
+enabled
+
+$ sudo ss -tlnp
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                                               
+LISTEN 0      511      10.10.10.10:80        0.0.0.0:*    users:(("nginx",pid=681,fd=5),("nginx",pid=676,fd=5))
+LISTEN 0      511        10.0.3.15:80        0.0.0.0:*    users:(("nginx",pid=681,fd=6),("nginx",pid=676,fd=6))
+LISTEN 0      4096      127.0.0.54:53        0.0.0.0:*    users:(("systemd-resolve",pid=485,fd=17))            
+LISTEN 0      4096         0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=678,fd=3),("systemd",pid=1,fd=93))
+LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*    users:(("systemd-resolve",pid=485,fd=15))            
+LISTEN 0      4096            [::]:22           [::]:*    users:(("sshd",pid=678,fd=4),("systemd",pid=1,fd=94))
+
+$ ip route
+default via 10.0.3.2 dev enp0s8 proto dhcp src 10.0.3.15 metric 100 
+10.0.3.0/24 dev enp0s8 proto kernel scope link src 10.0.3.15 metric 100 
+10.0.3.2 dev enp0s8 proto dhcp scope link src 10.0.3.15 metric 100 
+10.0.3.3 dev enp0s8 proto dhcp scope link src 10.0.3.15 metric 100 
+10.10.10.0/24 dev enp0s3 proto kernel scope link src 10.10.10.10
+
+$ curl -fsS -H 'Host: 127.0.0.1:8080' http://10.10.10.10/health/ready/
+{"status": "ok"}
+
+vm-metier : 249 fichiers déployés identiques (SHA-256).
+vm-proxy : 15 fichiers déployés identiques (SHA-256).
+Configuration conforme : vm-donnees, donnees/intern.conf.
+Configuration conforme : vm-donnees, donnees/pg_hba.conf.
+Configuration conforme : vm-donnees, donnees/intern-db.nft.
+Configuration conforme : vm-metier, metier/intern.service.
+Configuration conforme : vm-proxy, proxy/intern.conf.
+Hôte → http://127.0.0.1:8080/health/ready/ : HTTP 200, status=ok.
+Hôte → /login : HTTP 200, point de montage React présent.
+
+=== VirtualBox : vm-donnees ===
+VMState=running
+nic1=intnet
+intnet1=intnet-app
+nic2=none
+Redirections=[]
+
+=== VirtualBox : vm-metier ===
+VMState=running
+nic1=intnet
+intnet1=intnet-app
+nic2=none
+Redirections=[]
+
+=== VirtualBox : vm-proxy ===
+VMState=running
+nic1=intnet
+intnet1=intnet-app
+nic2=nat
+Redirections=["http,tcp,127.0.0.1,8080,,80"]
+
+Snapshot de vm-donnees : avant donnees (80fd6183-7cb4-4bc6-af85-6fa230d4e1e4)
+
+Snapshot de vm-metier : avant metier (a41085f3-dec4-46ae-95ed-c38feaf406fe)
+
+Snapshot de vm-proxy : avant proxy (6e396d1f-f0d8-42de-b701-4c2016a56d38)

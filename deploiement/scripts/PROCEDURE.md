@@ -1,6 +1,7 @@
 # Préparation des machines virtuelles
 
 Suite : [étape 8 — réseau interne, adressage et connectivité](../reseau/README.md).
+Déploiement des services : [étape 9 — données, métier et proxy](../DEPLOIEMENT.md).
 
 ## Étape 7 — Objectif et prérequis
 
