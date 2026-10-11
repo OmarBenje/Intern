@@ -74,6 +74,13 @@ class RecruiterJob(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["id", "offer"], name="recruiter_job_offer_identity"
+            ),
+        ]
+
 
 class RecruiterApplicant(models.Model):
     application = models.OneToOneField(
@@ -82,6 +89,10 @@ class RecruiterApplicant(models.Model):
     job = models.ForeignKey(
         RecruiterJob, on_delete=models.CASCADE, related_name="applicants"
     )
+    # These mirrors let SQL check the application, job and CV together.
+    candidate = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    offer = models.ForeignKey("Offer", on_delete=models.PROTECT)
+    resume_kind = models.CharField(max_length=16, default="resume", editable=False)
     # Immutable application snapshot: later private profile edits are never shared.
     profile_snapshot = models.JSONField(default=dict)
     resume = models.ForeignKey(
@@ -107,6 +118,24 @@ class RecruiterApplicant(models.Model):
     rejection_reason = models.TextField(blank=True)
     interview_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(resume_kind="resume"),
+                name="recruiter_resume_kind_valid",
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        self.candidate_id = self.application.user_id
+        self.offer_id = self.application.offer_id
+        if kwargs.get("update_fields") is not None:
+            kwargs["update_fields"] = set(kwargs["update_fields"]) | {
+                "candidate",
+                "offer",
+            }
+        return super().save(*args, **kwargs)
 
 
 class RecruiterIntegration(models.Model):

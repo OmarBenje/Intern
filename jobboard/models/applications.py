@@ -36,6 +36,9 @@ class Application(models.Model):
             models.UniqueConstraint(
                 fields=["id", "user"], name="application_user_identity"
             ),
+            models.UniqueConstraint(
+                fields=["id", "user", "offer"], name="application_owner_offer_identity"
+            ),
             allowed("status", ApplicationStatus.values, "application_status_valid"),
         ]
         indexes = [
