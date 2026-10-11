@@ -12,7 +12,7 @@ npm ci
 npm run dev
 ```
 
-Ouvrir <http://127.0.0.1:5173/login>. Vite transmet `/api` et `/health` au backend sur `127.0.0.1:8000`. Pour les mutations protégées par CSRF, lancer Django avec l'origine du serveur Vite autorisée :
+Ouvrir <http://127.0.0.1:5173/login>. Vite transmet le chemin API et `/health` au backend sur `127.0.0.1:8000`. Le préfixe API est défini par `VITE_API_ROOT` dans `.env` (par défaut `/api/v1`) ; il doit rester un chemin de la même origine. Pour les mutations protégées par CSRF, lancer Django avec l'origine du serveur Vite autorisée :
 
 ```bash
 CSRF_TRUSTED_ORIGINS=http://127.0.0.1:5173 uv run --project ../metier ../metier/app/manage.py runserver 127.0.0.1:8000
@@ -43,7 +43,9 @@ Vérifications : `npm run check:tokens`, `npm run build`, `npm run lint` et `npm
 
 ## Connexion et vérifications navigateur
 
-Le formulaire utilise une **adresse e-mail** ; l’API conserve aussi la connexion par
+L'inscription confirme la création d'un compte en attente de validation. Elle
+n'ouvre pas de session ; la connexion devient possible après activation par un
+superviseur. Le formulaire utilise une **adresse e-mail** ; l’API conserve aussi la connexion par
 nom d’utilisateur pour les anciens comptes. Aucun compte de démonstration ni connexion
 Google/GitHub n’est ajouté. Créer un compte ou utiliser un compte candidat existant
 pour un essai réel. Les mots de passe ne sont pas stockés dans localStorage/sessionStorage.
@@ -80,7 +82,7 @@ placeholders imposée par WCAG.
 
 Le navigateur envoie le PDF à Django (`POST /documents/`), puis associe le document au profil (`PUT /profile/resume/`). Les secrets R2 restent côté serveur. Le bucket reste privé ; aucun CORS R2 ni domaine public n’est nécessaire. Si l’association échoue après l’envoi, le bouton de reprise conserve l’ID du document sans réenvoyer son contenu. Après rechargement, le CV courant est relu depuis le profil.
 
-Pour activer la configuration R2 locale : `uv run --project ../metier --env-file ../metier/.env ../metier/app/manage.py runserver 127.0.0.1:8000` depuis la racine. Utiliser aussi `--env-file .env` pour le worker. Le PDF est limité à 10 Mio et contrôlé côté serveur. L’extraction IA n’est pas incluse dans ce parcours.
+Pour activer la configuration R2 locale depuis la racine d'Intern : `uv run --project metier --env-file metier/.env metier/app/manage.py runserver 127.0.0.1:8000`. Utiliser aussi `--env-file metier/.env` pour le worker. Le PDF est limité à 10 Mio et contrôlé côté serveur. L’extraction IA n’est pas incluse dans ce parcours.
 
 ## Onboarding obligatoire
 

@@ -17,7 +17,7 @@
 .auth-form-links { display: flex; justify-content: flex-end; }
 .auth-form-links a, .auth-back a { display: inline-flex; align-items: center; min-height: var(--target-size); color: var(--muted); font-size: var(--font-size-sm); text-decoration: underline; text-underline-offset: var(--underline-offset); padding: var(--space-2) 0; }
 .auth-form-links a:hover, .auth-back a:hover { color: var(--text); }
-.auth-submit { width: 100%; min-height: var(--control-height); display: flex; align-items: center; justify-content: center; gap: var(--button-gap); padding: var(--space-3) var(--space-5); border: 0; border-radius: var(--radius-control); background: var(--button-background); color: var(--button-text); font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); cursor: pointer; transition: background-color var(--duration-fast) var(--ease-interactive), transform var(--duration-fast) var(--ease-interactive); }
+.auth-submit { width: 100%; min-height: var(--control-height); display: flex; align-items: center; justify-content: center; gap: var(--button-gap); padding: var(--space-3) var(--space-5); border: 0; border-radius: var(--radius-control); background: var(--button-background); color: var(--button-text); text-decoration: none; font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); cursor: pointer; transition: background-color var(--duration-fast) var(--ease-interactive), transform var(--duration-fast) var(--ease-interactive); }
 .auth-submit:hover:not(:disabled) { background: var(--button-background-hover); }
 .auth-submit:active:not(:disabled) { transform: scale(var(--scale-pressed)); }
 .auth-submit:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }

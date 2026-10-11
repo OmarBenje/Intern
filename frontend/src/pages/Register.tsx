@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Navigate, useLocation } from 'react-router'
+import { Link, Navigate, useLocation } from 'react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { ArrowLeft02Icon, ArrowRight02Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { useSession } from '../auth/session-context'
@@ -40,6 +40,7 @@ export function Register() {
   const [values, setValues] = useState<Registration>({ full_name: '', email: '', password: '' })
   const [step, setStep] = useState(-1)
   const [pending, setPending] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fields, setFields] = useState<FieldErrors>({})
   const busy = useRef(false)
@@ -52,6 +53,11 @@ export function Register() {
     previousStep.current = step
   }, [error, fields, pending, step])
   if (session.user) return <Navigate to={session.user.role === 'recruiter' ? '/recruiter/dashboard' : session.user.onboarding_step && session.user.onboarding_step !== 'complete' ? `/onboarding/${session.user.onboarding_step}` : '/stages'} replace />
+  if (submitted) return <AuthLayout mode="register"><section className="auth-onboarding" role="status">
+    <header className="auth-heading"><h1>Votre demande est enregistrée.</h1></header>
+    <p>Votre compte attend la validation du superviseur. Vous pourrez vous connecter après son activation.</p>
+    <Link className="auth-submit" to="/login">Revenir à la connexion</Link>
+  </section></AuthLayout>
   const update = (field: keyof Registration, value: string) => setValues(previous => ({ ...previous, [field]: value }))
   function back() {
     setError(null); setFields({}); setStep(current => Math.max(-1, current - 1))
@@ -83,6 +89,7 @@ export function Register() {
     busy.current = true; setPending(true); setError(null); setFields({})
     try {
       await session.register({ full_name: values.full_name.trim(), email: values.email.trim(), password: values.password, role })
+      setSubmitted(true)
     } catch (cause) {
       const next = registrationErrors(cause)
       setFields(next)

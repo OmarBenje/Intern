@@ -12,7 +12,7 @@ nécessaires à sa revue.
 | 2 — Prototype Figma | Livrables préparés | [Liens Figma](maquette/figma_link.txt), [capture de l'écran zéro](maquette/ecran_zero.jpg), [descriptif](maquette/README.md), [manifest du prototype](maquette/figma_manifest.json) |
 | 3 — Couche données | Livrables préparés et vérifiés localement | [Schéma SQL](donnees/schema.sql), [jeu fictif](donnees/data.sql), [requêtes](donnees/requetes.sql), [modèle et règles](donnees/MODELE.md), [installation](donnees/README.md), [rapport de validation](donnees/VALIDATION.md) |
 | 4 — Couche métier | Livrables préparés et vérifiés localement | [code de l'API](metier/app/), [démarrage et architecture](metier/README.md), [exemples HTTP](metier/api.http), [dépendances](metier/requirements.txt), [configuration](metier/.env.example), [rapport de validation](metier/VALIDATION.md) |
-| 5 — Couche présentation | À vérifier | Frontend et démonstration par vidéo ou captures ; code existant à examiner à cette étape |
+| 5 — Couche présentation | Livrables préparés et vérifiés localement | [code frontend](frontend/src/), [démarrage](frontend/README.md), [captures](frontend/captures/README.md), [rapport de validation](frontend/VALIDATION.md) |
 | 6 — Intégration et tests | À réaliser | Tableau des tests, guide d'installation et dépôt final |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
@@ -175,3 +175,33 @@ les recherches de ressources privées sont limitées au propriétaire connecté.
 Les contrôles locaux ont réussi : **41 tests Django/PostgreSQL**, vérification
 des migrations, contrôle Django et analyse statique. Le détail et les limites
 sont consignés dans le [rapport de validation](metier/VALIDATION.md).
+
+## Étape 5 — Couche présentation
+
+### Lancer l'interface
+
+Après le démarrage de PostgreSQL et de l'API décrit à l'étape 4, ouvrir un
+second terminal depuis la racine d'Intern :
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Ouvrir `http://127.0.0.1:5173/login`. Le proxy Vite transmet les appels REST à
+l'API locale ; les paramètres de connexion, de CSRF et du préfixe API figurent
+dans [le guide frontend](frontend/README.md).
+
+### Visuel des écrans
+
+![Écran de connexion](frontend/captures/connexion.png)
+
+[Voir l'inscription en attente](frontend/captures/inscription-attente.png) ·
+[Voir le profil candidat](frontend/captures/profil-candidat.png) ·
+[Voir l'espace recruteur](frontend/captures/espace-recruteur.png)
+
+Ces captures proviennent de tests navigateur avec données fictives et réponses
+API contrôlées. Les parcours, les contrôles exécutés et ce qu'il reste à
+vérifier sur un déploiement réel sont détaillés dans le
+[rapport de validation](frontend/VALIDATION.md).

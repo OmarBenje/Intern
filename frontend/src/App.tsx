@@ -24,15 +24,12 @@ import { RecruiterJobs, JobWizard } from './pages/recruiter/Jobs'
 import { Applicants } from './pages/recruiter/Applicants'
 import './App.css'
 
-function Section({ title, description }: { title: string; description: string }) {
+function NotFound() {
   return (
     <main id="main-content" className="content">
-      <p className="eyebrow">Espace candidat</p>
-      <h1>{title}</h1>
-      <p className="intro">{description}</p>
-      <div className="placeholder">
-        <p>Le front est prêt pour les composants de cet espace.</p>
-      </div>
+      <h1>Page introuvable</h1>
+      <p className="intro">Cette adresse ne correspond à aucune page.</p>
+      <Link to="/dashboard">Revenir au tableau de bord</Link>
     </main>
   )
 }
@@ -110,7 +107,7 @@ function App() {
         <Route path="/applications/:id" element={<ApplicationDetail />} />
         <Route path="/settings" element={<Navigate to="/profil" replace />} />
         <Route path="/profil" element={<Profile />} />
-        <Route path="*" element={<Section title="Page introuvable" description="Cette adresse ne correspond à aucune page." />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   </SessionProvider></BrowserRouter>

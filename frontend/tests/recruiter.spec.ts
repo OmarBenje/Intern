@@ -31,7 +31,7 @@ test('role choice precedes every identity field and recruiter registration persi
   await page.route('**/api/v1/auth/register/', async route => {
     expect(route.request().postDataJSON()).toEqual({ role: 'recruiter', email: 'alice@example.test', full_name: 'Alice Martin', password: 'StrongPassword-987!' })
     expect(route.request().headers()['x-csrftoken']).toBe('role-csrf')
-    await route.fulfill({ json: { user: { ...user, onboarding_step: 'verify' } } })
+    await route.fulfill({ status: 201, json: { status: 'pending' } })
   })
   await page.goto('/register')
   await expect(page.getByLabel('Adresse e-mail')).toHaveCount(0)
@@ -52,8 +52,9 @@ test('role choice precedes every identity field and recruiter registration persi
   await page.getByRole('button', { name: 'Continuer' }).click()
   await page.getByLabel('Mot de passe', { exact: true }).fill('StrongPassword-987!')
   await page.getByRole('button', { name: 'Créer mon compte' }).click()
-  await expect(page).toHaveURL(/\/recruiter\/verify$/)
-  await expect(page.getByRole('heading', { name: 'Vérifiez votre e-mail professionnel' })).toBeVisible()
+  await expect(page).toHaveURL(/\/register$/)
+  await expect(page.getByRole('status')).toContainText('validation du superviseur')
+  await expect(page.getByRole('heading', { name: 'Votre demande est enregistrée.' })).toBeVisible()
 })
 
 test('recruiter navigation reuses candidate design without fetching candidate dashboard', async ({ page }, info) => {

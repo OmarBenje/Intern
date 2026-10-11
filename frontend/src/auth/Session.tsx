@@ -47,8 +47,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     generation.current++
     try {
       clearCsrfToken()
-      const data = await apiRequest<{ user: User }>('/auth/register/', { method: 'POST', body: details })
-      setSession({ user: checkedUser(data), loading: false, error: null })
+      const data = await apiRequest<{ status: string }>('/auth/register/', { method: 'POST', body: details })
+      if (data.status !== 'pending') throw new ApiError(201, 'invalid_response', 'La réponse du serveur est illisible.')
+      setSession({ user: null, loading: false, error: null })
     } finally { operation.current = false }
   }
   async function logout() {

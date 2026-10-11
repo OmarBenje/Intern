@@ -4,7 +4,7 @@ Date : 30 septembre 2026. Spécification d'implémentation pour le dépôt Inter
 
 ## Objectif et état vérifié
 
-Rendre le parcours candidat utilisable par un frontend : compte, profil, documents privés, découverte d'offres, dossier versionné, validation individuelle, exécution et suivi. Les 34 modèles et migrations 0001–0014 existent ; `check` réussit et les migrations sont appliquées localement. `config/urls.py` expose seulement l'admin et `jobboard/views.py` est vide. Aucun connecteur, service métier ou API candidat n'existe.
+Rendre le parcours candidat utilisable par un frontend : compte, profil, documents privés, découverte d'offres, dossier versionné, validation individuelle, exécution et suivi. Cette spécification décrit les choix initiaux ; l'implémentation actuelle se trouve sous `metier/app`, avec ses routes, services et migrations. Le contrat en vigueur est détaillé dans [API.md](API.md).
 
 La vision du 28 septembre (`VISION.md`) prévaut sur le cadrage du 23 septembre : plusieurs types de contrats, aucune restriction géographique implicite. Le schéma et ses FK composites sont conservés. Les réglages locaux PostgreSQL sur le port 5433 sont conservés.
 

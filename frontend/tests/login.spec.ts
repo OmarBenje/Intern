@@ -118,6 +118,15 @@ test('invalid credentials remain on form with accessible error and no automatic 
   expect(calls).toBe(1)
 })
 
+test('inactive account explains the pending validation', async ({ page }) => {
+  await backend(page)
+  await page.route('**/api/v1/auth/login/', route => route.fulfill({ status: 403, json: { error: { code: 'account_inactive' } } }))
+  await page.goto('/login'); await fillLogin(page)
+  await page.getByRole('button', { name: 'Se connecter', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('validation du superviseur')
+  await expect(page).toHaveURL(/\/login$/)
+})
+
 test('pending login blocks repeated submissions', async ({ page }, info) => {
   await backend(page)
   let calls = 0

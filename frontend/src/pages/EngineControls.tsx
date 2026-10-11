@@ -1,8 +1,9 @@
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Search01Icon, FilterHorizontalIcon, ArrowDown01Icon, Cancel01Icon } from '@hugeicons/core-free-icons'
 import { toast } from 'sonner'
-import { useLayoutEffect, useRef, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useLayoutEffect, useRef, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react'
+import { flushSync } from 'react-dom'
+import { Link, useLocation } from 'react-router'
 import { apiRequest } from '../lib/api'
 import { useApiQuery } from '../lib/useApiQuery'
 import { authError } from '../auth/errors'
@@ -33,6 +34,8 @@ const modeOptions = [{ value: '', label: 'Tous les modes' }, { value: 'remote', 
 const publicationOptions = [{ value: '', label: 'Toutes les dates' }, { value: '1', label: 'Dernières 24 heures' }, { value: '7', label: '7 derniers jours' }, { value: '30', label: '30 derniers jours' }]
 const sortOptions = [{ value: '', label: 'Automatique' }, { value: 'relevance', label: 'Pertinence' }, { value: 'newest', label: 'Plus récentes' }]
 const filterKeys = ['domains', 'subdomains', 'q', 'country_codes', 'domain', 'duration_min', 'duration_max', 'required_language', 'start_from', 'start_to', 'work_mode', 'published_within', 'sort']
+const advancedFilterKeys = ['duration_min', 'duration_max', 'required_language', 'start_from', 'start_to', 'work_mode', 'published_within']
+const advancedFilterCount = (params: URLSearchParams) => advancedFilterKeys.filter(key => params.has(key)).length + (params.get('unknown_policy') === 'exclude' ? 1 : 0)
 type FilterProps = { params: URLSearchParams; update: (params: URLSearchParams) => void; restoreTaxonomyFocus?: () => void }
 
 function FilterSelect({ name, label, options, initial, onChange }: { name: string; label: string; options: SelectOption[]; initial: string; onChange: () => void }) {
@@ -45,18 +48,31 @@ function FilterSelect({ name, label, options, initial, onChange }: { name: strin
 export function EngineFilters(props: FilterProps) {
   // URL changes (including browser Back) restore every draft field together.
   const parameterKey = props.params.toString()
+  const locationKey = useLocation().key
+  const [pending, setPending] = useState<{ from: string; locationKey: string; params: URLSearchParams } | null>(null)
+  useEffect(() => {
+    const clearPending = () => setPending(null)
+    window.addEventListener('popstate', clearPending)
+    return () => window.removeEventListener('popstate', clearPending)
+  }, [])
+  const currentParams = pending?.from === parameterKey && pending.locationKey === locationKey ? pending.params : props.params
+  const currentKey = currentParams.toString()
+  const advancedCount = advancedFilterCount(currentParams)
   const restoreFocus = useRef(false)
-  useLayoutEffect(() => { if (restoreFocus.current) { document.querySelector<HTMLButtonElement>('.offers-filters .job-taxonomy-trigger')?.focus(); restoreFocus.current = false } }, [parameterKey])
-  return <FilterForm key={parameterKey} {...props} restoreTaxonomyFocus={() => { restoreFocus.current = true }} />
+  useLayoutEffect(() => { if (restoreFocus.current) { document.querySelector<HTMLButtonElement>('.offers-filters .job-taxonomy-trigger')?.focus(); restoreFocus.current = false } }, [currentKey])
+  return <FilterState key={advancedCount} formKey={currentKey} {...props} params={currentParams} update={next => { flushSync(() => setPending({ from: parameterKey, locationKey, params: next })); props.update(next) }} restoreTaxonomyFocus={() => { restoreFocus.current = true }} />
 }
-function FilterForm({ params, update, restoreTaxonomyFocus }: FilterProps) {
-  const advancedCount = ['duration_min', 'duration_max', 'required_language', 'start_from', 'start_to', 'work_mode', 'published_within'].filter(key => params.has(key)).length + (params.get('unknown_policy') === 'exclude' ? 1 : 0)
+function FilterState({ formKey, ...props }: FilterProps & { formKey: string }) {
+  const [advancedOpen, setAdvancedOpen] = useState(advancedFilterCount(props.params) > 0)
+  return <FilterForm key={formKey} {...props} advancedOpen={advancedOpen} setAdvancedOpen={setAdvancedOpen} />
+}
+function FilterForm({ params, update, restoreTaxonomyFocus, advancedOpen, setAdvancedOpen }: FilterProps & { advancedOpen: boolean; setAdvancedOpen: Dispatch<SetStateAction<boolean>> }) {
+  const advancedCount = advancedFilterCount(params)
   const taxonomySubmission = useRef(false)
   const form = useRef<HTMLFormElement>(null)
   const [jobs, setJobs] = useState<JobSelection>({ domains: params.get('domains')?.split(',').filter(Boolean) ?? [], subdomains: params.get('subdomains')?.split(',').filter(Boolean) ?? [] })
   const facetParams = new URLSearchParams(Object.fromEntries(Object.entries(engineCriteria(params)).map(([key, value]) => [key, Array.isArray(value) ? value.join(',') : String(value)])))
   const vocabulary = useApiQuery<JobTaxonomy>(`/taxonomy/?${facetParams}`)
-  const [advancedOpen, setAdvancedOpen] = useState(advancedCount > 0)
   const [dirty, setDirty] = useState(false)
   const [dateError, setDateError] = useState('')
   const [durationError, setDurationError] = useState('')

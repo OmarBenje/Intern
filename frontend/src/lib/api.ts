@@ -1,4 +1,8 @@
-const API_ROOT = '/api/v1'
+export const API_ROOT = (import.meta.env.VITE_API_ROOT || '/api/v1').replace(/\/$/, '')
+export function apiUrl(path: `/${string}`) { return `${API_ROOT}${path}` }
+export function apiResourceUrl(path: string): string | null {
+  return path.startsWith('/api/v1/') ? apiUrl(path.slice('/api/v1'.length) as `/${string}`) : null
+}
 let csrfToken: string | null = null
 
 export class ApiError extends Error {
@@ -34,9 +38,9 @@ async function jsonResponse(response: Response): Promise<unknown> {
   return data
 }
 
-async function send(path: string, options: RequestInit, timeoutMs = 20000): Promise<Response> {
+async function send(path: `/${string}`, options: RequestInit, timeoutMs = 20000): Promise<Response> {
   try {
-    return await fetch(`${API_ROOT}${path}`, {
+    return await fetch(apiUrl(path), {
       ...options,
       signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(timeoutMs)]) : AbortSignal.timeout(timeoutMs),
       credentials: 'same-origin', mode: 'same-origin', cache: 'no-store', redirect: 'error',

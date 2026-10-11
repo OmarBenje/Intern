@@ -4,7 +4,7 @@ import { ArrowRight02Icon, Download04Icon, File02Icon, FileSyncIcon, Tick02Icon,
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { ApiError, apiRequest } from '../lib/api'
+import { ApiError, apiRequest, apiUrl } from '../lib/api'
 import { AuthButton, AuthNotice } from '../components/auth/AuthControls'
 import './Resume.css'
 import { useSession } from '../auth/session-context'
@@ -120,7 +120,7 @@ export function Resume({ onboarding = false, embedded = false, onSaved }: { onbo
               <div className="resume-file-icon"><HugeiconsIcon icon={File02Icon} size={32} strokeWidth={1.5} aria-hidden="true" /></div>
               <div className="resume-file-info"><strong>{currentDocument?.id === currentId ? currentDocument.original_name : 'Votre CV actuel'}</strong><span>Document PDF{currentDocument?.id === currentId && currentDocument.byte_size ? ` · ${Math.max(1, Math.round(currentDocument.byte_size / 1024))} Ko` : ''}</span></div>
               <span className="resume-saved-status"><HugeiconsIcon icon={Tick02Icon} size={16} strokeWidth={2} aria-hidden="true" /> Enregistré</span>
-              <div className="resume-file-tools"><a aria-label="Télécharger mon CV actuel" href={`/api/v1/documents/${currentId}/download/`}><HugeiconsIcon icon={Download04Icon} size={20} strokeWidth={1.5} aria-hidden="true" />Télécharger</a><button ref={replaceButton} type="button" onClick={() => { setReplacing(true) }}><HugeiconsIcon icon={FileSyncIcon} size={20} strokeWidth={1.5} aria-hidden="true" />Remplacer</button></div>
+              <div className="resume-file-tools"><a aria-label="Télécharger mon CV actuel" href={apiUrl(`/documents/${currentId}/download/`)}><HugeiconsIcon icon={Download04Icon} size={20} strokeWidth={1.5} aria-hidden="true" />Télécharger</a><button ref={replaceButton} type="button" onClick={() => { setReplacing(true) }}><HugeiconsIcon icon={FileSyncIcon} size={20} strokeWidth={1.5} aria-hidden="true" />Remplacer</button></div>
             </div> : <div data-onboarding-reveal="upload-cv" className={`resume-drop${file ? ' resume-drop--selected' : ''}${dragging ? ' resume-drop--active' : ''}`} onDragOver={event => { event.preventDefault(); if (!pending) setDragging(true) }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); select(Array.from(event.dataTransfer.files)) }}>
               <span className="resume-upload-icon" aria-hidden="true"><HugeiconsIcon className="resume-upload-idle" icon={Upload04Icon} size={32} strokeWidth={1.5} /><HugeiconsIcon className="resume-upload-ready" icon={Tick02Icon} size={32} strokeWidth={1.5} /></span>
               <label htmlFor="resume-file">{file ? file.name : <>Déposez votre PDF ici ou <span className="resume-browse">choisissez un fichier</span></>}</label>

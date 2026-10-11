@@ -21,7 +21,7 @@ La navigation horizontale, les boutons, les formulaires et les tokens de couleur
 
 ## Inscription et contrôle d’accès
 
-`POST /api/v1/auth/register/` accepte `role: "candidate" | "recruiter"`. L’omission conserve `candidate` pour les anciens clients. La réponse de connexion, inscription et `/auth/me/` contient le rôle. Aucun endpoint ne permet de modifier son rôle ou de s’attribuer des permissions administrateur.
+`POST /api/v1/auth/register/` accepte `role: "candidate" | "recruiter"`. L’omission conserve `candidate` pour les anciens clients. L'inscription répond `201 pending` et laisse le compte inactif jusqu'à la validation du superviseur. Après activation, la connexion et `/auth/me/` retournent le rôle. Aucun endpoint ne permet de modifier son rôle ou de s’attribuer des permissions administrateur.
 
 Le compte recruteur possède un `RecruiterProfile`, sans profil candidat. Les principales routes privées candidat lui sont refusées côté serveur. Un candidat reçoit un refus sur les ressources recruteur, sauf l’action explicite de candidature directe. Les lectures publiques du catalogue restent publiques.
 

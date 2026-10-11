@@ -16,18 +16,14 @@ async function fill(page: Page) {
   await page.getByRole('button', { name: 'Continuer' }).click()
   await page.getByLabel('Mot de passe', { exact: true }).fill('A unique passphrase 482!')
 }
-test('email first, back preserves data, final registration sends contract and CSRF', async ({ page }) => {
+test('email first, back preserves data, final registration confirms pending account', async ({ page }, info) => {
   await prepare(page)
   let calls = 0
   await page.route('**/api/v1/auth/register/', async route => {
     calls++
     expect(route.request().headers()['x-csrftoken']).toBe('registration-csrf')
     expect(route.request().postDataJSON()).toEqual({ full_name: 'Ada Lovelace', email: 'ada@example.test', password: 'A unique passphrase 482!', role: 'candidate' })
-    await route.fulfill({ json: { user: { id: 1, username: 'candidate_123', email: 'ada@example.test', onboarding_step: 'resume' }, csrf_token: 'registered-csrf' } })
-  })
-  await page.route('**/api/v1/auth/logout/', async route => {
-    expect(route.request().headers()['x-csrftoken']).toBe('registered-csrf')
-    await route.fulfill({ json: { ok: true } })
+    await route.fulfill({ status: 201, json: { status: 'pending', message: 'Votre compte attend la validation du superviseur.' } })
   })
   await expect(page.getByLabel('Nom complet')).toHaveCount(0)
   await expect(page.getByLabel('Mot de passe', { exact: true })).toHaveCount(0)
@@ -38,10 +34,12 @@ test('email first, back preserves data, final registration sends contract and CS
   await page.getByRole('button', { name: 'Continuer' }).click()
   await expect(page.getByLabel('Mot de passe', { exact: true })).toHaveValue('A unique passphrase 482!')
   await page.getByRole('button', { name: 'Créer mon compte' }).click()
-  await expect(page).toHaveURL(/\/onboarding\/resume$/)
-  await page.getByRole('button', { name: 'Se déconnecter' }).click()
-  await page.getByRole('link', { name: 'Créer un compte' }).click()
   await expect(page).toHaveURL(/\/register$/)
+  await expect(page.getByRole('heading', { name: 'Votre demande est enregistrée.' })).toBeVisible()
+  await expect(page.getByRole('status')).toContainText('validation du superviseur')
+  await page.screenshot({ path: info.outputPath('registration-pending.png'), fullPage: true })
+  await page.getByRole('link', { name: 'Revenir à la connexion' }).click()
+  await expect(page).toHaveURL(/\/login$/)
 })
 test('email error returns to correct step with associated error and focus', async ({ page }) => {
   await prepare(page)

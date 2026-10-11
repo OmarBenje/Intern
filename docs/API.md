@@ -12,7 +12,7 @@ Les routes et objectifs figurent dans [BACKEND_SPEC.md](BACKEND_SPEC.md). Exempl
 {"username":"candidate","email":"candidate@example.com","password":"a-long-unique-password","full_name":"Ada Example"}
 ```
 
-`auth/register/` POST. Connexion : `auth/login/` POST `{username,password}`. Déconnexion : POST `{}`. Identité : `auth/me/` GET. Mot de passe : `auth/password/` POST `{old_password,new_password}`. Reset : POST `{email}` sur `auth/password-reset/` puis `{uid,token,new_password}` sur `auth/password-reset-confirm/`. Le lien email cible la page frontend `/reset-password?uid=...&token=...` ; celle-ci devra appeler l'API de confirmation. Un jeton utilisé devient invalide.
+`auth/register/` POST répond `201` avec `status: pending` et crée un compte inactif, sans ouvrir de session. Le superviseur doit l'activer avant la connexion ; une tentative avec le bon mot de passe avant activation répond `403 account_inactive`. Connexion : `auth/login/` POST `{username,password}`. Déconnexion : POST `{}`. Identité : `auth/me/` GET. Mot de passe : `auth/password/` POST `{old_password,new_password}`. Reset : POST `{email}` sur `auth/password-reset/` puis `{uid,token,new_password}` sur `auth/password-reset-confirm/`. Le lien email cible la page frontend `/reset-password?uid=...&token=...` ; celle-ci appelle l'API de confirmation. Un jeton utilisé devient invalide.
 
 ## Profil et recherche
 
