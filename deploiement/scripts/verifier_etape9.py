@@ -132,7 +132,8 @@ def main():
         if current["nic2"] != expected_nat:
             raise RuntimeError("NAT temporaire encore présent.")
         expected_snapshot = "avant " + name.removeprefix("vm-")
-        if current.get("CurrentSnapshotName") != expected_snapshot:
+        snapshots = vbox("snapshot", name, "list", "--machinereadable")
+        if f'="{expected_snapshot}"' not in snapshots:
             raise RuntimeError(f"Snapshot avant déploiement absent : {name}")
         forwarding = [v for k, v in current.items() if k.startswith("Forwarding")]
         if forwarding != (["http,tcp,127.0.0.1,8080,,80"] if name == "vm-proxy" else []):

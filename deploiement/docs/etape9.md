@@ -77,4 +77,5 @@ stockés hors du dépôt et transférés dans un fichier invité protégé.
 
 L'installation et son fonctionnement après redémarrage sont vérifiés.
 La matrice complète des accès autorisés et interdits, les mesures répétées
-avec médiane et les trois exports OVA restent à réaliser à l'étape 10.
+avec médiane et les trois exports OVA sont consignés dans le
+[rapport de l'étape 10](etape10.md).

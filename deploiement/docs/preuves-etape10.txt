@@ -1,0 +1,65 @@
+Étape 10 — matrice réelle et écoutes des services
+
+{"source": "hote", "target": "proxy", "address": "127.0.0.1", "port": 8080, "expected": true, "reachable": true, "elapsed_s": 0.0028414670005076914}
+{"source": "hote", "target": "metier", "address": "10.10.10.20", "port": 8000, "expected": false, "reachable": false, "elapsed_s": 2.002456395999616, "error": "timed out"}
+{"source": "hote", "target": "donnees", "address": "10.10.10.30", "port": 5432, "expected": false, "reachable": false, "elapsed_s": 2.0019550600000002, "error": "timed out"}
+{"source": "vm-proxy", "target": "metier", "address": "10.10.10.20", "port": 8000, "expected": true, "reachable": true, "elapsed_s": 0.014883729999997541}
+{"source": "vm-proxy", "target": "donnees", "address": "10.10.10.30", "port": 5432, "expected": false, "reachable": false, "elapsed_s": 2.0040768219999983, "error": "timed out"}
+{"source": "vm-metier", "target": "proxy", "address": "10.10.10.10", "port": 80, "expected": true, "reachable": true, "elapsed_s": 0.0042667190000003075}
+{"source": "vm-metier", "target": "donnees", "address": "10.10.10.30", "port": 5432, "expected": true, "reachable": true, "elapsed_s": 0.002909585999997688}
+{"source": "vm-donnees", "target": "proxy", "address": "10.10.10.10", "port": 80, "expected": true, "reachable": true, "elapsed_s": 0.01346966299999508}
+{"source": "vm-donnees", "target": "metier", "address": "10.10.10.20", "port": 8000, "expected": true, "reachable": true, "elapsed_s": 0.0033023890000052347}
+
+vm-donnees $ sudo ss -tlnp
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                                               
+LISTEN 0      4096      127.0.0.54:53        0.0.0.0:*    users:(("systemd-resolve",pid=526,fd=17))            
+LISTEN 0      4096         0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=837,fd=3),("systemd",pid=1,fd=93))
+LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*    users:(("systemd-resolve",pid=526,fd=15))            
+LISTEN 0      200      10.10.10.30:5432      0.0.0.0:*    users:(("postgres",pid=709,fd=6))                    
+LISTEN 0      4096            [::]:22           [::]:*    users:(("sshd",pid=837,fd=4),("systemd",pid=1,fd=94))
+
+vm-donnees $ ip route
+10.10.10.0/24 dev enp0s3 proto kernel scope link src 10.10.10.30
+
+vm-donnees $ systemctl is-active postgresql@16-main nftables
+active
+active
+
+vm-metier $ sudo ss -tlnp
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                                                                               
+LISTEN 0      4096         0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=808,fd=3),("systemd",pid=1,fd=93))                                
+LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*    users:(("systemd-resolve",pid=508,fd=15))                                            
+LISTEN 0      4096      127.0.0.54:53        0.0.0.0:*    users:(("systemd-resolve",pid=508,fd=17))                                            
+LISTEN 0      2048     10.10.10.20:8000      0.0.0.0:*    users:(("gunicorn",pid=770,fd=5),("gunicorn",pid=769,fd=5),("gunicorn",pid=694,fd=5))
+LISTEN 0      4096            [::]:22           [::]:*    users:(("sshd",pid=808,fd=4),("systemd",pid=1,fd=94))
+
+vm-metier $ ip route
+10.10.10.0/24 dev enp0s3 proto kernel scope link src 10.10.10.20
+
+vm-metier $ systemctl is-active intern
+active
+
+vm-proxy $ sudo ss -tlnp
+State  Recv-Q Send-Q Local Address:Port Peer Address:PortProcess                                               
+LISTEN 0      511        10.0.3.15:80        0.0.0.0:*    users:(("nginx",pid=673,fd=6),("nginx",pid=671,fd=6))
+LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*    users:(("systemd-resolve",pid=481,fd=15))            
+LISTEN 0      4096      127.0.0.54:53        0.0.0.0:*    users:(("systemd-resolve",pid=481,fd=17))            
+LISTEN 0      511      10.10.10.10:80        0.0.0.0:*    users:(("nginx",pid=673,fd=5),("nginx",pid=671,fd=5))
+LISTEN 0      4096         0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=667,fd=3),("systemd",pid=1,fd=93))
+LISTEN 0      4096            [::]:22           [::]:*    users:(("sshd",pid=667,fd=4),("systemd",pid=1,fd=94))
+
+vm-proxy $ ip route
+default via 10.0.3.2 dev enp0s8 proto dhcp src 10.0.3.15 metric 100 
+10.0.3.0/24 dev enp0s8 proto kernel scope link src 10.0.3.15 metric 100 
+10.0.3.2 dev enp0s8 proto dhcp scope link src 10.0.3.15 metric 100 
+10.0.3.3 dev enp0s8 proto dhcp scope link src 10.0.3.15 metric 100 
+10.10.10.0/24 dev enp0s3 proto kernel scope link src 10.10.10.10
+
+vm-proxy $ systemctl is-active nginx
+active
+
+vm-metier $ psql (environnement privé) SELECT 1
+ connexion_base 
+----------------
+              1
+(1 row)

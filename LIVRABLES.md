@@ -17,6 +17,7 @@ nécessaires à sa revue.
 | 7 — Préparation des VM | Trois machines nommées et dimensionnées, snapshots initiaux et capture vérifiés | [Capture VirtualBox](deploiement/docs/virtualbox-machines.png), [Procédure CLI](deploiement/scripts/PROCEDURE.md), [rapport de vérification](deploiement/docs/etape7.md), [preuves CLI](deploiement/docs/preuves-etape7.txt), [identités et snapshots](deploiement/docs/identites-etape7.json) |
 | 8 — Réseau et adressage | Réseau interne configuré et vérifié sur les trois VM ; six pings réussis | [Plan et procédure](deploiement/reseau/README.md), [Netplan proxy](deploiement/reseau/vm-proxy.yaml), [Netplan métier](deploiement/reseau/vm-metier.yaml), [Netplan données](deploiement/reseau/vm-donnees.yaml), [rapport](deploiement/docs/etape8.md), [sorties de vérification](deploiement/docs/preuves-etape8.txt) |
 | 9 — Déploiement des couches | Services installés et vérifiés après redémarrage ; huit contrôles navigateur réussis | [Configurations et procédure](deploiement/DEPLOIEMENT.md), [rapport](deploiement/docs/etape9.md), [preuves VM](deploiement/docs/preuves-etape9.txt), [recette navigateur](deploiement/docs/recette-etape9.txt), [capture réelle](deploiement/docs/etape9-tableau-de-bord.png) |
+| 10 — Vérification et mesures | Neuf liaisons conformes, trois séries mesurées et trois OVA créés et contrôlés | [Procédure](deploiement/VERIFICATION.md), [rapport](deploiement/docs/etape10.md), [mesures](deploiement/docs/mesures.md), [preuves réseau](deploiement/docs/preuves-etape10.txt), [manifeste des OVA](deploiement/docs/exports-etape10.json) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -274,9 +275,9 @@ et [données](deploiement/reseau/vm-donnees.yaml),
 [sorties des commandes](deploiement/docs/preuves-etape8.txt) et
 [rapport](deploiement/docs/etape8.md).
 
-Les paquets de l'étape suivante seront installés avec une ouverture NAT
-ponctuelle, retirée avant les vérifications. La réponse HTTP et l'isolation des
-services applicatifs restent à vérifier après leur déploiement.
+L'installation des paquets avec une ouverture NAT ponctuelle puis son retrait
+est décrite à l'étape 9. La réponse HTTP et l'isolation des services applicatifs
+sont vérifiées aux étapes 9 et 10.
 
 ## Étape 9 — Déploiement des trois couches
 
@@ -303,4 +304,31 @@ Livrables : [rapport](deploiement/docs/etape9.md),
 [capture de connexion](deploiement/docs/etape9-connexion.png).
 
 La matrice complète de joignabilité, les mesures répétées et les exports OVA
-restent à réaliser à l'étape 10.
+figurent à l'étape 10 ci-dessous.
+
+## Étape 10 — Vérification, mesures et exports
+
+Les **neuf liaisons** de la matrice sont conformes. Les trois accès interdits
+échouent réellement : hôte vers métier, hôte vers base, proxy vers base.
+La connexion SQL depuis le métier réussit. Les ports d'écoute et les routes
+sont relevés dans les [preuves réseau](deploiement/docs/preuves-etape10.txt).
+
+Les mesures comportent **trois séries complètes**, avec dix consultations du
+catalogue par série. Le [tableau des mesures](deploiement/docs/mesures.md)
+présente les médianes, les séries et la configuration exacte ; les
+[valeurs brutes](deploiement/docs/mesures-etape10.json) permettent de refaire
+les calculs. Le proxy utilise la paravirtualisation `minimal`, après un blocage
+du noyau sur une tentative avec `default/KVM`, documenté dans le rapport.
+
+Les trois archives **`vm-proxy.ova`, `vm-metier.ova`, `vm-donnees.ova`** et
+`SHA256SUMS` sont créées sous **`$VM_WORK/exports-etape10`**, hors du dépôt.
+Les manifestes internes et la lecture de chaque archive par VirtualBox ont
+été vérifiés. Les VM originales sont éteintes après export. Les OVA représentent
+l'état installé ; les snapshots restent conservés sur les machines originales.
+
+Livrables : [rapport complet](deploiement/docs/etape10.md),
+[matrice brute](deploiement/docs/joignabilite-etape10.json),
+[empreintes et tailles des OVA](deploiement/docs/exports-etape10.json),
+[sorties des exports](deploiement/docs/preuves-exports-etape10.txt) et
+[procédure de vérification et de réimportation](deploiement/VERIFICATION.md).
+La [procédure générale](deploiement/PROCEDURE.md) relie les étapes 7 à 10.

@@ -1,0 +1,392 @@
+{
+  "finished_utc": "2026-10-11T22:57:23.818239+00:00",
+  "virtualbox": "7.2.8_RPMFUSIONr173730",
+  "host": {
+    "system": "Linux",
+    "release": "6.19.14-108.fc42.x86_64",
+    "distribution": "Fedora Linux 42 (KDE Plasma Desktop Edition)",
+    "cpu": "12th Gen Intel(R) Core(TM) i5-1235U",
+    "logical_cpus": 12,
+    "memory_bytes": 16424869888
+  },
+  "configuration": {
+    "vm-donnees": {
+      "memory": "2048",
+      "cpus": "2",
+      "nic1": "intnet",
+      "nic2": "none",
+      "intnet1": "intnet-app",
+      "paravirtprovider": "default",
+      "effparavirtprovider": "kvm"
+    },
+    "vm-metier": {
+      "memory": "2048",
+      "cpus": "2",
+      "nic1": "intnet",
+      "nic2": "none",
+      "intnet1": "intnet-app",
+      "paravirtprovider": "default",
+      "effparavirtprovider": "kvm"
+    },
+    "vm-proxy": {
+      "memory": "1024",
+      "cpus": "1",
+      "nic1": "intnet",
+      "nic2": "nat",
+      "intnet1": "intnet-app",
+      "paravirtprovider": "minimal",
+      "effparavirtprovider": "minimal"
+    }
+  },
+  "protocol": {
+    "trials": 3,
+    "idle_s": 30,
+    "requests_per_trial": 10,
+    "url": "http://127.0.0.1:8080/api/v1/offers/",
+    "timeout_s": 5,
+    "startup_poll_s": 0.5,
+    "memory": "Somme VmRSS des trois processus VBoxHeadless/VirtualBoxVM, hors VBoxSVC.",
+    "disk": "Fichiers VDI/VMDK/VHD des trois clones, snapshots inclus, modèle et OVA exclus.",
+    "startup": "Avant premier startvm jusqu’au premier HTTP 200 avec catalogue non vide ; démarrages séquentiels ; cache hôte conservé.",
+    "latency": "Dix GET séquentiels, client urllib sans session ni cache, lecture complète JSON ; médiane par série puis médiane des trois séries."
+  },
+  "trials": [
+    {
+      "trial": 1,
+      "startup_s": 21.09548314299991,
+      "memory": {
+        "vm-donnees": {
+          "rss_bytes": 516583424
+        },
+        "vm-metier": {
+          "rss_bytes": 593317888
+        },
+        "vm-proxy": {
+          "rss_bytes": 451448832
+        }
+      },
+      "rss_bytes": 1561350144,
+      "disk": {
+        "files": [
+          {
+            "file": "vm-donnees/Snapshots/{0854b520-f7cc-4e66-8b58-e17a6ba284a3}.vdi",
+            "file_bytes": 2097152,
+            "allocated_bytes": 86016
+          },
+          {
+            "file": "vm-donnees/Snapshots/{72d6f1fd-aa7d-412d-8f92-ff31e9b9e2d2}.vdi",
+            "file_bytes": 633339904,
+            "allocated_bytes": 631332864
+          },
+          {
+            "file": "vm-donnees/Snapshots/{a46c523d-c37d-4345-8e8b-df8a786ec86e}.vdi",
+            "file_bytes": 136314880,
+            "allocated_bytes": 134307840
+          },
+          {
+            "file": "vm-donnees/Snapshots/{dd5d1b65-8a33-47d2-b7c5-d0aaea666e6e}.vdi",
+            "file_bytes": 77594624,
+            "allocated_bytes": 75587584
+          },
+          {
+            "file": "vm-donnees/vm-donnees-disk1.vdi",
+            "file_bytes": 2882535424,
+            "allocated_bytes": 2880528384
+          },
+          {
+            "file": "vm-metier/Snapshots/{28a565a1-77e0-4ab3-9b10-6ca2235cab0c}.vdi",
+            "file_bytes": 1237319680,
+            "allocated_bytes": 1235312640
+          },
+          {
+            "file": "vm-metier/Snapshots/{2e10798d-cecb-4f65-bf2d-5aa8af579d35}.vdi",
+            "file_bytes": 137363456,
+            "allocated_bytes": 135356416
+          },
+          {
+            "file": "vm-metier/Snapshots/{bd4870c6-5833-46db-82b1-8d46f6b1b927}.vdi",
+            "file_bytes": 2097152,
+            "allocated_bytes": 86016
+          },
+          {
+            "file": "vm-metier/Snapshots/{c8e9bfaa-d606-4fa3-895b-1cab77606fac}.vdi",
+            "file_bytes": 96468992,
+            "allocated_bytes": 94461952
+          },
+          {
+            "file": "vm-metier/vm-metier-disk1.vdi",
+            "file_bytes": 2882535424,
+            "allocated_bytes": 2880528384
+          },
+          {
+            "file": "vm-proxy/Snapshots/{4fd44c3b-b92f-4712-a03f-04d74d9ff6c1}.vdi",
+            "file_bytes": 131072000,
+            "allocated_bytes": 129064960
+          },
+          {
+            "file": "vm-proxy/Snapshots/{5812a20c-cbd0-4c65-9be6-5aa6f5ac693a}.vdi",
+            "file_bytes": 93323264,
+            "allocated_bytes": 91316224
+          },
+          {
+            "file": "vm-proxy/Snapshots/{b64832c2-6266-4772-9f8f-f354af5a9690}.vdi",
+            "file_bytes": 2097152,
+            "allocated_bytes": 86016
+          },
+          {
+            "file": "vm-proxy/Snapshots/{bc1cc636-8048-4371-b086-dd4bc810a69d}.vdi",
+            "file_bytes": 305135616,
+            "allocated_bytes": 303128576
+          },
+          {
+            "file": "vm-proxy/vm-proxy-disk1.vdi",
+            "file_bytes": 2882535424,
+            "allocated_bytes": 2880528384
+          }
+        ],
+        "file_bytes": 11501830144,
+        "allocated_bytes": 11471712256
+      },
+      "latency_ms": [
+        56.65650300034031,
+        82.45172400074807,
+        57.17867099974683,
+        54.65106699921307,
+        65.4821259995515,
+        155.8099019994188,
+        144.28516899988608,
+        68.07030600066355,
+        58.59331900046527,
+        59.379453000474314
+      ],
+      "latency_median_ms": 62.43078950001291
+    },
+    {
+      "trial": 2,
+      "startup_s": 20.47319529000015,
+      "memory": {
+        "vm-donnees": {
+          "rss_bytes": 505724928
+        },
+        "vm-metier": {
+          "rss_bytes": 612335616
+        },
+        "vm-proxy": {
+          "rss_bytes": 440123392
+        }
+      },
+      "rss_bytes": 1558183936,
+      "disk": {
+        "files": [
+          {
+            "file": "vm-donnees/Snapshots/{0854b520-f7cc-4e66-8b58-e17a6ba284a3}.vdi",
+            "file_bytes": 2097152,
+            "allocated_bytes": 86016
+          },
+          {
+            "file": "vm-donnees/Snapshots/{72d6f1fd-aa7d-412d-8f92-ff31e9b9e2d2}.vdi",
+            "file_bytes": 633339904,
+            "allocated_bytes": 631332864
+          },
+          {
+            "file": "vm-donnees/Snapshots/{a46c523d-c37d-4345-8e8b-df8a786ec86e}.vdi",
+            "file_bytes": 163577856,
+            "allocated_bytes": 161570816
+          },
+          {
+            "file": "vm-donnees/Snapshots/{dd5d1b65-8a33-47d2-b7c5-d0aaea666e6e}.vdi",
+            "file_bytes": 77594624,
+            "allocated_bytes": 75587584
+          },
+          {
+            "file": "vm-donnees/vm-donnees-disk1.vdi",
+            "file_bytes": 2882535424,
+            "allocated_bytes": 2880528384
+          },
+          {
+            "file": "vm-metier/Snapshots/{28a565a1-77e0-4ab3-9b10-6ca2235cab0c}.vdi",
+            "file_bytes": 1237319680,
+            "allocated_bytes": 1235312640
+          },
+          {
+            "file": "vm-metier/Snapshots/{2e10798d-cecb-4f65-bf2d-5aa8af579d35}.vdi",
+            "file_bytes": 167772160,
+            "allocated_bytes": 165765120
+          },
+          {
+            "file": "vm-metier/Snapshots/{bd4870c6-5833-46db-82b1-8d46f6b1b927}.vdi",
+            "file_bytes": 2097152,
+            "allocated_bytes": 86016
+          },
+          {
+            "file": "vm-metier/Snapshots/{c8e9bfaa-d606-4fa3-895b-1cab77606fac}.vdi",
+            "file_bytes": 96468992,
+            "allocated_bytes": 94461952
+          },
+          {
+            "file": "vm-metier/vm-metier-disk1.vdi",
+            "file_bytes": 2882535424,
+            "allocated_bytes": 2880528384
+          },
+          {
+            "file": "vm-proxy/Snapshots/{4fd44c3b-b92f-4712-a03f-04d74d9ff6c1}.vdi",
+            "file_bytes": 149946368,
+            "allocated_bytes": 147939328
+          },
+          {
+            "file": "vm-proxy/Snapshots/{5812a20c-cbd0-4c65-9be6-5aa6f5ac693a}.vdi",
+            "file_bytes": 93323264,
+            "allocated_bytes": 91316224
+          },
+          {
+            "file": "vm-proxy/Snapshots/{b64832c2-6266-4772-9f8f-f354af5a9690}.vdi",
+            "file_bytes": 2097152,
+            "allocated_bytes": 86016
+          },
+          {
+            "file": "vm-proxy/Snapshots/{bc1cc636-8048-4371-b086-dd4bc810a69d}.vdi",
+            "file_bytes": 305135616,
+            "allocated_bytes": 303128576
+          },
+          {
+            "file": "vm-proxy/vm-proxy-disk1.vdi",
+            "file_bytes": 2882535424,
+            "allocated_bytes": 2880528384
+          }
+        ],
+        "file_bytes": 11578376192,
+        "allocated_bytes": 11548258304
+      },
+      "latency_ms": [
+        120.95082299947535,
+        83.99573199949373,
+        76.01181599966367,
+        79.2014359994937,
+        484.7241600000416,
+        88.44434000002366,
+        127.11533400033659,
+        113.9899809995768,
+        119.44295899957069,
+        92.97002899984363
+      ],
+      "latency_median_ms": 103.48000499971022
+    },
+    {
+      "trial": 3,
+      "startup_s": 20.3721882560003,
+      "memory": {
+        "vm-donnees": {
+          "rss_bytes": 508346368
+        },
+        "vm-metier": {
+          "rss_bytes": 616792064
+        },
+        "vm-proxy": {
+          "rss_bytes": 443326464
+        }
+      },
+      "rss_bytes": 1568464896,
+      "disk": {
+        "files": [
+          {
+            "file": "vm-donnees/Snapshots/{0854b520-f7cc-4e66-8b58-e17a6ba284a3}.vdi",
+            "file_bytes": 2097152,
+            "allocated_bytes": 86016
+          },
+          {
+            "file": "vm-donnees/Snapshots/{72d6f1fd-aa7d-412d-8f92-ff31e9b9e2d2}.vdi",
+            "file_bytes": 633339904,
+            "allocated_bytes": 631332864
+          },
+          {
+            "file": "vm-donnees/Snapshots/{a46c523d-c37d-4345-8e8b-df8a786ec86e}.vdi",
+            "file_bytes": 180355072,
+            "allocated_bytes": 178348032
+          },
+          {
+            "file": "vm-donnees/Snapshots/{dd5d1b65-8a33-47d2-b7c5-d0aaea666e6e}.vdi",
+            "file_bytes": 77594624,
+            "allocated_bytes": 75587584
+          },
+          {
+            "file": "vm-donnees/vm-donnees-disk1.vdi",
+            "file_bytes": 2882535424,
+            "allocated_bytes": 2880528384
+          },
+          {
+            "file": "vm-metier/Snapshots/{28a565a1-77e0-4ab3-9b10-6ca2235cab0c}.vdi",
+            "file_bytes": 1237319680,
+            "allocated_bytes": 1235312640
+          },
+          {
+            "file": "vm-metier/Snapshots/{2e10798d-cecb-4f65-bf2d-5aa8af579d35}.vdi",
+            "file_bytes": 178257920,
+            "allocated_bytes": 176250880
+          },
+          {
+            "file": "vm-metier/Snapshots/{bd4870c6-5833-46db-82b1-8d46f6b1b927}.vdi",
+            "file_bytes": 2097152,
+            "allocated_bytes": 86016
+          },
+          {
+            "file": "vm-metier/Snapshots/{c8e9bfaa-d606-4fa3-895b-1cab77606fac}.vdi",
+            "file_bytes": 96468992,
+            "allocated_bytes": 94461952
+          },
+          {
+            "file": "vm-metier/vm-metier-disk1.vdi",
+            "file_bytes": 2882535424,
+            "allocated_bytes": 2880528384
+          },
+          {
+            "file": "vm-proxy/Snapshots/{4fd44c3b-b92f-4712-a03f-04d74d9ff6c1}.vdi",
+            "file_bytes": 160432128,
+            "allocated_bytes": 158425088
+          },
+          {
+            "file": "vm-proxy/Snapshots/{5812a20c-cbd0-4c65-9be6-5aa6f5ac693a}.vdi",
+            "file_bytes": 93323264,
+            "allocated_bytes": 91316224
+          },
+          {
+            "file": "vm-proxy/Snapshots/{b64832c2-6266-4772-9f8f-f354af5a9690}.vdi",
+            "file_bytes": 2097152,
+            "allocated_bytes": 86016
+          },
+          {
+            "file": "vm-proxy/Snapshots/{bc1cc636-8048-4371-b086-dd4bc810a69d}.vdi",
+            "file_bytes": 305135616,
+            "allocated_bytes": 303128576
+          },
+          {
+            "file": "vm-proxy/vm-proxy-disk1.vdi",
+            "file_bytes": 2882535424,
+            "allocated_bytes": 2880528384
+          }
+        ],
+        "file_bytes": 11616124928,
+        "allocated_bytes": 11586007040
+      },
+      "latency_ms": [
+        72.91252100003476,
+        316.8150310002602,
+        56.948669999655976,
+        60.136945000522246,
+        57.522544000676135,
+        67.93274800020299,
+        57.873171999744955,
+        61.65904400040745,
+        54.20984400007001,
+        64.53882099958719
+      ],
+      "latency_median_ms": 60.89799450046485
+    }
+  ],
+  "medians": {
+    "startup_s": 20.47319529000015,
+    "rss_bytes": 1561350144,
+    "disk_file_bytes": 11578376192,
+    "disk_allocated_bytes": 11548258304,
+    "latency_ms": 62.43078950001291
+  }
+}

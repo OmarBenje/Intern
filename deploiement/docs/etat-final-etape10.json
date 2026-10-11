@@ -1,0 +1,43 @@
+{
+  "vm-proxy": {
+    "VMState": "poweroff",
+    "cpus": "1",
+    "memory": "1024",
+    "nic1": "intnet",
+    "nic2": "nat",
+    "intnet1": "intnet-app",
+    "paravirtprovider": "minimal",
+    "CurrentSnapshotName": "avant verification",
+    "CurrentSnapshotUUID": "638ec67e-1029-44f5-9370-a20d98d50979",
+    "redirections": [
+      "http,tcp,127.0.0.1,8080,,80"
+    ],
+    "ova_configuration_verified": true
+  },
+  "vm-metier": {
+    "VMState": "poweroff",
+    "cpus": "2",
+    "memory": "2048",
+    "nic1": "intnet",
+    "nic2": "none",
+    "intnet1": "intnet-app",
+    "paravirtprovider": "default",
+    "CurrentSnapshotName": "avant verification",
+    "CurrentSnapshotUUID": "4530eef4-73e3-4da9-8454-c62ffb300d3b",
+    "redirections": [],
+    "ova_configuration_verified": true
+  },
+  "vm-donnees": {
+    "VMState": "poweroff",
+    "cpus": "2",
+    "memory": "2048",
+    "nic1": "intnet",
+    "nic2": "none",
+    "intnet1": "intnet-app",
+    "paravirtprovider": "default",
+    "CurrentSnapshotName": "avant verification",
+    "CurrentSnapshotUUID": "8ed8feed-d47c-4101-ad64-4c470c72a201",
+    "redirections": [],
+    "ova_configuration_verified": true
+  }
+}

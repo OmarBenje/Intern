@@ -1,0 +1,23 @@
+Tentative initiale de mesure — proxy en paravirtualisation default/KVM
+
+Les deux VM privées ont démarré. La console du proxy est restée bloquée
+pendant le démarrage du noyau, avant l'ouverture des services SSH et Nginx.
+La capture etape10-demarrage-bloque.png montre notamment les horodatages
+anormaux affichés par le noyau. Les requêtes HTTP ont expiré.
+
+Résultat du script :
+RuntimeError: Catalogue indisponible après 240 secondes.
+
+Aucune série complète ni médiane n'a été produite pour cette configuration.
+L'accès SSH temporaire a été retiré par le bloc finally du vérificateur.
+
+Récupération du proxy bloqué, puis réglage testé :
+VBoxManage controlvm vm-proxy poweroff
+VBoxManage modifyvm vm-proxy --paravirtprovider minimal
+VBoxManage startvm vm-proxy --type headless
+
+L'arrêt forcé concernait le proxy bloqué dans le noyau, avant les services.
+Les VM métier et données n'ont pas subi d'arrêt forcé.
+Le code applicatif, les ressources RAM/vCPU et les réglages réseau sont inchangés.
+La cause exacte du blocage n'a pas été établie. La nouvelle campagne conserve
+le réglage minimal sur le proxy pour toutes ses séries et pour l'export OVA.

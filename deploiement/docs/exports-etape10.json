@@ -1,0 +1,91 @@
+{
+  "finished_utc": "2026-10-11T23:05:22.611085+00:00",
+  "directory": "exports-etape10 (hors dépôt, dans le répertoire local des VM)",
+  "artifacts": [
+    {
+      "file": "vm-donnees.ova",
+      "bytes": 1114041856,
+      "sha256": "d9cc76d24ca4f8a2c6302158990ff75bf3704583a311b1b5b25390b5295462ae",
+      "dry_run": "passed",
+      "members": [
+        "vm-donnees.ovf",
+        "vm-donnees-disk001.vmdk",
+        "vm-donnees.mf"
+      ],
+      "manifest_verified": [
+        "vm-donnees.ovf",
+        "vm-donnees-disk001.vmdk"
+      ],
+      "adapters": [
+        {
+          "slot": "0",
+          "enabled": "true",
+          "MACAddress": "080027226262",
+          "type": "82540EM"
+        },
+        {
+          "slot": "1",
+          "MACAddress": "080027C5DBCB",
+          "type": "82540EM"
+        }
+      ]
+    },
+    {
+      "file": "vm-metier.ova",
+      "bytes": 1249764352,
+      "sha256": "ec6feba0728b6864541ff9a3059d61ca01631af84b93ca5022cf2fc3b34593c9",
+      "dry_run": "passed",
+      "members": [
+        "vm-metier.ovf",
+        "vm-metier-disk001.vmdk",
+        "vm-metier.mf"
+      ],
+      "manifest_verified": [
+        "vm-metier-disk001.vmdk",
+        "vm-metier.ovf"
+      ],
+      "adapters": [
+        {
+          "slot": "0",
+          "enabled": "true",
+          "MACAddress": "08002795A364",
+          "type": "82540EM"
+        },
+        {
+          "slot": "1",
+          "MACAddress": "080027936FF0",
+          "type": "82540EM"
+        }
+      ]
+    },
+    {
+      "file": "vm-proxy.ova",
+      "bytes": 996657152,
+      "sha256": "12a1c85a7ce45ca390f0ffeab8a373829df3173e7f28b08bcd5fc3acc4982707",
+      "dry_run": "passed",
+      "members": [
+        "vm-proxy.ovf",
+        "vm-proxy-disk001.vmdk",
+        "vm-proxy.mf"
+      ],
+      "manifest_verified": [
+        "vm-proxy-disk001.vmdk",
+        "vm-proxy.ovf"
+      ],
+      "adapters": [
+        {
+          "slot": "0",
+          "enabled": "true",
+          "MACAddress": "08002786D526",
+          "type": "82540EM"
+        },
+        {
+          "slot": "1",
+          "enabled": "true",
+          "MACAddress": "080027101CC4",
+          "type": "82540EM"
+        }
+      ]
+    }
+  ]
+}

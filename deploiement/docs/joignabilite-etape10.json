@@ -1,0 +1,86 @@
+[
+  {
+    "source": "hote",
+    "target": "proxy",
+    "address": "127.0.0.1",
+    "port": 8080,
+    "expected": true,
+    "reachable": true,
+    "elapsed_s": 0.0028414670005076914
+  },
+  {
+    "source": "hote",
+    "target": "metier",
+    "address": "10.10.10.20",
+    "port": 8000,
+    "expected": false,
+    "reachable": false,
+    "elapsed_s": 2.002456395999616,
+    "error": "timed out"
+  },
+  {
+    "source": "hote",
+    "target": "donnees",
+    "address": "10.10.10.30",
+    "port": 5432,
+    "expected": false,
+    "reachable": false,
+    "elapsed_s": 2.0019550600000002,
+    "error": "timed out"
+  },
+  {
+    "source": "vm-proxy",
+    "target": "metier",
+    "address": "10.10.10.20",
+    "port": 8000,
+    "expected": true,
+    "reachable": true,
+    "elapsed_s": 0.014883729999997541
+  },
+  {
+    "source": "vm-proxy",
+    "target": "donnees",
+    "address": "10.10.10.30",
+    "port": 5432,
+    "expected": false,
+    "reachable": false,
+    "elapsed_s": 2.0040768219999983,
+    "error": "timed out"
+  },
+  {
+    "source": "vm-metier",
+    "target": "proxy",
+    "address": "10.10.10.10",
+    "port": 80,
+    "expected": true,
+    "reachable": true,
+    "elapsed_s": 0.0042667190000003075
+  },
+  {
+    "source": "vm-metier",
+    "target": "donnees",
+    "address": "10.10.10.30",
+    "port": 5432,
+    "expected": true,
+    "reachable": true,
+    "elapsed_s": 0.002909585999997688
+  },
+  {
+    "source": "vm-donnees",
+    "target": "proxy",
+    "address": "10.10.10.10",
+    "port": 80,
+    "expected": true,
+    "reachable": true,
+    "elapsed_s": 0.01346966299999508
+  },
+  {
+    "source": "vm-donnees",
+    "target": "metier",
+    "address": "10.10.10.20",
+    "port": 8000,
+    "expected": true,
+    "reachable": true,
+    "elapsed_s": 0.0033023890000052347
+  }
+]
