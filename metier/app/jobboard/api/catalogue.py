@@ -155,25 +155,26 @@ def serialize_offer(offer, detail=False, serializer=None):
     return data
 
 
-def filtered_offers(request, *, apply_search=True):
+def filtered_offers(request, *, apply_search=True, params=None):
+    params = request.query_params if params is None else params
     queryset = open_offers()
     for field, choices in [
         ("contract_type", ContractType.values),
         ("work_mode", WorkMode.values),
     ]:
-        value = request.GET.get(field)
+        value = params.get(field)
         if value:
             if value not in choices:
                 raise APIError("invalid_filter", f"Invalid {field}.")
             if field == "contract_type":
                 queryset = queryset.filter(**{field: value})
     for param, field in [("role", "role_id"), ("location", "locations__id"), ("company", "company_id")]:
-        value = request.GET.get(param)
+        value = params.get(param)
         if value:
             if not value.isdecimal() or len(value) > 18 or int(value) < 1:
                 raise APIError("invalid_filter", f"{param} must be a positive integer.")
             queryset = queryset.filter(**{field: int(value)})
-    query = request.GET.get("q", "").strip()
+    query = params.get("q", "").strip()
     if len(query) > 300:
         raise APIError("invalid_filter", "Search is limited to 300 characters.")
     from jobboard.services.engine_matching import preselect_offers
@@ -188,28 +189,28 @@ def filtered_offers(request, *, apply_search=True):
         "unknown_policy",
         "work_mode",
     ):
-        if key in request.GET:
-            criteria[key] = request.GET[key]
-    if request.GET.get("country_codes"):
-        criteria["country_codes"] = request.GET["country_codes"].split(",")
+        if key in params:
+            criteria[key] = params[key]
+    if params.get("country_codes"):
+        criteria["country_codes"] = params["country_codes"].split(",")
     for key in ("domains", "subdomains"):
-        if request.GET.get(key):
-            criteria[key] = request.GET[key].split(",")
+        if params.get(key):
+            criteria[key] = params[key].split(",")
     schema = Criteria(data=criteria)
     schema.is_valid(raise_exception=True)
     from jobboard.services.engine_filters import CatalogueFilters, filter_catalogue
 
     filters = CatalogueFilters(
         data={
-            key: request.GET[key]
+            key: params[key]
             for key in CatalogueFilters().fields
-            if key in request.GET
+            if key in params
         }
     )
     filters.is_valid(raise_exception=True)
-    if "include_unknown" in request.GET:
+    if "include_unknown" in params:
         schema.validated_data["unknown_policy"] = (
-            "include" if request.GET["include_unknown"] == "true" else "exclude"
+            "include" if params["include_unknown"] == "true" else "exclude"
         )
     filters.validated_data["unknown_policy"] = schema.validated_data.get(
         "unknown_policy", "include"

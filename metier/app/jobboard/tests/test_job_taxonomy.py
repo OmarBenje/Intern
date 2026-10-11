@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import include, path
 from django.utils import timezone
+from rest_framework.test import APIRequestFactory
 
 from jobboard.models import CandidateProfile, Company, JobSubdomain, Offer
 from jobboard.services.job_taxonomy import assign_taxonomy, classify, seed_taxonomy
@@ -115,6 +116,30 @@ class JobTaxonomyTests(TestCase):
             if d["slug"] == "software-it"
         )
         self.assertEqual(domain["count"], 2)
+
+    def test_taxonomy_preserves_request_params_and_other_filters(self):
+        from jobboard.api.taxonomy import taxonomy
+
+        self.offer("Backend Intern")
+        self.offer("Frontend Intern")
+        request = APIRequestFactory().get(
+            "/api/v1/taxonomy/",
+            {"subdomains": "backend", "q": "Frontend", "page": "2"},
+        )
+        original = request.GET
+        response = taxonomy(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertIs(request.GET, original)
+        self.assertEqual(request.GET["subdomains"], "backend")
+        self.assertEqual(request.GET["page"], "2")
+        domain = next(
+            d for d in response.data["domains"] if d["slug"] == "software-it"
+        )
+        self.assertEqual(domain["count"], 1)
+        self.assertEqual(
+            next(s for s in domain["subdomains"] if s["slug"] == "frontend")["count"],
+            1,
+        )
 
     def test_validation_saved_search_and_preference_roundtrip(self):
         for params in [

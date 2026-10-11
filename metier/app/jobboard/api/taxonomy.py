@@ -18,17 +18,14 @@ def taxonomy(request):
 
     # Remove only this facet's selections: other applied filters (including q,
     # country, duration, freshness) still determine available options.
-    params = request.GET.copy()
+    params = request.query_params.copy()
     for key in ("domain", "domains", "subdomains", "page", "page_size"):
         params.pop(key, None)
-    original = request._request.GET
-    try:
-        request._request.GET = params
-        queryset = (
-            filtered_offers(request).order_by().filter(taxonomy_status__in=CLASSIFIED)
-        )
-    finally:
-        request._request.GET = original
+    queryset = (
+        filtered_offers(request, params=params)
+        .order_by()
+        .filter(taxonomy_status__in=CLASSIFIED)
+    )
     # UNION deduplicates secondary overlap for both leaves and parent totals.
     primary = queryset.exclude(job_subdomain__isnull=True).values_list(
         "pk", "job_subdomain_id", "job_subdomain__domain_id"

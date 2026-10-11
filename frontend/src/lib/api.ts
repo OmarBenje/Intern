@@ -1,7 +1,8 @@
 export const API_ROOT = (import.meta.env.VITE_API_ROOT || '/api/v1').replace(/\/$/, '')
 export function apiUrl(path: `/${string}`) { return `${API_ROOT}${path}` }
 export function apiResourceUrl(path: string): string | null {
-  return path.startsWith('/api/v1/') ? apiUrl(path.slice('/api/v1'.length) as `/${string}`) : null
+  const prefix = [API_ROOT, '/api/v1'].find(root => path.startsWith(`${root}/`))
+  return prefix === undefined ? null : apiUrl(path.slice(prefix.length) as `/${string}`)
 }
 let csrfToken: string | null = null
 
