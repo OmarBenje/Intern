@@ -1,0 +1,35 @@
+OK 01 — 8 comptes
+OK 02 — 4 profils candidats dont un en attente
+OK 03 — 3 recruteurs
+OK 04 — 3 entreprises
+OK 05 — 4 stages
+OK 06 — 2 dossiers
+OK 07 — 2 transmissions au recruteur
+OK 08 — 3 CV fictifs
+OK 09 — Alice possède un dossier
+OK 10 — vide sans candidature
+OK 11 — Entreprise Sans Offre vide
+OK 12 — 2 stages sans candidature
+OK 13 — compte attente inactif
+OK 14 — un seul administrateur
+OK 15 — 2 recruteurs vérifiés
+OK 16 — recruteur non vérifié sans offre
+OK 17 — 2 propriétaires distincts dans la même entreprise
+OK 18 — e-mails entièrement fictifs
+OK 19 — 8 empreintes scrypt salées distinctes
+OK 20 — alias SQL du hash synchronisé
+OK 21 — sources sans possibilité d'envoi externe
+OK 22 — R1 / entreprise obligatoire rejected (23502)
+OK 23 — R1 / entreprise inexistante rejected (23503)
+OK 24 — R2 / CV d'un autre candidat rejected (23503)
+OK 25 — R3 / source d'une autre offre rejected (23503)
+OK 26 — R4 / dossier en double rejected (23505)
+OK 27 — R5 / login en double rejected (23505)
+OK 28 — statut de candidature invalide rejected (23514)
+OK 29 — R2 / transmission au mauvais recruteur rejected (23503)
+OK 30 — R2 / CV transmis d'un tiers rejected (23503)
+OK 31 — R2 / candidat miroir falsifié rejected (23503)
+OK 32 — R2 / document d'un type différent rejected (23514)
+OK 33 — offre référencée supprimée rejected (23503)
+OK 34 — alias recalculé après modification
+PASS — 34 vérifications ; écritures de test annulées.

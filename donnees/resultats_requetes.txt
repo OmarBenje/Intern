@@ -1,0 +1,131 @@
+BEGIN
+         name          | offres 
+-----------------------+--------
+ Atelier Démo          |      2
+ Laboratoire Exemple   |      2
+ Entreprise Sans Offre |      0
+(3 rows)
+
+ id |             title             |     entreprise      | contract_type | status 
+----+-------------------------------+---------------------+---------------+--------
+  1 | Stage développement Python    | Atelier Démo        | internship    | open
+  2 | Stage interfaces React        | Atelier Démo        | internship    | open
+  3 | Stage analyse de données      | Laboratoire Exemple | internship    | open
+  4 | Stage administration systèmes | Laboratoire Exemple | internship    | open
+(4 rows)
+
+ id | username |           title            |  status   
+----+----------+----------------------------+-----------
+  1 | alice    | Stage développement Python | submitted
+(1 row)
+
+ username 
+----------
+ attente
+ vide
+(2 rows)
+
+             title             
+-------------------------------
+ Stage analyse de données
+ Stage administration systèmes
+(2 rows)
+
+ sources_incoherentes 
+----------------------
+                    0
+(1 row)
+
+ user_id | offer_id | count 
+---------+----------+-------
+(0 rows)
+
+       username        | algorithme 
+-----------------------+------------
+ alice                 | scrypt
+ bob                   | scrypt
+ vide                  | scrypt
+ attente               | scrypt
+ admin                 | scrypt
+ recruteur_a           | scrypt
+ recruteur_b           | scrypt
+ recruteur_non_verifie | scrypt
+(8 rows)
+
+ hashes_desynchronises 
+-----------------------
+                     0
+(1 row)
+
+       username        | is_active | is_staff | is_superuser 
+-----------------------+-----------+----------+--------------
+ alice                 | t         | f        | f
+ bob                   | t         | f        | f
+ vide                  | t         | f        | f
+ attente               | f         | f        | f
+ admin                 | t         | t        | t
+ recruteur_a           | t         | f        | f
+ recruteur_b           | t         | f        | f
+ recruteur_non_verifie | t         | f        | f
+(8 rows)
+
+       username        |     name     | email_verified | verification_status | offres_personnelles 
+-----------------------+--------------+----------------+---------------------+---------------------
+ recruteur_a           | Atelier Démo | t              | verified            |                   1
+ recruteur_b           | Atelier Démo | t              | verified            |                   1
+ recruteur_non_verifie | Atelier Démo | f              | unverified          |                   0
+(3 rows)
+
+ destinataire | candidat |           title            | cv_du_candidat 
+--------------+----------+----------------------------+----------------
+ recruteur_a  | alice    | Stage développement Python | t
+ recruteur_b  | bob      | Stage interfaces React     | t
+(2 rows)
+
+        table_name         |                           conname                            |                                                                                                                                                                                              pg_get_constraintdef                                                                                                                                                                                               
+---------------------------+--------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ auth_user                 | auth_user_pkey                                               | PRIMARY KEY (id)
+ auth_user                 | auth_user_username_key                                       | UNIQUE (username)
+ jobboard_application      | application_owner_offer_identity                             | UNIQUE (id, user_id, offer_id)
+ jobboard_application      | application_source_offer_fk                                  | FOREIGN KEY (source_id, offer_id) REFERENCES jobboard_offersource(id, offer_id) DEFERRABLE
+ jobboard_application      | application_status_valid                                     | CHECK (((status)::text = ANY (ARRAY[('draft'::character varying)::text, ('submitted'::character varying)::text, ('screening'::character varying)::text, ('interview'::character varying)::text, ('offer_received'::character varying)::text, ('accepted'::character varying)::text, ('rejected'::character varying)::text, ('withdrawn'::character varying)::text])))
+ jobboard_application      | application_user_identity                                    | UNIQUE (id, user_id)
+ jobboard_application      | application_user_offer_unique                                | UNIQUE (user_id, offer_id)
+ jobboard_application      | jobboard_application_offer_id_a0b8f81e_fk_jobboard_offer_id  | FOREIGN KEY (offer_id) REFERENCES jobboard_offer(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_application      | jobboard_application_pkey                                    | PRIMARY KEY (id)
+ jobboard_application      | jobboard_application_source_id_a5ac1935_fk_jobboard_         | FOREIGN KEY (source_id) REFERENCES jobboard_offersource(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_application      | jobboard_application_user_id_5580a423_fk_auth_user_id        | FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_candidateprofile | jobboard_candidatepr_current_resume_id_a72e73a6_fk_jobboard_ | FOREIGN KEY (current_resume_id) REFERENCES jobboard_document(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_candidateprofile | jobboard_candidatepr_location_id_7f1c8971_fk_jobboard_       | FOREIGN KEY (location_id) REFERENCES jobboard_location(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_candidateprofile | jobboard_candidateprofile_pkey                               | PRIMARY KEY (id)
+ jobboard_candidateprofile | jobboard_candidateprofile_profile_version_check              | CHECK ((profile_version >= 0))
+ jobboard_candidateprofile | jobboard_candidateprofile_user_id_994b60bf_fk_auth_user_id   | FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_candidateprofile | jobboard_candidateprofile_user_id_key                        | UNIQUE (user_id)
+ jobboard_candidateprofile | profile_resume_kind_valid                                    | CHECK (((current_resume_kind)::text = 'resume'::text))
+ jobboard_candidateprofile | profile_resume_owner_kind_fk                                 | FOREIGN KEY (current_resume_id, user_id, current_resume_kind) REFERENCES jobboard_document(id, owner_id, kind) DEFERRABLE
+ jobboard_candidateprofile | profile_version_positive                                     | CHECK ((profile_version > 0))
+ jobboard_offer            | jobboard_offer_company_id_075b613e_fk_jobboard_company_id    | FOREIGN KEY (company_id) REFERENCES jobboard_company(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_offer            | jobboard_offer_job_subdomain_id_39cb116b_fk_jobboard_        | FOREIGN KEY (job_subdomain_id) REFERENCES jobboard_jobsubdomain(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_offer            | jobboard_offer_pkey                                          | PRIMARY KEY (id)
+ jobboard_offer            | jobboard_offer_role_id_f7852e46_fk_jobboard_role_id          | FOREIGN KEY (role_id) REFERENCES jobboard_role(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_offer            | offer_contract_valid                                         | CHECK (((contract_type)::text = ANY (ARRAY[('internship'::character varying)::text, ('apprenticeship'::character varying)::text, ('employment'::character varying)::text, ('contractor'::character varying)::text, ('temporary'::character varying)::text, ('unknown'::character varying)::text])))
+ jobboard_offer            | offer_dates_valid                                            | CHECK (((expires_at IS NULL) OR (published_at IS NULL) OR (expires_at >= published_at)))
+ jobboard_offer            | offer_schedule_valid                                         | CHECK (((employment_schedule)::text = ANY (ARRAY[('full_time'::character varying)::text, ('part_time'::character varying)::text, ('unknown'::character varying)::text])))
+ jobboard_offer            | offer_seniority_valid                                        | CHECK (((seniority)::text = ANY (ARRAY[('entry'::character varying)::text, ('mid'::character varying)::text, ('senior'::character varying)::text, ('lead'::character varying)::text, ('executive'::character varying)::text, ('unknown'::character varying)::text])))
+ jobboard_offer            | offer_status_valid                                           | CHECK (((status)::text = ANY (ARRAY[('open'::character varying)::text, ('closed'::character varying)::text, ('expired'::character varying)::text, ('hidden'::character varying)::text])))
+ jobboard_offer            | offer_taxonomy_assignment_valid                              | CHECK ((((job_subdomain_id IS NOT NULL) AND ((taxonomy_status)::text = ANY (ARRAY[('classified'::character varying)::text, ('broad'::character varying)::text]))) OR ((job_subdomain_id IS NULL) AND ((taxonomy_status)::text = ANY (ARRAY[('needs_review'::character varying)::text, ('unclassified'::character varying)::text]))) OR (taxonomy_manual AND ((taxonomy_status)::text = 'needs_review'::text))))
+ jobboard_offer            | offer_taxonomy_status_valid                                  | CHECK (((taxonomy_status)::text = ANY (ARRAY[('classified'::character varying)::text, ('broad'::character varying)::text, ('needs_review'::character varying)::text, ('unclassified'::character varying)::text])))
+ jobboard_offer            | offer_work_mode_valid                                        | CHECK (((work_mode)::text = ANY (ARRAY[('remote'::character varying)::text, ('hybrid'::character varying)::text, ('onsite'::character varying)::text, ('unknown'::character varying)::text])))
+ jobboard_recruiterjob     | jobboard_recruiterjo_owner_id_b80ced04_fk_jobboard_          | FOREIGN KEY (owner_id) REFERENCES jobboard_recruiterprofile(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_recruiterjob     | jobboard_recruiterjob_offer_id_6c835aa7_fk_jobboard_offer_id | FOREIGN KEY (offer_id) REFERENCES jobboard_offer(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_recruiterjob     | jobboard_recruiterjob_offer_id_key                           | UNIQUE (offer_id)
+ jobboard_recruiterjob     | jobboard_recruiterjob_pkey                                   | PRIMARY KEY (id)
+ jobboard_recruiterjob     | jobboard_recruiterjob_views_check                            | CHECK ((views >= 0))
+ jobboard_recruiterjob     | recruiter_job_offer_identity                                 | UNIQUE (id, offer_id)
+ jobboard_recruiterprofile | jobboard_recruiterpr_company_id_e162ab09_fk_jobboard_        | FOREIGN KEY (company_id) REFERENCES jobboard_company(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_recruiterprofile | jobboard_recruiterprofile_pkey                               | PRIMARY KEY (id)
+ jobboard_recruiterprofile | jobboard_recruiterprofile_user_id_6f16aee1_fk_auth_user_id   | FOREIGN KEY (user_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED
+ jobboard_recruiterprofile | jobboard_recruiterprofile_user_id_key                        | UNIQUE (user_id)
+(42 rows)
+
+ROLLBACK

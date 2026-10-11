@@ -1,0 +1,101 @@
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, jobboard, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying jobboard.0001_initial... OK
+  Applying jobboard.0002_skill_candidateprofile... OK
+  Applying jobboard.0003_location_role_searchpreference... OK
+  Applying jobboard.0004_company_offer_location_offer_role_offer_skills_and_more... OK
+  Applying jobboard.0005_alter_offer_role... OK
+  Applying jobboard.0006_rename_location_offer_locations_offer_contract_type_and_more... OK
+  Applying jobboard.0007_alter_offer_contract_type_alter_offer_work_mode... OK
+  Applying jobboard.0008_alter_offer_contract_type_alter_offer_work_mode... OK
+  Applying jobboard.0009_catalogue... OK
+  Applying jobboard.0010_profile_location_text... OK
+  Applying jobboard.0011_profiles_documents... OK
+  Applying jobboard.0012_applications_operations... OK
+  Applying jobboard.0013_finalize_catalogue_preferences... OK
+  Applying jobboard.0014_composite_foreign_keys... OK
+  Applying jobboard.0015_request_throttle... OK
+  Applying jobboard.0016_candidate_onboarding... OK
+  Applying jobboard.0017_internship_engine... OK
+  Applying jobboard.0018_enrichment_event... OK
+  Applying jobboard.0019_offer_merge_decision... OK
+  Applying jobboard.0020_source_discovery_seed... OK
+  Applying jobboard.0021_coverage_discovery... OK
+  Applying jobboard.0022_company_logo_queue... OK
+  Applying jobboard.0023_discovery_auto_activate... OK
+  Applying jobboard.0024_offer_content... OK
+  Applying jobboard.0025_search_document... OK
+  Applying jobboard.0026_company_logo_provenance... OK
+  Applying jobboard.0027_ats_probe_queue... OK
+  Applying jobboard.0028_job_taxonomy... OK
+  Applying jobboard.0029_company_profiles... OK
+  Applying jobboard.0030_collection_checkpoint... OK
+  Applying jobboard.0031_recruiter_workspace... OK
+  Applying jobboard.0032_recruiter_company_memberships... OK
+  Applying jobboard.0033_password_hash_sql_name... OK
+  Applying jobboard.0034_recruiter_applicant_integrity... OK
+  Applying sessions.0001_initial... OK
+DEV: 8 accounts, 3 recruiters, 3 companies, 4 offers, 2 applications. Password: see donnees/README.md.
+OK 01 — 8 comptes
+OK 02 — 4 profils candidats dont un en attente
+OK 03 — 3 recruteurs
+OK 04 — 3 entreprises
+OK 05 — 4 stages
+OK 06 — 2 dossiers
+OK 07 — 2 transmissions au recruteur
+OK 08 — 3 CV fictifs
+OK 09 — Alice possède un dossier
+OK 10 — vide sans candidature
+OK 11 — Entreprise Sans Offre vide
+OK 12 — 2 stages sans candidature
+OK 13 — compte attente inactif
+OK 14 — un seul administrateur
+OK 15 — 2 recruteurs vérifiés
+OK 16 — recruteur non vérifié sans offre
+OK 17 — 2 propriétaires distincts dans la même entreprise
+OK 18 — e-mails entièrement fictifs
+OK 19 — 8 empreintes scrypt salées distinctes
+OK 20 — alias SQL du hash synchronisé
+OK 21 — sources sans possibilité d'envoi externe
+OK 22 — R1 / entreprise obligatoire rejected (23502)
+OK 23 — R1 / entreprise inexistante rejected (23503)
+OK 24 — R2 / CV d'un autre candidat rejected (23503)
+OK 25 — R3 / source d'une autre offre rejected (23503)
+OK 26 — R4 / dossier en double rejected (23505)
+OK 27 — R5 / login en double rejected (23505)
+OK 28 — statut de candidature invalide rejected (23514)
+OK 29 — R2 / transmission au mauvais recruteur rejected (23503)
+OK 30 — R2 / CV transmis d'un tiers rejected (23503)
+OK 31 — R2 / candidat miroir falsifié rejected (23503)
+OK 32 — R2 / document d'un type différent rejected (23514)
+OK 33 — offre référencée supprimée rejected (23503)
+OK 34 — alias recalculé après modification
+PASS — 34 vérifications ; écritures de test annulées.
+pg_dump: warning: there are circular foreign-key constraints on this table:
+pg_dump: detail: jobboard_document
+pg_dump: hint: You might not be able to restore the dump without using --disable-triggers or temporarily dropping the constraints.
+pg_dump: hint: Consider using a full dump instead of a --data-only dump to avoid this problem.
+Exported schema.sql
+Exported data.sql
+Second seed_dev refusé sans écrasement.
+70 objects imported automatically (use -v 2 for details).
+
+8 mots de passe vérifiés ; 3 PDF et métadonnées conformes au nouveau CV.
