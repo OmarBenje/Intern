@@ -14,6 +14,9 @@ npm run dev
 
 Ouvrir <http://127.0.0.1:5173/login>. Vite transmet le chemin API et `/health` au backend sur `127.0.0.1:8000`. Le préfixe API est défini par `VITE_API_ROOT` dans `.env` (par défaut `/api/v1`) ; il doit rester un chemin de la même origine. Pour les mutations protégées par CSRF, lancer Django avec l'origine du serveur Vite autorisée :
 
+Si Django écoute sur un autre port, définir `API_PROXY_TARGET=http://127.0.0.1:<port>`
+avant `npm run dev`. Cette variable règle uniquement le proxy de développement.
+
 ```bash
 CSRF_TRUSTED_ORIGINS=http://127.0.0.1:5173 uv run --project ../metier ../metier/app/manage.py runserver 127.0.0.1:8000
 ```

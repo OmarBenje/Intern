@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Intern — Cahier de recette</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; color: #20252b; font-size: 9.2pt; line-height: 1.35; }
+    h1 { font-size: 20pt; margin: 0 0 3mm; }
+    h2 { font-size: 12pt; margin: 7mm 0 2mm; }
+    p { margin: 2mm 0; }
+    .meta { color: #42505a; }
+    .count { display: flex; gap: 6mm; margin: 4mm 0; }
+    .count span { border: 1px solid #c5d0d5; border-radius: 3mm; padding: 2mm 4mm; }
+    table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 7.6pt; }
+    th, td { border: 1px solid #aab8c0; padding: 1.6mm 1.7mm; vertical-align: top; overflow-wrap: anywhere; }
+    th { background: #eaf0f2; text-align: left; }
+    tr { break-inside: avoid; }
+    thead { display: table-header-group; }
+    td:first-child { font-weight: bold; white-space: nowrap; }
+    .pass { color: #0b6548; font-weight: bold; }
+    .pending { color: #8a4d0b; font-weight: bold; }
+    code { font-family: Consolas, monospace; font-size: .95em; }
+    ul { margin: 1mm 0 0; padding-left: 5mm; }
+  </style>
+</head>
+<body>
+  <h1>Intern — cahier de recette</h1>
+  <p class="meta">Étape 6 · Relevé du 11 octobre 2026 · Données exclusivement fictives</p>
+  <p>Une base PostgreSQL 16 éphémère a été créée, migrée et peuplée avec 8 comptes,
+    3 entreprises, 4 offres et 2 candidatures. T01 à T15 ont été exécutés dans
+    Chrome contre le client Vite et l'API Django réels. T16 à T22 sont des contrôles
+    automatisés de l'API et de la base, exécutés sur la base de test Django isolée.
+    T23 utilise des réponses API contrôlées pour vérifier le client.</p>
+  <div class="count"><span><strong>15/15</strong> parcours intégrés réussis</span>
+    <span><strong>560/560</strong> tests métier réussis</span>
+    <span><strong>104/104</strong> tests navigateur actifs réussis</span></div>
+  <table>
+    <colgroup><col style="width:6%"><col style="width:18%"><col style="width:25%"><col style="width:18%"><col style="width:26%"><col style="width:7%"></colgroup>
+    <thead><tr><th>ID Test</th><th>Description / Cas d'usage</th><th>Action réalisée</th><th>Résultat attendu</th><th>Résultat obtenu</th><th>Statut</th></tr></thead>
+    <tbody>
+      <tr><td>T01</td><td>Session anonyme · UC02</td><td>Lire <code>/auth/me/</code> sans connexion.</td><td>Aucune identité privée.</td><td>HTTP 401.</td><td class="pass">PASS</td></tr>
+      <tr><td>T02</td><td>Protection CSRF · UC01–UC02</td><td>Envoyer une connexion sans jeton CSRF.</td><td>Mutation refusée.</td><td>HTTP 403.</td><td class="pass">PASS</td></tr>
+      <tr><td>T03</td><td>Inscription et attente · UC01, R6</td><td>Inscrire un compte fictif, vérifier la session puis essayer de se connecter.</td><td>Compte inactif, aucune session avant validation.</td><td>HTTP 201 <code>pending</code>, puis 401 pour la session et 403 <code>account_inactive</code>.</td><td class="pass">PASS</td></tr>
+      <tr><td>T04</td><td>Mauvais mot de passe · UC02</td><td>Saisir un mot de passe erroné dans le client.</td><td>Rester sur la connexion avec une erreur lisible.</td><td>Page de connexion conservée et message d'erreur affiché.</td><td class="pass">PASS</td></tr>
+      <tr><td>T05</td><td>Connexion candidat · UC02, UC06</td><td>Se connecter dans Chrome avec un compte candidat actif.</td><td>Tableau de bord et identité serveur du candidat.</td><td>Redirection <code>/dashboard</code> ; <code>/auth/me/</code> répond 200, rôle candidat.</td><td class="pass">PASS</td></tr>
+      <tr><td>T06</td><td>Catalogue · UC03</td><td>Ouvrir <code>/stages</code> et lire l'API des offres.</td><td>Page et offres fictives disponibles.</td><td>Titre visible ; HTTP 200 et au moins deux offres.</td><td class="pass">PASS</td></tr>
+      <tr><td>T07</td><td>Dossier propre · UC06, R2</td><td>Lister les candidatures du candidat puis ouvrir son dossier.</td><td>Accès à sa propre ressource.</td><td>Liste non vide ; détail HTTP 200.</td><td class="pass">PASS</td></tr>
+      <tr><td>T08</td><td>ID tiers dans l'URL · UC06, R2</td><td>Remplacer l'ID d'une candidature par celui d'un autre candidat.</td><td>Données tierces non divulguées.</td><td>HTTP 404. Le serveur masque l'existence de la ressource.</td><td class="pass">PASS</td></tr>
+      <tr><td>T09</td><td>CV et rôle tiers · UC04, R2</td><td>Demander le CV d'un autre candidat et le tableau recruteur.</td><td>Accès refusés par le serveur.</td><td>CV : 404 ; tableau recruteur : 403.</td><td class="pass">PASS</td></tr>
+      <tr><td>T10</td><td>Source et doublon · UC05, R3–R4</td><td>Créer une candidature avec source d'une autre offre, puis avec la bonne source deux fois.</td><td>Mauvaise source refusée ; un seul dossier.</td><td>Mauvaise source : 404 ; bonne source : 200 deux fois, même ID.</td><td class="pass">PASS</td></tr>
+      <tr><td>T11</td><td>Espace recruteur · UC07</td><td>Se connecter comme recruteur et lire ses offres.</td><td>Espace du bon rôle et uniquement ses offres.</td><td>Redirection <code>/recruiter/dashboard</code> ; liste HTTP 200 avec une offre.</td><td class="pass">PASS</td></tr>
+      <tr><td>T12</td><td>Offre recruteur tierce · UC07–UC08, R2</td><td>Changer l'ID d'une offre et lire sa liste de candidats.</td><td>Ressources d'un autre recruteur non divulguées.</td><td>HTTP 404 pour les deux URL.</td><td class="pass">PASS</td></tr>
+      <tr><td>T13</td><td>Activation administrateur · UC09, R6</td><td>Ouvrir Django Admin, activer le compte T03, puis retenter la connexion API.</td><td>Connexion possible après activation seule.</td><td>Case initialement décochée ; sauvegarde ; connexion et session HTTP 200.</td><td class="pass">PASS</td></tr>
+      <tr><td>T14</td><td>Administration interdite · UC09</td><td>Ouvrir Django Admin avec la session candidat.</td><td>Pas d'accès à l'administration.</td><td>HTTP 302 vers la connexion Admin.</td><td class="pass">PASS</td></tr>
+      <tr><td>T15</td><td>Déconnexion · UC06</td><td>Se déconnecter, relire la session et les candidatures.</td><td>Session révoquée, ressources privées fermées.</td><td>Retour <code>/login</code> ; deux réponses HTTP 401.</td><td class="pass">PASS</td></tr>
+      <tr><td>T16</td><td>Inscription invalide · UC01, R5</td><td>Tests Django : mot de passe faible et champs de privilège injectés.</td><td>Validation serveur refuse les demandes.</td><td>Réponses HTTP 400 ; aucun compte créé.</td><td class="pass">PASS</td></tr>
+      <tr><td>T17</td><td>PDF invalide · UC04</td><td>Tests Django : faux PDF, contenu actif, fichier dépassant la limite.</td><td>Aucun document stocké.</td><td>HTTP 400, 400, 413 ; zéro document.</td><td class="pass">PASS</td></tr>
+      <tr><td>T18</td><td>Publication non vérifiée · UC07, R6</td><td>Test Django : publier une offre sans entreprise vérifiée.</td><td>Refus et état de brouillon conservé.</td><td>HTTP 409 ; transaction annulée, aucune offre publiée.</td><td class="pass">PASS</td></tr>
+      <tr><td>T19</td><td>Candidature directe · UC05, UC08</td><td>Test Django : CV prêt, candidature directe, répétition et accès recruteur tiers.</td><td>Un seul dossier transmis au bon recruteur.</td><td>HTTP 201, répétition identique ; recruteur tiers refusé en 404.</td><td class="pass">PASS</td></tr>
+      <tr><td>T20</td><td>Données privées Admin · UC09</td><td>Tests Django : accès staff aux documents et édition des données privées par superutilisateur.</td><td>Staff refusé ; données privées non modifiables directement.</td><td>HTTP 403 dans les deux cas ; valeur préservée.</td><td class="pass">PASS</td></tr>
+      <tr><td>T21</td><td>Vérification entreprise · UC11</td><td>Tests Django : code e-mail incorrect puis correct, demande de vérification.</td><td>Code invalide refusé ; validation manuelle distincte.</td><td>Code erroné : 400 ; code valide : 200 ; demande : <code>pending</code>.</td><td class="pass">PASS</td></tr>
+      <tr><td>T22</td><td>Contrainte SQL · R4</td><td>Test Django/PostgreSQL : insérer deux dossiers candidat/offre identiques.</td><td>Unicité imposée par PostgreSQL.</td><td><code>IntegrityError</code> ; insertion annulée.</td><td class="pass">PASS</td></tr>
+      <tr><td>T23</td><td>États et interfaces du client · UC01–UC08</td><td>Suite Playwright avec réponses API contrôlées.</td><td>Parcours, erreurs, chargements et vues mobiles stables.</td><td>104 tests réussis ; 3 scénarios optionnels de logos externes ignorés.</td><td class="pass">PASS</td></tr>
+      <tr><td>T24</td><td>Installation sur VM vierge</td><td>Rejouer le README sans dépendance préinstallée.</td><td>Installation et recette reproductibles.</td><td>Non exécuté dans cet environnement ; procédure rédigée et testée localement.</td><td class="pending">À vérifier</td></tr>
+      <tr><td>T25</td><td>Conformité visuelle au prototype</td><td>Comparer les écrans live au prototype interactif.</td><td>Validation visuelle des parcours.</td><td>Revue interactive externe non réalisée ici.</td><td class="pending">À vérifier</td></tr>
+    </tbody>
+  </table>
+  <h2>Portée et lecture des statuts</h2>
+  <p>Les statuts PASS reposent sur des réponses réellement observées. Les tests
+    Django utilisent une base PostgreSQL créée et détruite par Django ; ils ne
+    remplacent pas tous un parcours visuel. Les trois tests optionnels ignorés
+    concernent un fournisseur de logos externe. Aucun envoi ATS, e-mail réel,
+    stockage R2 ou déploiement sur trois machines virtuelles n'a été validé par
+    ce cahier. Les commandes de reproduction figurent dans <code>tests/README.md</code>.</p>
+</body>
+</html>

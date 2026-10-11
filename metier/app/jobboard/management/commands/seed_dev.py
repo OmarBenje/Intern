@@ -2,6 +2,7 @@
 
 import hashlib
 from pathlib import Path
+from runpy import run_path
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -9,9 +10,14 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from donnees.jeu_fictif import ADMIN_LOGIN, CANDIDATS, MOT_DE_PASSE_DEMO, RECRUTEURS
 from jobboard import models as m
 from jobboard.integrations.storage import storage_bucket, write_object
+
+_demo = run_path(str(settings.PROJECT_ROOT / "donnees/jeu_fictif.py"))
+ADMIN_LOGIN = _demo["ADMIN_LOGIN"]
+CANDIDATS = _demo["CANDIDATS"]
+MOT_DE_PASSE_DEMO = _demo["MOT_DE_PASSE_DEMO"]
+RECRUTEURS = _demo["RECRUTEURS"]
 
 
 class Command(BaseCommand):

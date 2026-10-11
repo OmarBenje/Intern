@@ -3,32 +3,96 @@
 Le [suivi des livrables](LIVRABLES.md) indique les documents disponibles,
 leur emplacement et leur état de vérification.
 
-API candidat Django 6.1 / Django REST framework 3.18 / PostgreSQL 16. Le schéma, le contrat de livraison et les décisions sont dans [docs/BACKEND_SPEC.md](docs/BACKEND_SPEC.md). Le [frontend React](frontend/README.md) propose la connexion, l’inscription, la réinitialisation du mot de passe et l’ajout du CV après activation ; les autres espaces métier restent provisoires.
+Intern sépare PostgreSQL 16, une API Django/DRF et un client React. Le schéma,
+les règles d'accès et les contrats sont décrits dans
+[la spécification backend](docs/BACKEND_SPEC.md). Le [client web](frontend/README.md)
+couvre les parcours candidat et recruteur ; l'administration utilise Django
+Admin. Les [pages entreprise](docs/COMPANY_PAGES.md) présentent les stages et
+leurs sources.
 
 L’[espace recruteur](docs/RECRUITER_WORKSPACE.md) ajoute le choix du rôle avant inscription, la vérification entreprise, les offres et le suivi des candidatures. Les routes `/api/v1/recruiter/` partagent l’authentification et les conventions v1 du candidat.
 
-## Démarrer en local
+## Installer et démarrer en local
 
-Les [pages entreprise](docs/COMPANY_PAGES.md) regroupent présentation sourcée, informations employeur, stages publiés et recommandations propres à l’entreprise. Le [comparatif concurrentiel](docs/research/company-pages-2026-10-01.md) décrit les choix et les données encore manquantes.
+Prérequis : Python 3.12 ou plus récent, `uv`, Node.js 20.19+ ou 22.12+,
+`npm`, Docker Engine avec Compose, et des ports libres **5433**, **8000** et
+**5173**. Les commandes suivantes se lancent depuis la racine du dépôt.
+Elles utilisent la configuration de développement ; ne pas réutiliser ses
+identifiants en production.
 
-Python 3.12 minimum, `uv`, Docker.
+1. Installer les dépendances Python et JavaScript :
 
-```bash
-uv sync --project metier --frozen
-docker compose up -d db
-uv run --project metier metier/app/manage.py migrate
-uv run --project metier metier/app/manage.py runserver
-```
+   ```sh
+   uv sync --project metier --frozen
+   npm --prefix frontend ci
+   ```
 
-Le PostgreSQL local reste sur **127.0.0.1:5433**. `compose.yaml` conserve le volume existant. Les réglages locaux fonctionnent sans `.env`. Pour une configuration personnalisée, copier `metier/.env.example` vers `metier/.env` puis utiliser `uv run --project metier --env-file metier/.env metier/app/manage.py ...`. Django ne charge pas implicitement `.env`.
+2. Démarrer PostgreSQL, attendre sa disponibilité et appliquer les migrations :
 
-Dans un autre terminal :
+   ```sh
+   docker compose up -d db
+   docker compose exec db pg_isready -U intern_user -d intern
+   uv run --project metier metier/app/manage.py migrate --noinput
+   uv run --project metier metier/app/manage.py check
+   ```
 
-```bash
-uv run --project metier metier/app/manage.py run_worker
-```
+   Compose conserve sa base dans un volume. Sur une installation neuve, la
+   base est vide. La commande `seed_dev` peut alors ajouter un jeu **fictif**
+   pour la démonstration :
 
-`--once` consomme au maximum un envoi et termine. Lancer également `purge_accounts` pour traiter les demandes de suppression ; `cleanup_backend` nettoie les sessions expirées, compteurs et réponses d'import expirées. Ces commandes sont prévues pour une exécution planifiée par l'exploitant.
+   ```sh
+   uv run --project metier metier/app/manage.py seed_dev
+   ```
+
+   Elle refuse une base qui contient déjà des comptes ou entreprises. Les
+   identifiants de démonstration sont dans [le guide des données](donnees/README.md).
+   Ne pas lancer la recette en supprimant un volume qui contient d'autres
+   données ; [la procédure de recette](tests/README.md) utilise une base isolée.
+
+3. Dans un terminal, démarrer l'API avec l'origine Vite autorisée pour le CSRF :
+
+   ```sh
+   CSRF_TRUSTED_ORIGINS=http://127.0.0.1:5173 \
+     uv run --project metier metier/app/manage.py runserver 127.0.0.1:8000
+   ```
+
+   Vérifier `http://127.0.0.1:8000/health/ready/`. Le PostgreSQL local est
+   publié sur **127.0.0.1:5433** ; l'API écoute sur **127.0.0.1:8000**.
+
+4. Dans un second terminal, démarrer le client :
+
+   ```sh
+   npm --prefix frontend run dev
+   ```
+
+   Ouvrir `http://127.0.0.1:5173/login`. Vite relaie `/api/v1` vers Django.
+   Utiliser `127.0.0.1` dans les deux URL pour les cookies et le CSRF.
+
+5. Pour les tâches asynchrones, lancer dans un troisième terminal :
+
+   ```sh
+   uv run --project metier metier/app/manage.py run_worker
+   ```
+
+Pour une connexion PostgreSQL personnalisée, copier
+`metier/.env.example` vers `metier/.env`, adapter ses variables et passer
+`--env-file metier/.env` aux commandes `uv run`. Régler les mêmes valeurs
+dans l'environnement de Compose. Django ne charge pas `.env`
+automatiquement. Si le port **8000** est occupé, démarrer Django sur un autre
+port et définir `API_PROXY_TARGET=http://127.0.0.1:<port>` pour Vite ; le
+préfixe côté navigateur se règle avec `VITE_API_ROOT`.
+
+Le [cahier de recette](tests/cahier_de_tests.pdf), sa
+[source lisible](tests/cahier_de_tests.html) et les commandes de
+[reproduction](tests/README.md) documentent l'intégration. Le
+[comparatif des pages entreprise](docs/research/company-pages-2026-10-01.md)
+décrit les choix de présentation.
+
+`--once` consomme au maximum un envoi et termine. Lancer également
+`purge_accounts` pour traiter les demandes de suppression ;
+`cleanup_backend` nettoie les sessions expirées, compteurs et réponses
+d'import expirées. Ces commandes sont prévues pour une exécution planifiée
+par l'exploitant.
 
 ## Architecture HTTP
 
@@ -36,7 +100,9 @@ La [spec de migration DRF](docs/DRF_MIGRATION_SPEC.md) décrit le contrat prése
 
 ## Parcours API
 
-Toutes les routes candidat demandent une session, sauf CSRF/inscription/connexion/reset de mot de passe. Lire [docs/API.md](docs/API.md) pour les corps et erreurs. Le catalogue est accessible aux candidats connectés.
+Les routes privées du candidat demandent une session. L'inscription, la
+connexion, le reset de mot de passe et la lecture du catalogue public n'en
+demandent pas. Lire [le contrat API](docs/API.md) pour les corps et erreurs.
 
 1. `GET /api/v1/auth/csrf/` : conserver le cookie et le `csrf_token`.
 2. `POST /api/v1/auth/register/` : compte et profil minimal inactifs, en attente de validation par un superviseur.

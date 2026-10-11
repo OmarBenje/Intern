@@ -45,9 +45,10 @@ npm run test:e2e
 
 La compilation, l'analyse statique et les tests Playwright vérifient le rendu
 et les appels REST avec réponses contrôlées. Les captures sont liées dans
-[leur index](captures/README.md). Le test navigateur ne remplace pas une recette
-interactive contre les trois services réels. Le prototype externe reste à
-comparer visuellement dans son interface, notamment pour l'administration.
+[leur index](captures/README.md). Une recette distincte contre Vite, Django
+et PostgreSQL réels est documentée dans le
+[cahier de tests](../tests/cahier_de_tests.pdf). Le prototype externe reste à
+comparer visuellement dans son interface.
 
 ## Résultats et limites
 
@@ -63,6 +64,6 @@ les **8 tests du catalogue** et le parcours d'inscription utilisé pour la
 capture ont été rejoués avec succès ; le build et le lint ont aussi été relancés.
 Les trois scénarios ignorés concernent le fournisseur externe de logos.
 
-Les captures utilisent uniquement des identités fictives. L'accès au prototype
-et un déploiement réel avec API et base de données demandent une vérification
-séparée avant présentation au jury.
+Les captures utilisent uniquement des identités fictives. La revue du
+prototype et l'installation sur une machine vierge restent à vérifier avant
+présentation au jury.

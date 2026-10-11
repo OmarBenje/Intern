@@ -13,7 +13,7 @@ nécessaires à sa revue.
 | 3 — Couche données | Livrables préparés et vérifiés localement | [Schéma SQL](donnees/schema.sql), [jeu fictif](donnees/data.sql), [requêtes](donnees/requetes.sql), [modèle et règles](donnees/MODELE.md), [installation](donnees/README.md), [rapport de validation](donnees/VALIDATION.md) |
 | 4 — Couche métier | Livrables préparés et vérifiés localement | [code de l'API](metier/app/), [démarrage et architecture](metier/README.md), [exemples HTTP](metier/api.http), [dépendances](metier/requirements.txt), [configuration](metier/.env.example), [rapport de validation](metier/VALIDATION.md) |
 | 5 — Couche présentation | Livrables préparés et vérifiés localement | [code frontend](frontend/src/), [démarrage](frontend/README.md), [captures](frontend/captures/README.md), [rapport de validation](frontend/VALIDATION.md) |
-| 6 — Intégration et tests | À réaliser | Tableau des tests, guide d'installation et dépôt final |
+| 6 — Intégration et tests | Recette locale réussie ; vérifications externes restantes | [cahier de tests PDF](tests/cahier_de_tests.pdf), [source du tableau](tests/cahier_de_tests.html), [guide d'installation](README.md#installer-et-démarrer-en-local), [procédure de recette](tests/README.md), [script reproductible](tests/recette_navigateur.mjs) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -205,3 +205,23 @@ Ces captures proviennent de tests navigateur avec données fictives et réponses
 API contrôlées. Les parcours, les contrôles exécutés et ce qu'il reste à
 vérifier sur un déploiement réel sont détaillés dans le
 [rapport de validation](frontend/VALIDATION.md).
+
+## Étape 6 — Intégration et tests
+
+Le [cahier de recette PDF](tests/cahier_de_tests.pdf) reprend le tableau des
+actions, attentes, résultats et statuts. Sa
+[source HTML](tests/cahier_de_tests.html) est régénérable avec
+`node tests/generer_cahier.mjs`.
+
+Sur une base PostgreSQL éphémère, neuve et peuplée de données fictives,
+**15 parcours navigateur/API** ont réussi avec Vite, Django et Django Admin
+réels. La suite métier compte **560 tests réussis**. Le client compte
+**104 tests navigateur réussis** avec réponses API contrôlées ; trois scénarios
+optionnels de logos externes sont ignorés. Le build, le lint, le contrôle
+Django, la vérification des migrations et Ruff passent. Les commandes sont
+dans le [guide de recette](tests/README.md), et l'installation pas à pas est
+dans le [README principal](README.md#installer-et-démarrer-en-local).
+
+Le PDF marque séparément l'installation sur une machine virtuelle vierge et la
+comparaison interactive avec le prototype comme **à vérifier**. Aucun résultat
+de déploiement ou de service externe n'est déduit de la recette locale.

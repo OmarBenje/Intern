@@ -5,6 +5,7 @@ import { defineConfig, loadEnv } from 'vite'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   const apiRoot = (env.VITE_API_ROOT || '/api/v1').replace(/\/$/, '')
+  const apiTarget = process.env.API_PROXY_TARGET || 'http://127.0.0.1:8000'
   return {
   plugins: [react()],
   server: {
@@ -12,8 +13,8 @@ export default defineConfig(({ mode }) => {
     port: 5173,
     proxy: {
       // Preserve the browser's Host so Django can validate the CSRF Origin.
-      [apiRoot]: { target: 'http://127.0.0.1:8000', changeOrigin: false, rewrite: path => path.replace(apiRoot, '/api/v1') },
-      '/health': { target: 'http://127.0.0.1:8000', changeOrigin: false },
+      [apiRoot]: { target: apiTarget, changeOrigin: false, rewrite: path => path.replace(apiRoot, '/api/v1') },
+      '/health': { target: apiTarget, changeOrigin: false },
     },
   },
   }

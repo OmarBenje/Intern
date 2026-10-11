@@ -337,4 +337,9 @@ class RecommendationRankingTests(TestCase):
         with CaptureQueriesContext(connection) as large:
             self.results(page_size=20)
         self.assertEqual(len(small), len(large))
-        self.assertLessEqual(len(large), 16)
+        # The workspace permission performs one constant-time recruiter role check.
+        self.assertEqual(
+            sum('FROM "jobboard_recruiterprofile"' in query["sql"] for query in large),
+            1,
+        )
+        self.assertLessEqual(len(large), 17)
