@@ -1,5 +1,7 @@
 # Préparation des machines virtuelles
 
+Suite : [étape 8 — réseau interne, adressage et connectivité](../reseau/README.md).
+
 ## Étape 7 — Objectif et prérequis
 
 Préparer un modèle Ubuntu Server 24.04 LTS sans interface graphique et sans

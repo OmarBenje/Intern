@@ -1,0 +1,24 @@
+[Unit]
+Description=Intern — API Django par Gunicorn
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=intern
+Group=intern
+WorkingDirectory=/opt/intern/metier/app
+EnvironmentFile=/etc/intern/intern.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/intern/metier/.venv/bin/gunicorn --bind 10.10.10.20:8000 --workers 2 --timeout 30 --access-logfile - --error-logfile - config.wsgi:application
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/intern
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

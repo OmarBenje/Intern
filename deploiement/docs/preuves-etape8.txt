@@ -1,0 +1,154 @@
+Étape 8 — sorties réelles des VM après configuration et redémarrage
+
+=== vm-proxy ===
+$ hostname
+vm-proxy
+
+$ ip -br address
+lo               UNKNOWN        127.0.0.1/8 ::1/128
+enp0s3           UP             10.10.10.10/24 fe80::a00:27ff:fe86:d526/64
+enp0s8           UP             10.0.3.15/24 metric 100 fd17:625c:f037:3:a00:27ff:fe10:1cc4/64 fe80::a00:27ff:fe10:1cc4/64
+
+$ ip route
+default via 10.0.3.2 dev enp0s8 proto dhcp src 10.0.3.15 metric 100
+10.0.3.0/24 dev enp0s8 proto kernel scope link src 10.0.3.15 metric 100
+10.0.3.2 dev enp0s8 proto dhcp scope link src 10.0.3.15 metric 100
+10.0.3.3 dev enp0s8 proto dhcp scope link src 10.0.3.15 metric 100
+10.10.10.0/24 dev enp0s3 proto kernel scope link src 10.10.10.10
+
+$ sudo netplan get
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s3:
+      addresses:
+      - "10.10.10.10/24"
+      dhcp4: false
+      dhcp6: false
+    enp0s8:
+      dhcp4: true
+      dhcp6: false
+
+$ ping -c 2 -W 2 10.10.10.20
+PING 10.10.10.20 (10.10.10.20) 56(84) bytes of data.
+64 bytes from 10.10.10.20: icmp_seq=1 ttl=64 time=0.879 ms
+64 bytes from 10.10.10.20: icmp_seq=2 ttl=64 time=0.833 ms
+
+--- 10.10.10.20 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 0.833/0.856/0.879/0.023 ms
+
+$ ping -c 2 -W 2 10.10.10.30
+PING 10.10.10.30 (10.10.10.30) 56(84) bytes of data.
+64 bytes from 10.10.10.30: icmp_seq=1 ttl=64 time=0.846 ms
+64 bytes from 10.10.10.30: icmp_seq=2 ttl=64 time=1.04 ms
+
+--- 10.10.10.30 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 0.846/0.944/1.043/0.098 ms
+
+=== vm-metier ===
+$ hostname
+vm-metier
+
+$ ip -br address
+lo               UNKNOWN        127.0.0.1/8 ::1/128
+enp0s3           UP             10.10.10.20/24 fe80::a00:27ff:fe95:a364/64
+
+$ ip route
+10.10.10.0/24 dev enp0s3 proto kernel scope link src 10.10.10.20
+
+$ sudo netplan get
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s3:
+      addresses:
+      - "10.10.10.20/24"
+      dhcp4: false
+      dhcp6: false
+
+$ ping -c 2 -W 2 10.10.10.10
+PING 10.10.10.10 (10.10.10.10) 56(84) bytes of data.
+64 bytes from 10.10.10.10: icmp_seq=1 ttl=64 time=0.641 ms
+64 bytes from 10.10.10.10: icmp_seq=2 ttl=64 time=0.904 ms
+
+--- 10.10.10.10 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1046ms
+rtt min/avg/max/mdev = 0.641/0.772/0.904/0.131 ms
+
+$ ping -c 2 -W 2 10.10.10.30
+PING 10.10.10.30 (10.10.10.30) 56(84) bytes of data.
+64 bytes from 10.10.10.30: icmp_seq=1 ttl=64 time=0.644 ms
+64 bytes from 10.10.10.30: icmp_seq=2 ttl=64 time=1.29 ms
+
+--- 10.10.10.30 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1104ms
+rtt min/avg/max/mdev = 0.644/0.969/1.294/0.325 ms
+
+=== vm-donnees ===
+$ hostname
+vm-donnees
+
+$ ip -br address
+lo               UNKNOWN        127.0.0.1/8 ::1/128
+enp0s3           UP             10.10.10.30/24 fe80::a00:27ff:fe22:6262/64
+
+$ ip route
+10.10.10.0/24 dev enp0s3 proto kernel scope link src 10.10.10.30
+
+$ sudo netplan get
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s3:
+      addresses:
+      - "10.10.10.30/24"
+      dhcp4: false
+      dhcp6: false
+
+$ ping -c 2 -W 2 10.10.10.10
+PING 10.10.10.10 (10.10.10.10) 56(84) bytes of data.
+64 bytes from 10.10.10.10: icmp_seq=1 ttl=64 time=0.710 ms
+64 bytes from 10.10.10.10: icmp_seq=2 ttl=64 time=0.784 ms
+
+--- 10.10.10.10 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1027ms
+rtt min/avg/max/mdev = 0.710/0.747/0.784/0.037 ms
+
+$ ping -c 2 -W 2 10.10.10.20
+PING 10.10.10.20 (10.10.10.20) 56(84) bytes of data.
+64 bytes from 10.10.10.20: icmp_seq=1 ttl=64 time=0.709 ms
+64 bytes from 10.10.10.20: icmp_seq=2 ttl=64 time=1.49 ms
+
+--- 10.10.10.20 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1038ms
+rtt min/avg/max/mdev = 0.709/1.101/1.494/0.392 ms
+
+=== VirtualBox : vm-proxy ===
+VMState=poweroff
+nic1=intnet
+intnet1=intnet-app
+macaddress1=08002786D526
+nic2=nat
+Redirections=["http,tcp,127.0.0.1,8080,,80"]
+
+=== VirtualBox : vm-metier ===
+VMState=poweroff
+nic1=intnet
+intnet1=intnet-app
+macaddress1=08002795A364
+nic2=none
+Redirections=[]
+
+=== VirtualBox : vm-donnees ===
+VMState=poweroff
+nic1=intnet
+intnet1=intnet-app
+macaddress1=080027226262
+nic2=none
+Redirections=[]
+

@@ -1,0 +1,7 @@
+table inet intern_db {
+    chain input {
+        type filter hook input priority 0; policy accept;
+        tcp dport 5432 ip saddr 10.10.10.20 accept
+        tcp dport 5432 drop
+    }
+}

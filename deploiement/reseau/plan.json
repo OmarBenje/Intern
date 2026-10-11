@@ -1,0 +1,9 @@
+{
+  "network": "intnet-app",
+  "prefix": 24,
+  "machines": [
+    {"name": "vm-proxy", "address": "10.10.10.10", "preparation_port": 2221},
+    {"name": "vm-metier", "address": "10.10.10.20", "preparation_port": 2222},
+    {"name": "vm-donnees", "address": "10.10.10.30", "preparation_port": 2223}
+  ]
+}

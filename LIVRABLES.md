@@ -15,6 +15,7 @@ nécessaires à sa revue.
 | 5 — Couche présentation | Livrables préparés et vérifiés localement | [code frontend](frontend/src/), [démarrage](frontend/README.md), [captures](frontend/captures/README.md), [rapport de validation](frontend/VALIDATION.md) |
 | 6 — Intégration et tests | Recette locale réussie ; vérifications externes restantes | [cahier de tests PDF](tests/cahier_de_tests.pdf), [source du tableau](tests/cahier_de_tests.html), [guide d'installation](README.md#installer-et-démarrer-en-local), [procédure de recette](tests/README.md), [script reproductible](tests/recette_navigateur.mjs) |
 | 7 — Préparation des VM | Trois machines nommées et dimensionnées, snapshots initiaux et capture vérifiés | [Capture VirtualBox](deploiement/docs/virtualbox-machines.png), [Procédure CLI](deploiement/scripts/PROCEDURE.md), [rapport de vérification](deploiement/docs/etape7.md), [preuves CLI](deploiement/docs/preuves-etape7.txt), [identités et snapshots](deploiement/docs/identites-etape7.json) |
+| 8 — Réseau et adressage | Réseau interne configuré et vérifié sur les trois VM ; six pings réussis | [Plan et procédure](deploiement/reseau/README.md), [Netplan proxy](deploiement/reseau/vm-proxy.yaml), [Netplan métier](deploiement/reseau/vm-metier.yaml), [Netplan données](deploiement/reseau/vm-donnees.yaml), [rapport](deploiement/docs/etape8.md), [sorties de vérification](deploiement/docs/preuves-etape8.txt) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -247,3 +248,31 @@ modèle, tous éteints. Les noms des snapshots sont abrégés dans cette fenêtr
 leurs noms complets et les ressources vérifiées figurent dans les
 [preuves CLI](deploiement/docs/preuves-etape7.txt) et le
 [rapport de vérification](deploiement/docs/etape7.md).
+
+## Étape 8 — Réseau et adressage
+
+Le réseau interne **`intnet-app`** relie les trois machines sur `10.10.10.0/24`.
+Le proxy conserve seul un adaptateur NAT, avec la redirection
+**`127.0.0.1:8080 → 80`**.
+
+| Machine | Interface interne | Adresse | NAT |
+| --- | --- | --- | --- |
+| vm-proxy | enp0s3 | 10.10.10.10/24 | enp0s8 |
+| vm-metier | enp0s3 | 10.10.10.20/24 | Aucun |
+| vm-donnees | enp0s3 | 10.10.10.30/24 | Aucun |
+
+Après redémarrage sur cette topologie, **les six pings ont réussi avec 0 % de
+perte** : chaque machine joint les deux autres. Les VM métier et données n'ont
+aucune route IPv4 par défaut. Les fichiers Netplan installés correspondent aux
+fichiers livrés. Les snapshots **« avant reseau »** sont conservés, les accès SSH
+temporaires sont retirés et les machines sont éteintes après vérification.
+
+Livrables : [plan et procédure](deploiement/reseau/README.md), fichiers Netplan
+[proxy](deploiement/reseau/vm-proxy.yaml), [métier](deploiement/reseau/vm-metier.yaml)
+et [données](deploiement/reseau/vm-donnees.yaml),
+[sorties des commandes](deploiement/docs/preuves-etape8.txt) et
+[rapport](deploiement/docs/etape8.md).
+
+Les paquets de l'étape suivante seront installés avec une ouverture NAT
+ponctuelle, retirée avant les vérifications. La réponse HTTP et l'isolation des
+services applicatifs restent à vérifier après leur déploiement.
