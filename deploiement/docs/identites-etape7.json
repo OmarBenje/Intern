@@ -1,0 +1,32 @@
+[
+  {
+    "name": "vm-proxy",
+    "cpus": 1,
+    "memory_mb": 1024,
+    "machine_id": "fbb1f0d7559b4be1ab7ed8248631a6dc",
+    "mac": "08002786D526",
+    "uuid": "b59bb789-3c5e-4ddc-8997-538a7cf36b1a",
+    "snapshot": "base propre",
+    "snapshot_uuid": "ac363a7b-b5ce-4f03-bde0-cd5457384cc9"
+  },
+  {
+    "name": "vm-metier",
+    "cpus": 2,
+    "memory_mb": 2048,
+    "machine_id": "5f4de8b3cdcb40bd804fc8171ffd8459",
+    "mac": "08002795A364",
+    "uuid": "83ebf4fc-e538-40fa-94ca-99c166a456ca",
+    "snapshot": "base propre",
+    "snapshot_uuid": "b0ab621f-4844-49bd-8c93-f3565faa6b2b"
+  },
+  {
+    "name": "vm-donnees",
+    "cpus": 2,
+    "memory_mb": 2048,
+    "machine_id": "aec9927b58d54af1946194dd2e1b7ee7",
+    "mac": "080027226262",
+    "uuid": "77c08143-103e-431a-9e6f-b985d677f083",
+    "snapshot": "base propre",
+    "snapshot_uuid": "039e44d2-25c5-4e31-b25d-63658b8c330b"
+  }
+]

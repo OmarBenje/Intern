@@ -14,6 +14,7 @@ nécessaires à sa revue.
 | 4 — Couche métier | Livrables préparés et vérifiés localement | [code de l'API](metier/app/), [démarrage et architecture](metier/README.md), [exemples HTTP](metier/api.http), [dépendances](metier/requirements.txt), [configuration](metier/.env.example), [rapport de validation](metier/VALIDATION.md) |
 | 5 — Couche présentation | Livrables préparés et vérifiés localement | [code frontend](frontend/src/), [démarrage](frontend/README.md), [captures](frontend/captures/README.md), [rapport de validation](frontend/VALIDATION.md) |
 | 6 — Intégration et tests | Recette locale réussie ; vérifications externes restantes | [cahier de tests PDF](tests/cahier_de_tests.pdf), [source du tableau](tests/cahier_de_tests.html), [guide d'installation](README.md#installer-et-démarrer-en-local), [procédure de recette](tests/README.md), [script reproductible](tests/recette_navigateur.mjs) |
+| 7 — Préparation des VM | Trois machines nommées et dimensionnées, snapshots initiaux et capture vérifiés | [Capture VirtualBox](deploiement/docs/virtualbox-machines.png), [Procédure CLI](deploiement/scripts/PROCEDURE.md), [rapport de vérification](deploiement/docs/etape7.md), [preuves CLI](deploiement/docs/preuves-etape7.txt), [identités et snapshots](deploiement/docs/identites-etape7.json) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -225,3 +226,24 @@ dans le [README principal](README.md#installer-et-démarrer-en-local).
 Le PDF marque séparément l'installation sur une machine virtuelle vierge et la
 comparaison interactive avec le prototype comme **à vérifier**. Aucun résultat
 de déploiement ou de service externe n'est déduit de la recette locale.
+
+## Étape 7 — Préparation des trois machines
+
+[Procédure CLI](deploiement/scripts/PROCEDURE.md)
+j
+Les trois machines sont nommées, dimensionnées et disposent chacune du snapshot
+initial **« base propre »**. Le modèle commun est conservé en plus des trois clones.
+
+| Machine | vCPU | RAM | Snapshot initial |
+| --- | ---: | ---: | --- |
+| vm-proxy | 1 | 1 Gio | base propre |
+| vm-metier | 2 | 2 Gio | base propre |
+| vm-donnees | 2 | 2 Gio | base propre |
+
+![Liste des machines dans le gestionnaire VirtualBox](deploiement/docs/virtualbox-machines.png)
+
+Cette capture réelle du gestionnaire VirtualBox montre les trois clones et le
+modèle, tous éteints. Les noms des snapshots sont abrégés dans cette fenêtre ;
+leurs noms complets et les ressources vérifiées figurent dans les
+[preuves CLI](deploiement/docs/preuves-etape7.txt) et le
+[rapport de vérification](deploiement/docs/etape7.md).

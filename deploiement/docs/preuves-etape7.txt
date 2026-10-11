@@ -1,0 +1,47 @@
+$ VBoxManage --version
+7.2.8_RPMFUSIONr173730
+
+$ VBoxManage list vms
+"vm-modele" {45ce41de-f43c-40ee-9c28-ac275f0b2ddc}
+"vm-proxy" {b59bb789-3c5e-4ddc-8997-538a7cf36b1a}
+"vm-metier" {83ebf4fc-e538-40fa-94ca-99c166a456ca}
+"vm-donnees" {77c08143-103e-431a-9e6f-b985d677f083}
+
+$ VBoxManage showvminfo vm-proxy --machinereadable (champs utiles)
+name=vm-proxy
+UUID=b59bb789-3c5e-4ddc-8997-538a7cf36b1a
+cpus=1
+memory=1024
+VMState=poweroff
+nic1=nat
+macaddress1=08002786D526
+CurrentSnapshotName=base propre
+CurrentSnapshotUUID=ac363a7b-b5ce-4f03-bde0-cd5457384cc9
+Disque de base indépendant=31c1020a-157d-4f52-a3bb-9c075c7df19c
+machine-id vérifié par SSH après redémarrage=fbb1f0d7559b4be1ab7ed8248631a6dc
+
+$ VBoxManage showvminfo vm-metier --machinereadable (champs utiles)
+name=vm-metier
+UUID=83ebf4fc-e538-40fa-94ca-99c166a456ca
+cpus=2
+memory=2048
+VMState=poweroff
+nic1=nat
+macaddress1=08002795A364
+CurrentSnapshotName=base propre
+CurrentSnapshotUUID=b0ab621f-4844-49bd-8c93-f3565faa6b2b
+Disque de base indépendant=98c8f0e8-cda1-4fa3-bbeb-6a6c6e39cfaa
+machine-id vérifié par SSH après redémarrage=5f4de8b3cdcb40bd804fc8171ffd8459
+
+$ VBoxManage showvminfo vm-donnees --machinereadable (champs utiles)
+name=vm-donnees
+UUID=77c08143-103e-431a-9e6f-b985d677f083
+cpus=2
+memory=2048
+VMState=poweroff
+nic1=nat
+macaddress1=080027226262
+CurrentSnapshotName=base propre
+CurrentSnapshotUUID=039e44d2-25c5-4e31-b25d-63658b8c330b
+Disque de base indépendant=3d5c2f13-12a1-4cba-9038-bb84c94dc75c
+machine-id vérifié par SSH après redémarrage=aec9927b58d54af1946194dd2e1b7ee7
