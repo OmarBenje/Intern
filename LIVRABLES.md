@@ -18,6 +18,7 @@ nécessaires à sa revue.
 | 8 — Réseau et adressage | Réseau interne configuré et vérifié sur les trois VM ; six pings réussis | [Plan et procédure](deploiement/reseau/README.md), [Netplan proxy](deploiement/reseau/vm-proxy.yaml), [Netplan métier](deploiement/reseau/vm-metier.yaml), [Netplan données](deploiement/reseau/vm-donnees.yaml), [rapport](deploiement/docs/etape8.md), [sorties de vérification](deploiement/docs/preuves-etape8.txt) |
 | 9 — Déploiement des couches | Services installés et vérifiés après redémarrage ; huit contrôles navigateur réussis | [Configurations et procédure](deploiement/DEPLOIEMENT.md), [rapport](deploiement/docs/etape9.md), [preuves VM](deploiement/docs/preuves-etape9.txt), [recette navigateur](deploiement/docs/recette-etape9.txt), [capture réelle](deploiement/docs/etape9-tableau-de-bord.png) |
 | 10 — Vérification et mesures | Neuf liaisons conformes, trois séries mesurées et trois OVA créés et contrôlés | [Procédure](deploiement/VERIFICATION.md), [rapport](deploiement/docs/etape10.md), [mesures](deploiement/docs/mesures.md), [preuves réseau](deploiement/docs/preuves-etape10.txt), [manifeste des OVA](deploiement/docs/exports-etape10.json) |
+| 11 — Données conteneurisées | Configuration préparée et contrôlée statiquement ; peuplement et persistance Docker à vérifier | [Service et volume](docker/compose.yaml), [configuration](docker/.env.example), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-donnees.sh), [rapport et limites](docker/docs/etape11.md) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -332,3 +333,17 @@ Livrables : [rapport complet](deploiement/docs/etape10.md),
 [sorties des exports](deploiement/docs/preuves-exports-etape10.txt) et
 [procédure de vérification et de réimportation](deploiement/VERIFICATION.md).
 La [procédure générale](deploiement/PROCEDURE.md) relie les étapes 7 à 10.
+
+## Étape 11 — Couche données conteneurisée
+
+Le [service de données](docker/compose.yaml) utilise PostgreSQL 16.15, le volume
+nommé `pgdata` et les deux scripts SQL existants, montés en lecture seule.
+Il appartient uniquement au réseau `interne`, sans port publié, et dispose
+d'une sonde de santé TCP. La [procédure](docker/PROCEDURE.md) distingue
+l'arrêt conservant les données de la suppression du volume et décrit les
+vérifications du peuplement et de la persistance.
+
+Les contrôles statiques ont réussi. Le moteur disponible lance Podman et
+échoue avant l'exécution ; le démarrage avec Docker Engine et les preuves
+réelles restent à produire. Le [rapport](docker/docs/etape11.md) précise
+ces limites. L'étape n'est pas déclarée validée.

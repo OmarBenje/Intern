@@ -1,0 +1,39 @@
+name: intern-docker
+
+services:
+  donnees:
+    image: postgres:16.15-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Renseigner POSTGRES_DB dans docker/.env}
+      POSTGRES_USER: ${POSTGRES_USER:?Renseigner POSTGRES_USER dans docker/.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Renseigner POSTGRES_PASSWORD dans docker/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - type: bind
+        source: ../donnees/schema.sql
+        target: /docker-entrypoint-initdb.d/01-schema.sql
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ../donnees/data.sql
+        target: /docker-entrypoint-initdb.d/02-data.sql
+        read_only: true
+        bind:
+          create_host_path: false
+    networks:
+      - interne
+    healthcheck:
+      # TCP reste indisponible pendant les imports du serveur temporaire.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  pgdata:
+
+networks:
+  interne:
+    internal: true
