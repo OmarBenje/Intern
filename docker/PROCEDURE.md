@@ -1,4 +1,4 @@
-# Conteneurisation — données et métier
+# Conteneurisation — trois couches
 
 ## Prérequis
 
@@ -31,8 +31,7 @@ et `POSTGRES_PORT=5432`.
 
 ## Déclaration et initialisation
 
-[compose.yaml](compose.yaml) déclare les services données et métier.
-Le proxy sera ajouté à l'étape suivante.
+[compose.yaml](compose.yaml) déclare les services données, métier et proxy.
 L'image officielle `postgres:16.15-bookworm` utilise la même version PostgreSQL
 que les mesures VM. Elle reconnaît les commandes `\restrict` des exports SQL.
 La version est explicite ; le digest réellement téléchargé sera relevé lors
@@ -183,3 +182,88 @@ La construction et la connexion PostgreSQL avec Docker Engine restent
 
 Références : [image officielle Python](https://hub.docker.com/_/python),
 [installation uv et cache Docker](https://docs.astral.sh/uv/guides/integration/docker/).
+
+## Étape 13 — Proxy et composition
+
+Le [proxy](proxy.Dockerfile) est construit en trois phases : collecte des
+statiques depuis l'image métier, build React avec Node 22.23.3, puis copie
+des seuls fichiers nécessaires dans Nginx 1.28.0 Alpine. Les outils Python
+et Node ne sont pas copiés dans l'image finale du proxy.
+
+La [configuration Nginx](proxy.conf) sert le client et les statiques de
+l'administration. Elle transmet `/api/`, `/admin/` et `/health/` à
+`http://metier:8000`, en conservant le Host et le protocole pour les sessions
+et le CSRF. Le client utilise le préfixe relatif `/api/v1`.
+
+| Service | Réseaux | Port publié sur l'hôte |
+| --- | --- | --- |
+| proxy | frontal | `127.0.0.1:8080` vers `80` |
+| metier | frontal, interne | Aucun |
+| donnees | interne | Aucun |
+
+`pgdata` reste le seul volume nommé. Les statiques sont incorporés dans
+l'image du proxy ; les sources SQL sont les seuls montages de fichiers.
+Le métier attend la santé de PostgreSQL et le proxy attend celle du métier.
+La sonde du proxy consulte `/health/ready/` à travers Nginx et Django jusqu'à
+la base, ce qui vérifie la disponibilité des trois couches.
+
+### Une commande pour chaque opération
+
+Renseigner d'abord `docker/.env` comme indiqué dans les prérequis. Depuis
+la racine d'Intern :
+
+```sh
+# Construction dans l'ordre métier puis proxy, et démarrage des trois services.
+sh docker/demarrer.sh up
+
+# Arrêt et suppression des conteneurs ; le volume de données est conservé.
+sh docker/demarrer.sh down
+
+# Recréation des conteneurs depuis les images déjà construites, volume conservé.
+sh docker/demarrer.sh restart
+
+# État des trois services.
+sh docker/demarrer.sh ps
+```
+
+Le script utilise Docker Compose. Les deux constructions sont séquentielles
+car la collecte des statiques du proxy utilise l'image métier construite.
+Une fois les images disponibles, le démarrage direct est également possible :
+
+```sh
+docker compose --env-file docker/.env -f docker/compose.yaml up -d --no-build --wait --wait-timeout 180
+```
+
+Le script de démarrage métier est l'`ENTRYPOINT` de son image et Gunicorn
+est son `CMD`. La composition conserve ces deux éléments : elle ne remplace
+pas l'`ENTRYPOINT` en perdant la commande de lancement.
+
+Ouvrir **http://127.0.0.1:8080/login** et contrôler :
+
+```sh
+curl --fail http://127.0.0.1:8080/health/ready/
+docker compose --env-file docker/.env -f docker/compose.yaml exec -T proxy nginx -t
+sh docker/verifier-metier.sh
+```
+
+### Recette navigateur et capture
+
+La recette existante est réutilisée avec un dossier de sortie distinct des
+preuves VM. Les fichiers sont générés par le navigateur réel.
+Définir `RECETTE_PASSWORD` avec le mot de passe fictif documenté dans
+`donnees/README.md`, puis :
+
+```sh
+mkdir -p docker/docs
+RECETTE_URL=http://127.0.0.1:8080 RECETTE_OUTPUT_DIR=docker/docs RECETTE_PREFIX=etape13 node deploiement/scripts/recette_etape9.mjs
+```
+
+Pour la capture des services, afficher `sh docker/demarrer.sh ps` dans un
+terminal et capturer cette fenêtre après que les trois services sont sains.
+Le [rapport de l'étape](docs/etape13.md) distingue les essais Podman réellement
+exécutés de la validation Docker Engine restante.
+
+La composition rend explicites les noms des services, les dépendances,
+les réseaux et les montages. La procédure VM comporte les installations,
+les configurations système, les copies et les redémarrages de chaque machine.
+Les deux procédures restent disponibles pour la comparaison ultérieure.

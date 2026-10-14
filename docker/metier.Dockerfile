@@ -22,4 +22,5 @@ RUN useradd --create-home --uid 10001 intern \
     && chown -R intern:intern /app/.private-media /app/staticfiles
 USER intern
 EXPOSE 8000
+ENTRYPOINT ["sh", "/app/docker/demarrer-metier.sh"]
 CMD [".venv/bin/gunicorn", "--chdir", "app", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "30", "--access-logfile", "-", "--error-logfile", "-"]

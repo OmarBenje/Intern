@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 import { writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { resolve, sep } from 'node:path'
 
 const require = createRequire(new URL('../../frontend/package.json', import.meta.url))
 const { chromium } = require('@playwright/test')
@@ -10,7 +11,10 @@ const base = process.env.RECETTE_URL || 'http://127.0.0.1:8080'
 const password = process.env.RECETTE_PASSWORD
 if (!password) throw new Error('Définir RECETTE_PASSWORD avec le mot de passe du jeu fictif.')
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
-const docs = fileURLToPath(new URL('../docs/', import.meta.url))
+const docs = process.env.RECETTE_OUTPUT_DIR
+  ? resolve(process.env.RECETTE_OUTPUT_DIR) + sep
+  : fileURLToPath(new URL('../docs/', import.meta.url))
+const prefix = process.env.RECETTE_PREFIX || 'etape9'
 const results = []
 const apiOrigins = new Set()
 const pageErrors = []
@@ -56,7 +60,7 @@ try {
   })
   await page.goto('/login')
   await page.getByRole('button', { name: 'Se connecter', exact: true }).waitFor()
-  await page.screenshot({ path: docs + 'etape9-connexion.png', fullPage: true })
+  await page.screenshot({ path: docs + prefix + '-connexion.png', fullPage: true })
   await check('connexion candidat depuis le client React et session persistante', async () => {
     await login(page, 'alice@example.test', '/dashboard')
     const me = await context.request.get('/api/v1/auth/me/')
@@ -67,7 +71,7 @@ try {
     await page.getByRole('button', { name: 'Se déconnecter' }).waitFor()
     await page.locator('#main-content[aria-busy="false"]').waitFor()
     await page.locator('.dashboard-table tbody .application-position').first().waitFor()
-    await page.screenshot({ path: docs + 'etape9-tableau-de-bord.png', fullPage: true })
+    await page.screenshot({ path: docs + prefix + '-tableau-de-bord.png', fullPage: true })
   })
   await check('catalogue fictif accessible via Nginx', async () => {
     await page.goto('/stages')
@@ -105,7 +109,7 @@ try {
   })
   results.push(`Navigateur : ${browser.version()}`)
   results.push(`Origine API observée : ${[...apiOrigins].join(', ')}`)
-  await writeFile(docs + 'recette-etape9.txt', results.join('\n') + '\n')
+  await writeFile(docs + 'recette-' + prefix + '.txt', results.join('\n') + '\n')
 } finally {
   for (const context of contexts) await context.close()
   await browser.close()

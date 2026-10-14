@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-14",
+  "engine": "Podman",
+  "project": "intern-etape13",
+  "initial": [
+    {
+      "service": "intern-etape13_proxy_1",
+      "running": true,
+      "health": "healthy",
+      "networks": [
+        "intern-etape13_frontal"
+      ],
+      "ports": {
+        "80/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "8080"
+          }
+        ]
+      },
+      "image_id": "04e484e980ad6eb722734d1a578c470f2cd6aa031c8e21067713550f319e0fe6"
+    },
+    {
+      "service": "intern-etape13_metier_1",
+      "running": true,
+      "health": "healthy",
+      "networks": [
+        "intern-etape13_frontal",
+        "intern-etape13_interne"
+      ],
+      "ports": {
+        "8000/tcp": null
+      },
+      "image_id": "bb31ce64773904c17d899562c0d014e88b10833a08fd1c5e6701f7dbb95cfffc"
+    },
+    {
+      "service": "intern-etape13_donnees_1",
+      "running": true,
+      "health": "healthy",
+      "networks": [
+        "intern-etape13_interne"
+      ],
+      "ports": {
+        "5432/tcp": null
+      },
+      "image_id": "e8538db784b854a9baac5c1be6d059dcf0db257af2d94c8c5807b5fc15f11222"
+    }
+  ],
+  "final": [
+    {
+      "service": "intern-etape13_proxy_1",
+      "running": true,
+      "health": "healthy",
+      "networks": [
+        "intern-etape13_frontal"
+      ],
+      "ports": {
+        "80/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "8080"
+          }
+        ]
+      },
+      "image_id": "04e484e980ad6eb722734d1a578c470f2cd6aa031c8e21067713550f319e0fe6"
+    },
+    {
+      "service": "intern-etape13_metier_1",
+      "running": true,
+      "health": "healthy",
+      "networks": [
+        "intern-etape13_frontal",
+        "intern-etape13_interne"
+      ],
+      "ports": {
+        "8000/tcp": null
+      },
+      "image_id": "bb31ce64773904c17d899562c0d014e88b10833a08fd1c5e6701f7dbb95cfffc"
+    },
+    {
+      "service": "intern-etape13_donnees_1",
+      "running": true,
+      "health": "healthy",
+      "networks": [
+        "intern-etape13_interne"
+      ],
+      "ports": {
+        "5432/tcp": null
+      },
+      "image_id": "e8538db784b854a9baac5c1be6d059dcf0db257af2d94c8c5807b5fc15f11222"
+    }
+  ],
+  "images": [
+    {
+      "tags": [
+        "localhost/intern-metier:etape12"
+      ],
+      "id": "bb31ce64773904c17d899562c0d014e88b10833a08fd1c5e6701f7dbb95cfffc",
+      "size_bytes": 388668320
+    },
+    {
+      "tags": [
+        "localhost/intern-proxy:etape13"
+      ],
+      "id": "04e484e980ad6eb722734d1a578c470f2cd6aa031c8e21067713550f319e0fe6",
+      "size_bytes": 55975819
+    },
+    {
+      "tags": [
+        "docker.io/library/postgres:16.15-bookworm"
+      ],
+      "id": "e8538db784b854a9baac5c1be6d059dcf0db257af2d94c8c5807b5fc15f11222",
+      "size_bytes": 450942316
+    }
+  ],
+  "down_up": "PASS",
+  "volume_preserved": true,
+  "initialization_skipped": true,
+  "sql_checks": 34,
+  "http_ready": 200,
+  "docker_engine_tested": false
+}

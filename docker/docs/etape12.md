@@ -5,9 +5,9 @@
 Construire l'application existante et accéder à PostgreSQL par le nom
 `donnees`, sans port publié sur le métier.
 
-**Résultat actuel : image reconstruite avec Podman, 388 668 114 octets ;
+**Résultat actuel : image reconstruite avec Podman, 388 668 320 octets ;
 Git, uv et cache uv absents ; démarrage Gunicorn vérifié.** La connexion SQL
-et la validation avec Docker Engine restent à exécuter.
+est vérifiée à l'étape 13 ; Docker Engine reste à vérifier.
 
 - [Construction de l'image](../metier.Dockerfile).
 - [Exclusion du contexte](../.dockerignore), source unique à la racine.
@@ -193,3 +193,12 @@ vérifiées sur cette image Podman. La connexion à `donnees`, le contrôle des
 migrations contre PostgreSQL et l'exécution avec Docker Engine restent à
 vérifier. Le cache de couches reste utilisable : désactiver le cache de
 paquets uv ne désactive pas la réutilisation des couches de construction.
+
+## Contrôle dans la composition
+
+L'étape 13 intègre le script de démarrage dans l'`ENTRYPOINT` de l'image,
+pour conserver le `CMD` Gunicorn lorsque Compose lance le service.
+La taille après cette modification de configuration est **388 668 320 octets**.
+Les **34 contrôles SQL depuis le métier** et la sonde `/health/ready/` via
+le proxy ont réussi sur Podman. Le [rapport de composition](etape13.md)
+et ses preuves donnent les identifiants des images actuelles.

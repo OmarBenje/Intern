@@ -1,0 +1,10 @@
+PASS — proxy, métier et base répondent via /health/ready/
+PASS — session anonyme refusée et mutation sans CSRF refusée
+PASS — connexion candidat depuis le client React et session persistante
+PASS — catalogue fictif accessible via Nginx
+PASS — CV fictif privé téléchargé par son propriétaire
+PASS — connexion recruteur et tableau de bord réel
+PASS — administration Django et ses fichiers statiques accessibles
+PASS — appels API du navigateur sur la même origine et absence d’erreur JavaScript
+Navigateur : 154.0.8037.97
+Origine API observée : http://127.0.0.1:8080

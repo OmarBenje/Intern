@@ -19,7 +19,8 @@ nécessaires à sa revue.
 | 9 — Déploiement des couches | Services installés et vérifiés après redémarrage ; huit contrôles navigateur réussis | [Configurations et procédure](deploiement/DEPLOIEMENT.md), [rapport](deploiement/docs/etape9.md), [preuves VM](deploiement/docs/preuves-etape9.txt), [recette navigateur](deploiement/docs/recette-etape9.txt), [capture réelle](deploiement/docs/etape9-tableau-de-bord.png) |
 | 10 — Vérification et mesures | Neuf liaisons conformes, trois séries mesurées et trois OVA créés et contrôlés | [Procédure](deploiement/VERIFICATION.md), [rapport](deploiement/docs/etape10.md), [mesures](deploiement/docs/mesures.md), [preuves réseau](deploiement/docs/preuves-etape10.txt), [manifeste des OVA](deploiement/docs/exports-etape10.json) |
 | 11 — Données conteneurisées | Configuration préparée et contrôlée statiquement ; peuplement et persistance Docker à vérifier | [Service et volume](docker/compose.yaml), [configuration](docker/.env.example), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-donnees.sh), [rapport et limites](docker/docs/etape11.md) |
-| 12 — Image métier | Image construite et contrôlée avec Podman : 388 668 114 octets ; connexion SQL et Docker Engine à vérifier | [Dockerfile](docker/metier.Dockerfile), [exclusions](docker/.dockerignore), [composition](docker/compose.yaml), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-metier.sh), [rapport](docker/docs/etape12.md), [preuve](docker/docs/verification-image-etape12.txt) |
+| 12 — Image métier | Image actuelle : 388 668 320 octets ; connexion SQL vérifiée avec Podman à l'étape 13 ; Docker Engine à vérifier | [Dockerfile](docker/metier.Dockerfile), [exclusions](docker/.dockerignore), [composition](docker/compose.yaml), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-metier.sh), [rapport](docker/docs/etape12.md), [preuve](docker/docs/verification-image-etape12.txt) |
+| 13 — Proxy et composition | Trois services sains, arrêt et redémarrage, 34 contrôles SQL et huit contrôles navigateur réussis avec Podman ; Docker Engine à vérifier | [Fichier de composition](docker/compose.yaml), [configuration du proxy](docker/proxy.conf), [Dockerfile du proxy](docker/proxy.Dockerfile), [commandes](docker/demarrer.sh), [capture des services](docker/docs/etape13-services.png), [connexion](docker/docs/etape13-connexion.png), [tableau de bord](docker/docs/etape13-tableau-de-bord.png), [rapport](docker/docs/etape13.md), [preuves](docker/docs/preuves-etape13.json) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -365,5 +366,48 @@ La recette actuelle est construite et inspectée avec Podman :
 antérieure. Git, uv et le cache uv sont absents de l'image finale. Gunicorn
 démarre sous le compte `intern` et `/health/live/` répond HTTP 200.
 La [preuve](docker/docs/verification-image-etape12.txt) conserve les identifiants
-et les empreintes. La connexion SQL et l'exécution sur Docker Engine restent
-à vérifier.
+et les empreintes de cette construction. Le script de démarrage intégré à
+l'image lors de la composition donne une taille actuelle de **388 668 320 octets**.
+La connexion SQL réussit à l'étape 13. Docker Engine reste à vérifier.
+
+## Étape 13 — Proxy et composition
+
+### Livrables
+
+| Fichier | Rôle |
+| --- | --- |
+| [compose.yaml](docker/compose.yaml) | Composition des trois services, deux réseaux, volume et publication du port |
+| [proxy.conf](docker/proxy.conf) | Configuration Nginx : client, statiques et transmission au métier |
+| [proxy.Dockerfile](docker/proxy.Dockerfile) | Construction de l'image du proxy |
+| [demarrer.sh](docker/demarrer.sh) | Construction, démarrage, arrêt et redémarrage |
+| [PROCEDURE.md](docker/PROCEDURE.md) | Instructions reproductibles |
+| [Capture des trois services](docker/docs/etape13-services.png) | Trois conteneurs sains et réponse du proxy |
+| [Capture de connexion](docker/docs/etape13-connexion.png) | Écran servi par le proxy |
+| [Capture du tableau de bord](docker/docs/etape13-tableau-de-bord.png) | Application réelle après authentification |
+| [Rapport](docker/docs/etape13.md) | Vérifications et limites |
+| [Preuves de composition](docker/docs/preuves-etape13.json) | États, réseaux, ports, images et redémarrage |
+| [Recette navigateur](docker/docs/recette-etape13.txt) | Huit contrôles réels |
+| [Résultats SQL](docker/docs/sql-etape13.txt) | 34 contrôles depuis le métier |
+
+### Captures
+
+![Trois services en marche](docker/docs/etape13-services.png)
+
+[Voir l'écran de connexion](docker/docs/etape13-connexion.png) ·
+[Voir le tableau de bord](docker/docs/etape13-tableau-de-bord.png).
+
+### Synthèse des vérifications
+
+L'image du proxy contient le client React et les statiques Django.
+Nginx transmet les appels au service `metier`, sans adresse IP fixe.
+La composition comporte trois services, deux réseaux et un seul volume nommé.
+Seul le proxy publie le port `127.0.0.1:8080` ; les dépendances attendent
+la santé des services précédents.
+
+Sur un projet Podman isolé, les trois conteneurs sont sains. L'arrêt puis la
+recréation par Compose conservent les données. Les **34 contrôles SQL** et
+les **huit contrôles navigateur réels** réussissent. La
+[capture des services](docker/docs/etape13-services.png), le
+[rapport](docker/docs/etape13.md) et les
+[preuves](docker/docs/preuves-etape13.json) sont livrés.
+La validation du moteur Docker Engine reste à effectuer.
