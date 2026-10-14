@@ -19,6 +19,7 @@ nécessaires à sa revue.
 | 9 — Déploiement des couches | Services installés et vérifiés après redémarrage ; huit contrôles navigateur réussis | [Configurations et procédure](deploiement/DEPLOIEMENT.md), [rapport](deploiement/docs/etape9.md), [preuves VM](deploiement/docs/preuves-etape9.txt), [recette navigateur](deploiement/docs/recette-etape9.txt), [capture réelle](deploiement/docs/etape9-tableau-de-bord.png) |
 | 10 — Vérification et mesures | Neuf liaisons conformes, trois séries mesurées et trois OVA créés et contrôlés | [Procédure](deploiement/VERIFICATION.md), [rapport](deploiement/docs/etape10.md), [mesures](deploiement/docs/mesures.md), [preuves réseau](deploiement/docs/preuves-etape10.txt), [manifeste des OVA](deploiement/docs/exports-etape10.json) |
 | 11 — Données conteneurisées | Configuration préparée et contrôlée statiquement ; peuplement et persistance Docker à vérifier | [Service et volume](docker/compose.yaml), [configuration](docker/.env.example), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-donnees.sh), [rapport et limites](docker/docs/etape11.md) |
+| 12 — Image métier | Livrables préparés ; construction, connexion et taille Docker à vérifier | [Dockerfile](docker/metier.Dockerfile), [exclusions](docker/.dockerignore), [composition](docker/compose.yaml), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-metier.sh), [rapport](docker/docs/etape12.md) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -234,7 +235,7 @@ de déploiement ou de service externe n'est déduit de la recette locale.
 ## Étape 7 — Préparation des trois machines
 
 [Procédure CLI](deploiement/scripts/PROCEDURE.md)
-j
+
 Les trois machines sont nommées, dimensionnées et disposent chacune du snapshot
 initial **« base propre »**. Le modèle commun est conservé en plus des trois clones.
 
@@ -347,3 +348,16 @@ Les contrôles statiques ont réussi. Le moteur disponible lance Podman et
 échoue avant l'exécution ; le démarrage avec Docker Engine et les preuves
 réelles restent à produire. Le [rapport](docker/docs/etape11.md) précise
 ces limites. L'étape n'est pas déclarée validée.
+
+## Étape 12 — Image métier
+
+Le [Dockerfile](docker/metier.Dockerfile) installe les dépendances verrouillées
+avant le code dans un constructeur séparé. L'image finale utilise Python slim
+et un utilisateur sans privilèges. Le [service métier](docker/compose.yaml)
+joint la base via `donnees:5432`, appartient aux deux réseaux et ne publie
+aucun port. Son démarrage attend la santé de la base et vérifie les migrations.
+
+La [procédure](docker/PROCEDURE.md) fournit les commandes de construction,
+de vérification SQL depuis le métier et de mesure de taille. Les contrôles
+statiques sont documentés dans le [rapport](docker/docs/etape12.md).
+La construction et les résultats réels restent à obtenir sur Docker Engine.

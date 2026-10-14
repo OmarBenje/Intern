@@ -1,4 +1,4 @@
-# Conteneurisation — couche données
+# Conteneurisation — données et métier
 
 ## Prérequis
 
@@ -22,14 +22,17 @@ chmod 600 docker/.env
 ```
 
 Renseigner un mot de passe local dans `docker/.env`, sans versionner ce fichier.
+Renseigner aussi `DJANGO_SECRET_KEY` avec une valeur générée localement :
+`python3 -c 'import secrets; print(secrets.token_urlsafe(64))'`.
+Si le fichier `.env` existe déjà, y ajouter cette clé sans remplacer ses valeurs.
 Les noms `POSTGRES_DB`, `POSTGRES_USER` et `POSTGRES_PASSWORD` sont ceux de
 l'application. Le service métier utilisera ensuite `POSTGRES_HOST=donnees`
 et `POSTGRES_PORT=5432`.
 
 ## Déclaration et initialisation
 
-[compose.yaml](compose.yaml) déclare uniquement le service de données à cette
-étape. Les couches métier et proxy seront ajoutées aux étapes suivantes.
+[compose.yaml](compose.yaml) déclare les services données et métier.
+Le proxy sera ajouté à l'étape suivante.
 L'image officielle `postgres:16.15-bookworm` utilise la même version PostgreSQL
 que les mesures VM. Elle reconnaît les commandes `\restrict` des exports SQL.
 La version est explicite ; le digest réellement téléchargé sera relevé lors
@@ -103,3 +106,68 @@ Changer les variables de base ou de mot de passe après initialisation ne
 modifie pas les comptes déjà enregistrés dans le volume.
 
 Référence : [documentation de l'image officielle PostgreSQL](https://hub.docker.com/_/postgres).
+
+## Étape 12 — Construire l'image métier
+
+[metier.Dockerfile](metier.Dockerfile) utilise `python:3.12.15-slim-bookworm`.
+Python reste dans la même version mineure que les VM, avec une version corrective
+différente. Le constructeur installe Git et `uv==0.11.29`, puis les dépendances
+de `metier/uv.lock`, avant de copier le code. L'image finale ne reçoit que
+l'environnement Python, le code et les fichiers nécessaires à la démonstration ;
+Git, uv et leurs caches restent hors de cette image.
+
+Le fichier [d'exclusion](.dockerignore) pointe vers `../.dockerignore`, utilisé
+par le contexte de construction situé à la racine d'Intern. Il exclut les
+environnements virtuels, secrets, historique Git et artefacts temporaires.
+Le lien `docker/Dockerfile` pointe vers `metier.Dockerfile` pour conserver une
+seule définition utilisable par les configurations existantes.
+
+Les fichiers partagés `jeu_fictif.py`, `verifier.py` et `cv_fictif.pdf` sont copiés
+depuis leurs sources existantes. Les trois CV de démonstration sont placés dans
+les chemins privés enregistrés en base, avec accès réservé au compte `intern`.
+Le code et les dépendances restent détenus par root ; seuls le stockage privé
+et les statiques sont accessibles en écriture au processus applicatif.
+
+Le [script de démarrage](demarrer-metier.sh) vérifie Django et l'historique des
+migrations, collecte les statiques puis lance Gunicorn. Il ne recrée ni le
+schéma ni le jeu fictif. Une migration absente fait échouer le démarrage,
+pour éviter de modifier silencieusement la base restaurée.
+Gunicorn écoute sur `0.0.0.0:8000`, avec deux workers et le même timeout de
+30 secondes que le déploiement VM. Aucun port n'est publié.
+`metier` rejoint `frontal` et `interne` et attend la santé de `donnees`.
+Sa sonde `/health/ready/` exécute une véritable requête SQL.
+
+La configuration HTTP utilise explicitement `DJANGO_DEBUG=true`, comme la
+démonstration VM. Aucun worker d'import ou d'envoi externe n'est lancé.
+Les fichiers privés ajoutés pendant une session ne persistent pas à la
+recréation du métier ; les CV fictifs inclus dans l'image sont restaurés.
+
+### Construire, démarrer et vérifier
+
+Après renseignement de `docker/.env`, depuis la racine d'Intern :
+
+```sh
+docker compose --env-file docker/.env -f docker/compose.yaml config --quiet
+docker compose --env-file docker/.env -f docker/compose.yaml build metier
+docker compose --env-file docker/.env -f docker/compose.yaml up -d --wait --wait-timeout 180 metier
+docker compose --env-file docker/.env -f docker/compose.yaml logs metier
+sh docker/verifier-metier.sh > docker/docs/connexion-etape12.txt
+docker compose --env-file docker/.env -f docker/compose.yaml ps > docker/docs/services-etape12.txt
+docker inspect "$(docker compose --env-file docker/.env -f docker/compose.yaml ps -q metier)" --format 'ports={{json .HostConfig.PortBindings}} reseaux={{json .NetworkSettings.Networks}}' > docker/docs/isolation-etape12.txt
+docker image inspect intern-metier:etape12 --format 'id={{.Id}} taille_exacte_octets={{.Size}}' > docker/docs/taille-image-etape12.txt
+cat docker/docs/taille-image-etape12.txt
+```
+
+Résultats attendus : résolution de `donnees`, HTTP 200 avec `status: ok`,
+**34 vérifications SQL réussies depuis le métier**, deux réseaux pour le métier
+et aucun port publié. Le champ `taille_exacte_octets` affiche la valeur entière
+mesurée par Docker pour l'image non compressée, sans arrondi. Reporter cette
+valeur et l'identifiant de l'image dans le rapport de l'étape 12, avec la date
+de mesure. Une conversion en Mio (octets / 1 048 576) peut compléter cette
+valeur, mais ne remplace pas le nombre exact d'octets.
+Cette mesure ne représente pas la place totale de toutes les couches partagées
+sur disque.
+L'accès navigateur attend le proxy de l'étape 13.
+
+Références : [image officielle Python](https://hub.docker.com/_/python),
+[installation uv et cache Docker](https://docs.astral.sh/uv/guides/integration/docker/).

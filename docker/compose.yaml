@@ -1,6 +1,41 @@
 name: intern-docker
 
 services:
+  metier:
+    image: intern-metier:etape12
+    build:
+      context: ..
+      dockerfile: docker/metier.Dockerfile
+    entrypoint: ["sh", "/app/docker/demarrer-metier.sh"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Renseigner POSTGRES_DB dans docker/.env}
+      POSTGRES_USER: ${POSTGRES_USER:?Renseigner POSTGRES_USER dans docker/.env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Renseigner POSTGRES_PASSWORD dans docker/.env}
+      POSTGRES_HOST: donnees
+      POSTGRES_PORT: "5432"
+      DJANGO_DEBUG: "true"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Renseigner DJANGO_SECRET_KEY dans docker/.env}
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,metier
+      CSRF_TRUSTED_ORIGINS: http://127.0.0.1:8080,http://localhost:8080
+      PUBLIC_BASE_URL: http://127.0.0.1:8080
+      INTERN_ROOT: /app
+      PRIVATE_STORAGE_BACKEND: local
+      PRIVATE_STORAGE_ROOT: /app/.private-media
+      MAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+      GREENHOUSE_API_KEYS: "{}"
+    networks:
+      - frontal
+      - interne
+    depends_on:
+      donnees:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", ".venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready/', timeout=4).read()"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   donnees:
     image: postgres:16.15-bookworm
     environment:
@@ -35,5 +70,6 @@ volumes:
   pgdata:
 
 networks:
+  frontal:
   interne:
     internal: true

@@ -12,3 +12,25 @@ staticfiles
 **/node_modules
 frontend/test-results
 frontend/playwright-report
+
+# Artefacts et fichiers locaux absents du contexte des images.
+**/.venv
+**/.git
+**/.env
+**/.env.*
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.ruff_cache
+**/*.log
+**/*.tmp
+**/*~
+**/test-results
+**/playwright-report
+frontend/dist
+deploiement/docs
+docker/docs
+analyse
+maquette
+tests
+docs
