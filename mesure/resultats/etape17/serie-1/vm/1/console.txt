@@ -1,0 +1,21 @@
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Creating summariser <summary>
+Created the tree successfully using resultats/etape17/serie-1/vm/1/plan.jmx
+Starting standalone test @ 2026 Oct 14 15:51:39 CEST (1791985899209)
+Waiting for possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445
+summary +     19 in 00:00:21 =    0.9/s Avg:    88 Min:    20 Max:  1163 Err:     0 (0.00%) Active: 1 Started: 1 Finished: 0
+summary +     29 in 00:00:30 =    1.0/s Avg:    26 Min:    22 Max:    47 Err:     0 (0.00%) Active: 1 Started: 1 Finished: 0
+summary =     48 in 00:00:51 =    0.9/s Avg:    51 Min:    20 Max:  1163 Err:     0 (0.00%)
+summary +     29 in 00:00:30 =    1.0/s Avg:    26 Min:    20 Max:    63 Err:     0 (0.00%) Active: 1 Started: 1 Finished: 0
+summary =     77 in 00:01:21 =    1.0/s Avg:    41 Min:    20 Max:  1163 Err:     0 (0.00%)
+summary +     29 in 00:00:30 =    1.0/s Avg:    25 Min:    18 Max:    48 Err:     0 (0.00%) Active: 1 Started: 1 Finished: 0
+summary =    106 in 00:01:50 =    1.0/s Avg:    37 Min:    18 Max:  1163 Err:     0 (0.00%)
+summary +     29 in 00:00:30 =    1.0/s Avg:    26 Min:    21 Max:    61 Err:     0 (0.00%) Active: 1 Started: 1 Finished: 0
+summary =    135 in 00:02:20 =    1.0/s Avg:    35 Min:    18 Max:  1163 Err:     0 (0.00%)
+summary +     29 in 00:00:30 =    1.0/s Avg:    23 Min:    19 Max:    28 Err:     0 (0.00%) Active: 0 Started: 1 Finished: 1
+summary =    164 in 00:02:50 =    1.0/s Avg:    32 Min:    18 Max:  1163 Err:     0 (0.00%)
+Tidying up ...    @ 2026 Oct 14 15:54:29 CEST (1791986069814)
+... end of run

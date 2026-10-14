@@ -1,0 +1,10 @@
+{
+  "checked_epoch_s": 1792003343.7274077,
+  "reference_services_healthy": [
+    "proxy",
+    "metier",
+    "donnees"
+  ],
+  "running_vms": 0,
+  "http_ready_status": 200
+}

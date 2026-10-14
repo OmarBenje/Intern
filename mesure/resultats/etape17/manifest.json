@@ -1,0 +1,182 @@
+{
+  "status": "complete",
+  "protocol_sha256": "f973f7cfa871d5330532363463b1b2a6617500752da258a5b71682ffa354a79d",
+  "source_plan_sha256": "0fe2b1cd4c123294b3ad6fc9ddeeda6e3a6775dd28499e05216deaf925a39aef",
+  "order": [
+    "vm",
+    "docker",
+    "docker",
+    "vm"
+  ],
+  "runs": [
+    {
+      "series": 1,
+      "deployment": "vm",
+      "users": 1,
+      "path": "serie-1/vm/1",
+      "errors": 0
+    },
+    {
+      "series": 1,
+      "deployment": "vm",
+      "users": 5,
+      "path": "serie-1/vm/5",
+      "errors": 0
+    },
+    {
+      "series": 1,
+      "deployment": "vm",
+      "users": 10,
+      "path": "serie-1/vm/10",
+      "errors": 0
+    },
+    {
+      "series": 1,
+      "deployment": "vm",
+      "users": 20,
+      "path": "serie-1/vm/20",
+      "errors": 0
+    },
+    {
+      "series": 1,
+      "deployment": "docker",
+      "users": 1,
+      "path": "serie-1/docker/1",
+      "errors": 0
+    },
+    {
+      "series": 1,
+      "deployment": "docker",
+      "users": 5,
+      "path": "serie-1/docker/5",
+      "errors": 0
+    },
+    {
+      "series": 1,
+      "deployment": "docker",
+      "users": 10,
+      "path": "serie-1/docker/10",
+      "errors": 0
+    },
+    {
+      "series": 1,
+      "deployment": "docker",
+      "users": 20,
+      "path": "serie-1/docker/20",
+      "errors": 0
+    },
+    {
+      "series": 2,
+      "deployment": "docker",
+      "users": 1,
+      "path": "serie-2/docker/1",
+      "errors": 0
+    },
+    {
+      "series": 2,
+      "deployment": "docker",
+      "users": 5,
+      "path": "serie-2/docker/5",
+      "errors": 0
+    },
+    {
+      "series": 2,
+      "deployment": "docker",
+      "users": 10,
+      "path": "serie-2/docker/10",
+      "errors": 0
+    },
+    {
+      "series": 2,
+      "deployment": "docker",
+      "users": 20,
+      "path": "serie-2/docker/20",
+      "errors": 0
+    },
+    {
+      "series": 2,
+      "deployment": "vm",
+      "users": 1,
+      "path": "serie-2/vm/1",
+      "errors": 0
+    },
+    {
+      "series": 2,
+      "deployment": "vm",
+      "users": 5,
+      "path": "serie-2/vm/5",
+      "errors": 0
+    },
+    {
+      "series": 2,
+      "deployment": "vm",
+      "users": 10,
+      "path": "serie-2/vm/10",
+      "errors": 0
+    },
+    {
+      "series": 2,
+      "deployment": "vm",
+      "users": 20,
+      "path": "serie-2/vm/20",
+      "errors": 0
+    }
+  ],
+  "started_epoch_s": 1791985807.4718845,
+  "snapshot_sha256": "d4cf4ec80dd40030716fe46f85194ce18dfdf1ae852ecf727eaccd0f75488eb4",
+  "accounts_sha256": "b3738ea09a9a0ea2e773e456bbff4dfad91c6632f7b889a426da119d02658c84",
+  "sources_sha256": "6198ffc2deda96e795fd12c12e0c7dc57db1b63474aafc6f708cddf8492d38a4",
+  "images": {
+    "proxy": "sha256:04e484e980ad6eb722734d1a578c470f2cd6aa031c8e21067713550f319e0fe6",
+    "metier": "sha256:bb31ce64773904c17d899562c0d014e88b10833a08fd1c5e6701f7dbb95cfffc",
+    "donnees": "sha256:e8538db784b854a9baac5c1be6d059dcf0db257af2d94c8c5807b5fc15f11222"
+  },
+  "docker_resources": {
+    "proxy": {
+      "NanoCpus": 0,
+      "Memory": 0
+    },
+    "metier": {
+      "NanoCpus": 0,
+      "Memory": 0
+    },
+    "donnees": {
+      "NanoCpus": 0,
+      "Memory": 0
+    }
+  },
+  "docker_versions": {
+    "python": "3.12.15",
+    "django": "6.1.1",
+    "drf": "3.18.1",
+    "gunicorn": "23.0.0"
+  },
+  "progress": {
+    "epoch_s": 1792001340.0519023,
+    "action": "reference_restored"
+  },
+  "vm_versions": {
+    "python": "3.12.3",
+    "django": "6.1.1",
+    "drf": "3.18.1",
+    "gunicorn": "23.0.0"
+  },
+  "vm_configuration": {
+    "proxy": {
+      "cpus": "1",
+      "memory": "1024",
+      "paravirtprovider": "minimal"
+    },
+    "metier": {
+      "cpus": "2",
+      "memory": "2048",
+      "paravirtprovider": "default"
+    },
+    "donnees": {
+      "cpus": "2",
+      "memory": "2048",
+      "paravirtprovider": "default"
+    }
+  },
+  "finished_epoch_s": 1792001305.0883067
+}

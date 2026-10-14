@@ -1,0 +1,40 @@
+{
+  "window_start_ms": 1791993208592,
+  "window_end_ms": 1791993328592,
+  "plateau_s": 120,
+  "users": 10,
+  "effective_users": [
+    10
+  ],
+  "requests": 1180,
+  "errors": 0,
+  "error_pct": 0.0,
+  "throughput_rps": 9.833333333333334,
+  "successful_throughput_rps": 9.833333333333334,
+  "p50_ms": 17.0,
+  "p90_ms": 19.0,
+  "p95_ms": 20.0,
+  "p99_ms": 22.0,
+  "total_samples": 1549,
+  "all_errors": 0,
+  "request_types": {
+    "00 — CSRF": {
+      "samples": 10,
+      "errors": 0
+    },
+    "01 — Connexion": {
+      "samples": 10,
+      "errors": 0
+    },
+    "02 — Mes candidatures": {
+      "samples": 1529,
+      "errors": 0
+    }
+  },
+  "injector_cpu_pct_mean": 4.456263745183129,
+  "injector_cpu_pct_max": 18.81997282613401,
+  "injector_rss_bytes_mean": 311004489.7627119,
+  "injector_rss_bytes_max": 364007424.0,
+  "host_busy_pct_mean": 5.667916664914994,
+  "host_busy_pct_max": 12.122465866776999
+}

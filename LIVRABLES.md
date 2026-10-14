@@ -24,6 +24,7 @@ nécessaires à sa revue.
 | 14 — Vérification et comparaison | Neuf liaisons conformes, trois séries Docker Engine et PDF de deux pages vérifiés ; temps initial non chronométré | [Matrice et tableau comparatif](docs/comparaison.md), [compte rendu PDF](docs/compte_rendu_comparaison.pdf), [matrice brute](docker/docs/joignabilite-etape14.json), [mesures brutes](docker/docs/mesures-etape14.json), [rapport technique](docker/docs/etape14.md), [contrôles des erreurs](docker/docs/verification-etape14.json) |
 | 15 — Plan JMeter | Scénario vérifié en CLI et GUI sur Docker isolé ; données communes VM/Docker à préparer avant les campagnes | [Plan](mesure/plan.jmx), [vingt comptes fictifs](mesure/comptes.csv), [procédure](mesure/PROCEDURE.md), [rapport et preuves](mesure/ETAPE15.md), [capture de réussite](mesure/resultats/etape15/reussite.png), [capture d'échec](mesure/resultats/etape15/echec.png) |
 | 16 — Étalonnage | Plafond statique mesuré ; deux contrôles identiques sans erreur, écarts de débit et p95 sous 10 % | [Court rapport d'étalonnage](mesure/ETAPE16.md), [protocole fixé](mesure/protocole.json), [mesures et empreintes](mesure/resultats/etape16/etalonnage.json), [contrôle 1](mesure/resultats/etape16/controle-1/brut.csv), [contrôle 2](mesure/resultats/etape16/controle-2/brut.csv), [reproduction](mesure/PROCEDURE.md#étalonnage-en-ligne-de-commande) |
+| 17 — Campagnes | Seize paliers vérifiés, zéro erreur ; interruption et reprise documentées | [Rapport et résultats bruts](mesure/ETAPE17.md), [relevé serveur](mesure/resultats/etape17/releve-serveurs.csv), [vérification](mesure/resultats/etape17/verification.json) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -520,4 +521,35 @@ complètent le rapport. Les trois VM sont démarrées puis arrêtées proprement
 le déploiement Docker de référence est remis en marche après les contrôles.
 Une base VM dédiée avec le même jeu fictif reste à préparer avant les campagnes
 comparatives.
+
+## Étape 17 — Exécuter les campagnes
+
+La [méthode reproductible des étapes 15 à 17](mesure/PROCEDURE.md)
+décrit les prérequis, les commandes, le rôle des scripts et les critères de
+vérification. Le [diagnostic et la reprise](mesure/ETAPE17.md#diagnostic-et-reprise-après-incident)
+explicitent aussi la gestion de l'indisponibilité du moteur Docker.
+
+Livrables attendus : les fichiers de résultats JMeter bruts des séries VM et
+Docker, puis les relevés des métriques serveur palier par palier. Deux séries
+doivent alterner l'ordre VM/Docker pour vérifier l'effet de l'ordre de passage.
+
+La [procédure](mesure/ETAPE17.md) et le [pilote](mesure/scripts/campagnes17.py)
+préparent l'export SQL commun, les campagnes isolées et les relevés CPU,
+mémoire, I/O et connexions de base. La lecture des compteurs Linux et
+l'alignement des horodatages ont été vérifiés localement.
+
+**Les seize paliers sont terminés et vérifiés techniquement.** Les fichiers
+bruts des deux séries sont conservés avec les 48 relevés par service et palier.
+Les 22 199 échantillons JMeter ne comportent aucune erreur ; chaque service
+possède au moins 22 relevés dans sa fenêtre stable.
+
+Le [relevé des paliers](mesure/resultats/etape17/releve-paliers.csv),
+le [relevé serveur](mesure/resultats/etape17/releve-serveurs.csv),
+la [vérification](mesure/resultats/etape17/verification.json) et les
+[empreintes](mesure/resultats/etape17/SHA256SUMS) rendent la collecte vérifiable.
+La [restauration finale](mesure/resultats/etape17/restauration.json) est contrôlée :
+trois services de référence sains, HTTP 200 et aucune VM active.
+L'interruption du moteur Docker et la reprise sont documentées ; elles limitent
+l'interprétation de l'effet de l'ordre de passage. L'analyse comparative reste
+à effectuer à l'étape 18.
 

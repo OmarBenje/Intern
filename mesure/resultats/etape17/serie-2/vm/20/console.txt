@@ -1,0 +1,23 @@
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Creating summariser <summary>
+Created the tree successfully using resultats/etape17/serie-2/vm/20/plan.jmx
+Starting standalone test @ 2026 Oct 14 20:05:29 CEST (1792001129697)
+Waiting for possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445
+summary +      1 in 00:00:02 =    0.7/s Avg:    50 Min:    50 Max:    50 Err:     0 (0.00%) Active: 1 Started: 1 Finished: 0
+summary +    321 in 00:00:28 =   11.3/s Avg:    49 Min:     6 Max:   746 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =    322 in 00:00:30 =   10.8/s Avg:    49 Min:     6 Max:   746 Err:     0 (0.00%)
+summary +    584 in 00:00:30 =   19.5/s Avg:    23 Min:    16 Max:    41 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =    906 in 00:01:00 =   15.1/s Avg:    32 Min:     6 Max:   746 Err:     0 (0.00%)
+summary +    587 in 00:00:30 =   19.5/s Avg:    24 Min:    17 Max:    58 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =   1493 in 00:01:30 =   16.6/s Avg:    29 Min:     6 Max:   746 Err:     0 (0.00%)
+summary +    584 in 00:00:30 =   19.5/s Avg:    24 Min:    19 Max:    52 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =   2077 in 00:02:00 =   17.3/s Avg:    27 Min:     6 Max:   746 Err:     0 (0.00%)
+summary +    586 in 00:00:30 =   19.5/s Avg:    24 Min:    17 Max:    57 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =   2663 in 00:02:30 =   17.8/s Avg:    27 Min:     6 Max:   746 Err:     0 (0.00%)
+summary +    396 in 00:00:20 =   19.7/s Avg:    25 Min:    17 Max:   111 Err:     0 (0.00%) Active: 0 Started: 20 Finished: 20
+summary =   3059 in 00:02:50 =   18.0/s Avg:    26 Min:     6 Max:   746 Err:     0 (0.00%)
+Tidying up ...    @ 2026 Oct 14 20:08:20 CEST (1792001300328)
+... end of run
