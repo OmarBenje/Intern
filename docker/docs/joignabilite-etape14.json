@@ -1,0 +1,83 @@
+[
+  {
+    "source": "hote",
+    "target": "proxy",
+    "host": "127.0.0.1",
+    "port": 8080,
+    "expected": true,
+    "connected": true,
+    "detail": ""
+  },
+  {
+    "source": "hote",
+    "target": "metier",
+    "host": "172.18.0.2",
+    "port": 8000,
+    "expected": false,
+    "connected": false,
+    "detail": "timed out"
+  },
+  {
+    "source": "hote",
+    "target": "donnees",
+    "host": "172.19.0.2",
+    "port": 5432,
+    "expected": false,
+    "connected": false,
+    "detail": "timed out"
+  },
+  {
+    "source": "proxy",
+    "target": "metier",
+    "host": "172.18.0.2",
+    "port": 8000,
+    "expected": true,
+    "connected": true,
+    "detail": "172.18.0.2 (172.18.0.2:8000) open"
+  },
+  {
+    "source": "proxy",
+    "target": "donnees",
+    "host": "172.19.0.2",
+    "port": 5432,
+    "expected": false,
+    "connected": false,
+    "detail": "nc: 172.19.0.2 (172.19.0.2:5432): Operation timed out"
+  },
+  {
+    "source": "metier",
+    "target": "proxy",
+    "host": "172.18.0.3",
+    "port": 80,
+    "expected": true,
+    "connected": true,
+    "detail": ""
+  },
+  {
+    "source": "metier",
+    "target": "donnees",
+    "host": "172.19.0.2",
+    "port": 5432,
+    "expected": true,
+    "connected": true,
+    "detail": ""
+  },
+  {
+    "source": "donnees",
+    "target": "proxy",
+    "host": "172.18.0.3",
+    "port": 80,
+    "expected": false,
+    "connected": false,
+    "detail": "probe: connect: Network is unreachable\nprobe: line 1: /dev/tcp/172.18.0.3/80: Network is unreachable"
+  },
+  {
+    "source": "donnees",
+    "target": "metier",
+    "host": "172.19.0.3",
+    "port": 8000,
+    "expected": true,
+    "connected": true,
+    "detail": ""
+  }
+]

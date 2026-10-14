@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-14",
+  "engine": "Docker Engine 28.3.3 rootless",
+  "compose": "2.39.4",
+  "services": [
+    {
+      "service": "donnees",
+      "healthy": true,
+      "networks": [
+        "intern-etape14_interne"
+      ],
+      "ports": {},
+      "image": "sha256:e8538db784b854a9baac5c1be6d059dcf0db257af2d94c8c5807b5fc15f11222"
+    },
+    {
+      "service": "metier",
+      "healthy": true,
+      "networks": [
+        "intern-etape14_frontal",
+        "intern-etape14_interne"
+      ],
+      "ports": {},
+      "image": "sha256:bb31ce64773904c17d899562c0d014e88b10833a08fd1c5e6701f7dbb95cfffc"
+    },
+    {
+      "service": "proxy",
+      "healthy": true,
+      "networks": [
+        "intern-etape14_frontal"
+      ],
+      "ports": {
+        "80/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "8080"
+          }
+        ]
+      },
+      "image": "sha256:04e484e980ad6eb722734d1a578c470f2cd6aa031c8e21067713550f319e0fe6"
+    }
+  ],
+  "volume_preserved_after_down_up": true,
+  "initialization_skipped_after_recreation": true,
+  "sql_checks": 34,
+  "nginx_configuration": "PASS",
+  "git_uv_cache_absent": true,
+  "python_files_different_from_vm": [
+    "jobboard/services/company_logos.py"
+  ],
+  "comparison_pdf_pages": 2
+}

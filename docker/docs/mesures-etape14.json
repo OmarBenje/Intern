@@ -1,0 +1,796 @@
+{
+  "finished_utc": "2026-10-14T10:45:37.674973+00:00",
+  "host": {
+    "release": "6.19.14-108.fc42.x86_64",
+    "system": "Linux",
+    "logical_cpus": 12
+  },
+  "docker": "28.3.3",
+  "compose": "2.39.4",
+  "security_options": [
+    "name=seccomp,profile=builtin",
+    "name=rootless",
+    "name=cgroupns"
+  ],
+  "storage_driver": "fuse-overlayfs",
+  "images": [
+    {
+      "id": "sha256:bb31ce64773904c17d899562c0d014e88b10833a08fd1c5e6701f7dbb95cfffc",
+      "tags": [
+        "intern-metier:etape12",
+        "localhost/intern-metier:etape12"
+      ],
+      "size_bytes": 372903397
+    },
+    {
+      "id": "sha256:e8538db784b854a9baac5c1be6d059dcf0db257af2d94c8c5807b5fc15f11222",
+      "tags": [
+        "postgres:16.15-bookworm"
+      ],
+      "size_bytes": 442763077
+    },
+    {
+      "id": "sha256:04e484e980ad6eb722734d1a578c470f2cd6aa031c8e21067713550f319e0fe6",
+      "tags": [
+        "intern-proxy:etape13",
+        "localhost/intern-proxy:etape13"
+      ],
+      "size_bytes": 54419777
+    }
+  ],
+  "protocol": {
+    "trials": 3,
+    "idle_s": 30,
+    "requests_per_trial": 10,
+    "url": "http://127.0.0.1:8080/api/v1/offers/",
+    "timeout_s": 5,
+    "startup_poll_s": 0.5,
+    "memory": "Somme RSS des conteneurs et du moteur, avec ses auxiliaires rootless.",
+    "disk": "Fichiers des couches uniques des trois images et conteneurs, plus volume ; caches de build, archives et snapshots exclus.",
+    "setup_time": "Non chronométré depuis zéro ; aucun résultat reconstitué."
+  },
+  "trials": [
+    {
+      "trial": 1,
+      "startup_s": 49.84438339400003,
+      "memory": {
+        "rss_bytes": 610230272,
+        "processes": [
+          {
+            "pid": 73355,
+            "parent": 3447,
+            "name": "rootlesskit",
+            "rss_bytes": 12439552
+          },
+          {
+            "pid": 73364,
+            "parent": 73355,
+            "name": "exe",
+            "rss_bytes": 10588160
+          },
+          {
+            "pid": 73381,
+            "parent": 73355,
+            "name": "vpnkit",
+            "rss_bytes": 20975616
+          },
+          {
+            "pid": 73396,
+            "parent": 73364,
+            "name": "dockerd",
+            "rss_bytes": 90132480
+          },
+          {
+            "pid": 73423,
+            "parent": 73396,
+            "name": "containerd",
+            "rss_bytes": 44781568
+          },
+          {
+            "pid": 88097,
+            "parent": 1545,
+            "name": "fuse-overlayfs",
+            "rss_bytes": 3190784
+          },
+          {
+            "pid": 88107,
+            "parent": 1545,
+            "name": "containerd-shim",
+            "rss_bytes": 16990208
+          },
+          {
+            "pid": 88134,
+            "parent": 88107,
+            "name": "postgres",
+            "rss_bytes": 29167616
+          },
+          {
+            "pid": 88177,
+            "parent": 88134,
+            "name": "postgres",
+            "rss_bytes": 6238208
+          },
+          {
+            "pid": 88178,
+            "parent": 88134,
+            "name": "postgres",
+            "rss_bytes": 6983680
+          },
+          {
+            "pid": 88180,
+            "parent": 88134,
+            "name": "postgres",
+            "rss_bytes": 10473472
+          },
+          {
+            "pid": 88181,
+            "parent": 88134,
+            "name": "postgres",
+            "rss_bytes": 8978432
+          },
+          {
+            "pid": 88182,
+            "parent": 88134,
+            "name": "postgres",
+            "rss_bytes": 8335360
+          },
+          {
+            "pid": 88205,
+            "parent": 1545,
+            "name": "fuse-overlayfs",
+            "rss_bytes": 7868416
+          },
+          {
+            "pid": 88216,
+            "parent": 1545,
+            "name": "containerd-shim",
+            "rss_bytes": 16871424
+          },
+          {
+            "pid": 88240,
+            "parent": 88216,
+            "name": "gunicorn",
+            "rss_bytes": 29360128
+          },
+          {
+            "pid": 88474,
+            "parent": 88240,
+            "name": "gunicorn",
+            "rss_bytes": 92487680
+          },
+          {
+            "pid": 88475,
+            "parent": 88240,
+            "name": "gunicorn",
+            "rss_bytes": 92483584
+          },
+          {
+            "pid": 88557,
+            "parent": 88134,
+            "name": "postgres",
+            "rss_bytes": 22691840
+          },
+          {
+            "pid": 88610,
+            "parent": 88134,
+            "name": "postgres",
+            "rss_bytes": 15745024
+          },
+          {
+            "pid": 88612,
+            "parent": 1545,
+            "name": "fuse-overlayfs",
+            "rss_bytes": 2101248
+          },
+          {
+            "pid": 88623,
+            "parent": 1545,
+            "name": "containerd-shim",
+            "rss_bytes": 16699392
+          },
+          {
+            "pid": 88650,
+            "parent": 88623,
+            "name": "nginx",
+            "rss_bytes": 5627904
+          },
+          {
+            "pid": 88680,
+            "parent": 73396,
+            "name": "docker-proxy",
+            "rss_bytes": 3129344
+          },
+          {
+            "pid": 88716,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 3239936
+          },
+          {
+            "pid": 88717,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 3239936
+          },
+          {
+            "pid": 88718,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 3227648
+          },
+          {
+            "pid": 88719,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 3239936
+          },
+          {
+            "pid": 88720,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 3239936
+          },
+          {
+            "pid": 88721,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 3239936
+          },
+          {
+            "pid": 88722,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 3239936
+          },
+          {
+            "pid": 88723,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 2654208
+          },
+          {
+            "pid": 88724,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 2654208
+          },
+          {
+            "pid": 88725,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 2654208
+          },
+          {
+            "pid": 88726,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 2654208
+          },
+          {
+            "pid": 88727,
+            "parent": 88650,
+            "name": "nginx",
+            "rss_bytes": 2605056
+          }
+        ]
+      },
+      "disk": {
+        "file_bytes": 869138055,
+        "allocated_bytes": 927240192,
+        "files": 27167
+      },
+      "latency_ms": [
+        167.38293500020518,
+        89.79011100018397,
+        84.71000099962112,
+        90.25225300047168,
+        70.44470199980424,
+        71.05146100002457,
+        72.03400900016277,
+        81.8355450001036,
+        83.54954999958863,
+        83.22139299980336
+      ],
+      "latency_median_ms": 83.385471499696
+    },
+    {
+      "trial": 2,
+      "startup_s": 42.33696203399995,
+      "memory": {
+        "rss_bytes": 635621376,
+        "processes": [
+          {
+            "pid": 73355,
+            "parent": 3447,
+            "name": "rootlesskit",
+            "rss_bytes": 12550144
+          },
+          {
+            "pid": 73364,
+            "parent": 73355,
+            "name": "exe",
+            "rss_bytes": 10616832
+          },
+          {
+            "pid": 73381,
+            "parent": 73355,
+            "name": "vpnkit",
+            "rss_bytes": 20975616
+          },
+          {
+            "pid": 73396,
+            "parent": 73364,
+            "name": "dockerd",
+            "rss_bytes": 91062272
+          },
+          {
+            "pid": 73423,
+            "parent": 73396,
+            "name": "containerd",
+            "rss_bytes": 45412352
+          },
+          {
+            "pid": 89341,
+            "parent": 1545,
+            "name": "fuse-overlayfs",
+            "rss_bytes": 3284992
+          },
+          {
+            "pid": 89351,
+            "parent": 1545,
+            "name": "containerd-shim",
+            "rss_bytes": 16732160
+          },
+          {
+            "pid": 89376,
+            "parent": 89351,
+            "name": "postgres",
+            "rss_bytes": 29179904
+          },
+          {
+            "pid": 89419,
+            "parent": 89376,
+            "name": "postgres",
+            "rss_bytes": 6213632
+          },
+          {
+            "pid": 89420,
+            "parent": 89376,
+            "name": "postgres",
+            "rss_bytes": 7016448
+          },
+          {
+            "pid": 89422,
+            "parent": 89376,
+            "name": "postgres",
+            "rss_bytes": 10502144
+          },
+          {
+            "pid": 89423,
+            "parent": 89376,
+            "name": "postgres",
+            "rss_bytes": 9015296
+          },
+          {
+            "pid": 89424,
+            "parent": 89376,
+            "name": "postgres",
+            "rss_bytes": 8253440
+          },
+          {
+            "pid": 89449,
+            "parent": 1545,
+            "name": "fuse-overlayfs",
+            "rss_bytes": 7929856
+          },
+          {
+            "pid": 89460,
+            "parent": 1545,
+            "name": "containerd-shim",
+            "rss_bytes": 16576512
+          },
+          {
+            "pid": 89488,
+            "parent": 89460,
+            "name": "gunicorn",
+            "rss_bytes": 29364224
+          },
+          {
+            "pid": 89701,
+            "parent": 89488,
+            "name": "gunicorn",
+            "rss_bytes": 92286976
+          },
+          {
+            "pid": 89702,
+            "parent": 89488,
+            "name": "gunicorn",
+            "rss_bytes": 92291072
+          },
+          {
+            "pid": 89742,
+            "parent": 89376,
+            "name": "postgres",
+            "rss_bytes": 22573056
+          },
+          {
+            "pid": 89745,
+            "parent": 1545,
+            "name": "fuse-overlayfs",
+            "rss_bytes": 2183168
+          },
+          {
+            "pid": 89755,
+            "parent": 1545,
+            "name": "containerd-shim",
+            "rss_bytes": 16502784
+          },
+          {
+            "pid": 89785,
+            "parent": 89755,
+            "name": "nginx",
+            "rss_bytes": 5607424
+          },
+          {
+            "pid": 89812,
+            "parent": 73396,
+            "name": "docker-proxy",
+            "rss_bytes": 3182592
+          },
+          {
+            "pid": 89848,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 3231744
+          },
+          {
+            "pid": 89849,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 3231744
+          },
+          {
+            "pid": 89850,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 3231744
+          },
+          {
+            "pid": 89851,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 3231744
+          },
+          {
+            "pid": 89852,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 3231744
+          },
+          {
+            "pid": 89853,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 3231744
+          },
+          {
+            "pid": 89854,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 3231744
+          },
+          {
+            "pid": 89855,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 2670592
+          },
+          {
+            "pid": 89856,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 2670592
+          },
+          {
+            "pid": 89857,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 2670592
+          },
+          {
+            "pid": 89858,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 2670592
+          },
+          {
+            "pid": 89859,
+            "parent": 89785,
+            "name": "nginx",
+            "rss_bytes": 2609152
+          },
+          {
+            "pid": 89938,
+            "parent": 89376,
+            "name": "postgres",
+            "rss_bytes": 15896576
+          },
+          {
+            "pid": 90168,
+            "parent": 89460,
+            "name": "python",
+            "rss_bytes": 24498176
+          }
+        ]
+      },
+      "disk": {
+        "file_bytes": 869138055,
+        "allocated_bytes": 927240192,
+        "files": 27167
+      },
+      "latency_ms": [
+        199.7903880001104,
+        109.5576859997891,
+        101.21077399981004,
+        125.41303899979539,
+        72.62318099947151,
+        82.75676100038254,
+        70.84745699921768,
+        67.69300500036479,
+        65.92164199992112,
+        93.78021199972864
+      ],
+      "latency_median_ms": 88.26848650005559
+    },
+    {
+      "trial": 3,
+      "startup_s": 51.41168927699982,
+      "memory": {
+        "rss_bytes": 608387072,
+        "processes": [
+          {
+            "pid": 73355,
+            "parent": 3447,
+            "name": "rootlesskit",
+            "rss_bytes": 12734464
+          },
+          {
+            "pid": 73364,
+            "parent": 73355,
+            "name": "exe",
+            "rss_bytes": 10633216
+          },
+          {
+            "pid": 73381,
+            "parent": 73355,
+            "name": "vpnkit",
+            "rss_bytes": 20979712
+          },
+          {
+            "pid": 73396,
+            "parent": 73364,
+            "name": "dockerd",
+            "rss_bytes": 87785472
+          },
+          {
+            "pid": 73423,
+            "parent": 73396,
+            "name": "containerd",
+            "rss_bytes": 44793856
+          },
+          {
+            "pid": 90508,
+            "parent": 1545,
+            "name": "fuse-overlayfs",
+            "rss_bytes": 3178496
+          },
+          {
+            "pid": 90518,
+            "parent": 1545,
+            "name": "containerd-shim",
+            "rss_bytes": 16912384
+          },
+          {
+            "pid": 90544,
+            "parent": 90518,
+            "name": "postgres",
+            "rss_bytes": 29208576
+          },
+          {
+            "pid": 90586,
+            "parent": 90544,
+            "name": "postgres",
+            "rss_bytes": 6246400
+          },
+          {
+            "pid": 90587,
+            "parent": 90544,
+            "name": "postgres",
+            "rss_bytes": 7094272
+          },
+          {
+            "pid": 90589,
+            "parent": 90544,
+            "name": "postgres",
+            "rss_bytes": 10514432
+          },
+          {
+            "pid": 90590,
+            "parent": 90544,
+            "name": "postgres",
+            "rss_bytes": 8876032
+          },
+          {
+            "pid": 90591,
+            "parent": 90544,
+            "name": "postgres",
+            "rss_bytes": 8261632
+          },
+          {
+            "pid": 90632,
+            "parent": 1545,
+            "name": "fuse-overlayfs",
+            "rss_bytes": 7852032
+          },
+          {
+            "pid": 90643,
+            "parent": 1545,
+            "name": "containerd-shim",
+            "rss_bytes": 16719872
+          },
+          {
+            "pid": 90669,
+            "parent": 90643,
+            "name": "gunicorn",
+            "rss_bytes": 29360128
+          },
+          {
+            "pid": 90878,
+            "parent": 90669,
+            "name": "gunicorn",
+            "rss_bytes": 92372992
+          },
+          {
+            "pid": 90879,
+            "parent": 90669,
+            "name": "gunicorn",
+            "rss_bytes": 92368896
+          },
+          {
+            "pid": 90929,
+            "parent": 90544,
+            "name": "postgres",
+            "rss_bytes": 15839232
+          },
+          {
+            "pid": 91048,
+            "parent": 90544,
+            "name": "postgres",
+            "rss_bytes": 22790144
+          },
+          {
+            "pid": 91054,
+            "parent": 1545,
+            "name": "fuse-overlayfs",
+            "rss_bytes": 2179072
+          },
+          {
+            "pid": 91065,
+            "parent": 1545,
+            "name": "containerd-shim",
+            "rss_bytes": 16523264
+          },
+          {
+            "pid": 91099,
+            "parent": 91065,
+            "name": "nginx",
+            "rss_bytes": 5636096
+          },
+          {
+            "pid": 91128,
+            "parent": 73396,
+            "name": "docker-proxy",
+            "rss_bytes": 3182592
+          },
+          {
+            "pid": 91169,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 3293184
+          },
+          {
+            "pid": 91170,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 3293184
+          },
+          {
+            "pid": 91171,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 3293184
+          },
+          {
+            "pid": 91172,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 3293184
+          },
+          {
+            "pid": 91173,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 3293184
+          },
+          {
+            "pid": 91174,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 3293184
+          },
+          {
+            "pid": 91175,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 2670592
+          },
+          {
+            "pid": 91176,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 3293184
+          },
+          {
+            "pid": 91177,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 2670592
+          },
+          {
+            "pid": 91178,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 2670592
+          },
+          {
+            "pid": 91179,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 2670592
+          },
+          {
+            "pid": 91180,
+            "parent": 91099,
+            "name": "nginx",
+            "rss_bytes": 2609152
+          }
+        ]
+      },
+      "disk": {
+        "file_bytes": 869138055,
+        "allocated_bytes": 927240192,
+        "files": 27167
+      },
+      "latency_ms": [
+        71.96980400021857,
+        106.9125450003412,
+        70.54541399975278,
+        83.82271099981153,
+        88.77574899997853,
+        79.10894799988455,
+        69.31310499930987,
+        68.58680999994249,
+        63.91728800008423,
+        97.5086119997286
+      ],
+      "latency_median_ms": 75.53937600005156
+    }
+  ],
+  "medians": {
+    "startup_s": 49.84438339400003,
+    "rss_bytes": 610230272,
+    "disk_file_bytes": 869138055,
+    "disk_allocated_bytes": 927240192,
+    "latency_ms": 83.385471499696
+  }
+}

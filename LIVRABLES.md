@@ -18,9 +18,10 @@ nécessaires à sa revue.
 | 8 — Réseau et adressage | Réseau interne configuré et vérifié sur les trois VM ; six pings réussis | [Plan et procédure](deploiement/reseau/README.md), [Netplan proxy](deploiement/reseau/vm-proxy.yaml), [Netplan métier](deploiement/reseau/vm-metier.yaml), [Netplan données](deploiement/reseau/vm-donnees.yaml), [rapport](deploiement/docs/etape8.md), [sorties de vérification](deploiement/docs/preuves-etape8.txt) |
 | 9 — Déploiement des couches | Services installés et vérifiés après redémarrage ; huit contrôles navigateur réussis | [Configurations et procédure](deploiement/DEPLOIEMENT.md), [rapport](deploiement/docs/etape9.md), [preuves VM](deploiement/docs/preuves-etape9.txt), [recette navigateur](deploiement/docs/recette-etape9.txt), [capture réelle](deploiement/docs/etape9-tableau-de-bord.png) |
 | 10 — Vérification et mesures | Neuf liaisons conformes, trois séries mesurées et trois OVA créés et contrôlés | [Procédure](deploiement/VERIFICATION.md), [rapport](deploiement/docs/etape10.md), [mesures](deploiement/docs/mesures.md), [preuves réseau](deploiement/docs/preuves-etape10.txt), [manifeste des OVA](deploiement/docs/exports-etape10.json) |
-| 11 — Données conteneurisées | Configuration préparée et contrôlée statiquement ; peuplement et persistance Docker à vérifier | [Service et volume](docker/compose.yaml), [configuration](docker/.env.example), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-donnees.sh), [rapport et limites](docker/docs/etape11.md) |
-| 12 — Image métier | Image actuelle : 388 668 320 octets ; connexion SQL vérifiée avec Podman à l'étape 13 ; Docker Engine à vérifier | [Dockerfile](docker/metier.Dockerfile), [exclusions](docker/.dockerignore), [composition](docker/compose.yaml), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-metier.sh), [rapport](docker/docs/etape12.md), [preuve](docker/docs/verification-image-etape12.txt) |
-| 13 — Proxy et composition | Trois services sains, arrêt et redémarrage, 34 contrôles SQL et huit contrôles navigateur réussis avec Podman ; Docker Engine à vérifier | [Fichier de composition](docker/compose.yaml), [configuration du proxy](docker/proxy.conf), [Dockerfile du proxy](docker/proxy.Dockerfile), [commandes](docker/demarrer.sh), [capture des services](docker/docs/etape13-services.png), [connexion](docker/docs/etape13-connexion.png), [tableau de bord](docker/docs/etape13-tableau-de-bord.png), [rapport](docker/docs/etape13.md), [preuves](docker/docs/preuves-etape13.json) |
+| 11 — Données conteneurisées | Peuplement et persistance vérifiés sur Docker Engine à l'étape 14 | [Service et volume](docker/compose.yaml), [configuration](docker/.env.example), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-donnees.sh), [rapport initial](docker/docs/etape11.md), [preuve Docker](docker/docs/verification-etape14.json) |
+| 12 — Image métier | Image construite ; contenu et connexion SQL vérifiés sur Docker Engine à l'étape 14 | [Dockerfile](docker/metier.Dockerfile), [exclusions](docker/.dockerignore), [composition](docker/compose.yaml), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-metier.sh), [rapport](docker/docs/etape12.md), [preuve initiale](docker/docs/verification-image-etape12.txt), [tailles Docker](docker/docs/mesures-etape14.json) |
+| 13 — Proxy et composition | Trois services sains, persistance, 34 contrôles SQL et huit contrôles navigateur réussis sur Docker Engine à l'étape 14 | [Fichier de composition](docker/compose.yaml), [configuration du proxy](docker/proxy.conf), [Dockerfile du proxy](docker/proxy.Dockerfile), [commandes](docker/demarrer.sh), [capture initiale des services](docker/docs/etape13-services.png), [connexion Docker](docker/docs/etape14-connexion.png), [tableau de bord Docker](docker/docs/etape14-tableau-de-bord.png), [rapport initial](docker/docs/etape13.md), [preuves Docker](docker/docs/verification-etape14.json) |
+| 14 — Vérification et comparaison | Neuf liaisons conformes, trois séries Docker Engine et PDF de deux pages vérifiés ; temps initial non chronométré | [Matrice et tableau comparatif](docs/comparaison.md), [compte rendu PDF](docs/compte_rendu_comparaison.pdf), [matrice brute](docker/docs/joignabilite-etape14.json), [mesures brutes](docker/docs/mesures-etape14.json), [rapport technique](docker/docs/etape14.md), [contrôles des erreurs](docker/docs/verification-etape14.json) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -350,6 +351,10 @@ Les contrôles statiques ont réussi. Le moteur disponible lance Podman et
 réelles restent à produire. Le [rapport](docker/docs/etape11.md) précise
 ces limites. L'étape n'est pas déclarée validée.
 
+Ces limites initiales sont levées pour l'exécution à l'étape 14 : le peuplement,
+les 34 contrôles SQL et la conservation du volume après recréation sont
+vérifiés sur Docker Engine rootless, dans la [preuve finale](docker/docs/verification-etape14.json).
+
 ## Étape 12 — Image métier
 
 Le [Dockerfile](docker/metier.Dockerfile) installe les dépendances verrouillées
@@ -368,7 +373,11 @@ démarre sous le compte `intern` et `/health/live/` répond HTTP 200.
 La [preuve](docker/docs/verification-image-etape12.txt) conserve les identifiants
 et les empreintes de cette construction. Le script de démarrage intégré à
 l'image lors de la composition donne une taille actuelle de **388 668 320 octets**.
-La connexion SQL réussit à l'étape 13. Docker Engine reste à vérifier.
+La connexion SQL réussit à l'étape 13 avec Podman, puis à l'étape 14 sur
+Docker Engine. Ce dernier annonce **372 903 397 octets** pour l'image métier
+de même identifiant ; les valeurs Podman précédentes sont conservées avec
+leur méthode. Les [mesures finales](docker/docs/mesures-etape14.json) donnent
+les tailles annoncées par Docker et l'empreinte des fichiers réellement mesurés.
 
 ## Étape 13 — Proxy et composition
 
@@ -410,4 +419,54 @@ les **huit contrôles navigateur réels** réussissent. La
 [capture des services](docker/docs/etape13-services.png), le
 [rapport](docker/docs/etape13.md) et les
 [preuves](docker/docs/preuves-etape13.json) sont livrés.
-La validation du moteur Docker Engine reste à effectuer.
+La [recette finale](docker/docs/recette-etape14.txt) confirme les huit contrôles
+sur Docker Engine natif. La [preuve finale](docker/docs/verification-etape14.json)
+confirme les trois services sains et la persistance après leur recréation.
+
+## Étape 14 — Vérification et comparaison
+
+### Livrables de synthèse
+
+| Livrable | Lien |
+| --- | --- |
+| Matrice remplie, tableau chiffré et réponses aux trois questions | [comparaison.md](docs/comparaison.md) |
+| Compte rendu vérifié de deux pages | [Ouvrir le PDF](docs/compte_rendu_comparaison.pdf) |
+| Neuf tentatives de connexion réellement exécutées | [Matrice brute](docker/docs/joignabilite-etape14.json) |
+| Trois séries, trente latences et mémoire moteur compris | [Mesures Docker](docker/docs/mesures-etape14.json) |
+| Référence des trois séries VM | [Mesures VM](deploiement/docs/mesures-etape10.json) |
+| Vérification des erreurs fréquentes et organisation finale | [Rapport technique](docker/docs/etape14.md) |
+| Santé, persistance, Nginx et absence des outils/caches | [Preuves finales](docker/docs/verification-etape14.json) |
+| Huit contrôles navigateur sur Docker Engine | [Recette finale](docker/docs/recette-etape14.txt) |
+| 34 contrôles SQL depuis le métier | [Résultats SQL](docker/docs/sql-etape14.txt) |
+| Reproduction et génération du PDF | [Procédure](docker/PROCEDURE.md) |
+
+### Matrice observée
+
+| Depuis | Proxy :80 | Métier :8000 | Données :5432 |
+| --- | --- | --- | --- |
+| Hôte | Oui, via 8080 | Refus attendu observé | Refus attendu observé |
+| Proxy | Sans objet | Oui | Refus attendu observé |
+| Métier | Oui | Sans objet | Oui |
+| Données | Refus attendu observé | Oui | Sans objet |
+
+Les neuf liaisons sont conformes avec tous les services sains. Les quatre
+refus sont réellement testés par IP. Seul le proxy publie un port.
+
+### Comparaison des médianes
+
+| Grandeur | Trois VM | Trois conteneurs Docker Engine |
+| --- | ---: | ---: |
+| Démarrage jusqu'au catalogue | 20,473 s | 49,844 s |
+| Mémoire RSS côté hôte | 1,454 Gio | 0,568 Gio, moteur et auxiliaires compris |
+| Disque : taille des fichiers | 10,783 Gio | 0,809 Gio |
+| Disque : blocs alloués | 10,755 Gio | 0,864 Gio |
+| Latence de consultation | 62,431 ms | 83,385 ms |
+| Mise en place initiale | Non chronométrée | Non chronométrée |
+
+Cette campagne Linux utilise **Docker Engine 28.3.3 rootless et Compose 2.39.4**,
+VPNKit et fuse-overlayfs. Les différences de versions, ressources, stockage
+et snapshots sont expliquées dans le compte rendu. Les conteneurs consomment
+moins de mémoire et de stockage, mais sont plus lents dans cette configuration.
+Le temps humain initial n'est pas inventé ; la comparaison ne prétend pas
+isoler l'effet de la seule technique de virtualisation.
+

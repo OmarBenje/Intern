@@ -115,8 +115,8 @@ de `metier/uv.lock`, avant de copier le code. L'image finale ne reçoit que
 l'environnement Python, le code et les fichiers nécessaires à la démonstration ;
 Git, uv et leurs caches restent hors de cette image.
 
-Le fichier [d'exclusion](.dockerignore) pointe vers `../.dockerignore`, utilisé
-par le contexte de construction situé à la racine d'Intern. Il exclut les
+Le fichier [d'exclusion](.dockerignore) est la source unique ; le lien
+`../.dockerignore` le rend actif à la racine du contexte de construction. Il exclut les
 environnements virtuels, secrets, historique Git et artefacts temporaires.
 Le lien `docker/Dockerfile` pointe vers `metier.Dockerfile` pour conserver une
 seule définition utilisable par les configurations existantes.
@@ -260,10 +260,79 @@ RECETTE_URL=http://127.0.0.1:8080 RECETTE_OUTPUT_DIR=docker/docs RECETTE_PREFIX=
 
 Pour la capture des services, afficher `sh docker/demarrer.sh ps` dans un
 terminal et capturer cette fenêtre après que les trois services sont sains.
-Le [rapport de l'étape](docs/etape13.md) distingue les essais Podman réellement
-exécutés de la validation Docker Engine restante.
+Le [rapport initial](docs/etape13.md) décrit les essais Podman.
+L'[étape 14](docs/etape14.md) complète ces preuves sur Docker Engine natif.
 
 La composition rend explicites les noms des services, les dépendances,
 les réseaux et les montages. La procédure VM comporte les installations,
 les configurations système, les copies et les redémarrages de chaque machine.
 Les deux procédures restent disponibles pour la comparaison ultérieure.
+
+## Étape 14 — Vérification et comparaison sur Docker Engine
+
+La campagne du 14 octobre a été exécutée avec **Docker Engine 28.3.3 rootless
+et Docker Compose 2.39.4**, sur Linux, avec VPNKit et fuse-overlayfs. Un moteur
+temporaire isolé a permis ces essais sans remplacer le programme Docker qui
+délègue à Podman sur le poste. Les images construites précédemment sont importées
+avec leurs identifiants vérifiés. Le client doit pointer vers ce véritable
+Docker Engine : vérifier les sections client et serveur de `docker version`.
+Les résultats précédents Podman restent des preuves distinctes.
+
+### Reproduire les mesures
+
+Choisir un projet de démonstration isolé, libérer son port 8080 et préparer
+un fichier d'environnement local. Démarrer ses trois services et attendre
+leur santé. Les variables suivantes doivent désigner le client Docker natif,
+le fichier d'environnement et le PID du daemon de la session mesurée :
+
+```sh
+"$DOCKER_BIN" compose --env-file "$DOCKER_ENV_FILE" -f docker/compose.yaml -p intern-verification up -d --no-build --wait --wait-timeout 180
+python3 docker/verifier-etape14.py \
+  --docker "$DOCKER_BIN" --env-file "$DOCKER_ENV_FILE" \
+  --project intern-verification --engine-pidfile "$DOCKER_PIDFILE"
+```
+
+Le script arrête et relance seulement les conteneurs du projet choisi.
+Il conserve le volume, refuse une matrice inattendue, confirme les quatre
+offres fictives, puis effectue trois séries avec trente secondes au repos
+et dix consultations par série. Le seuil de démarrage est le premier catalogue
+HTTP 200, pas la fin d'une attente de santé du proxy. Le cache disque hôte
+n'est pas purgé, comme pour les VM.
+
+La mémoire est la somme des RSS des processus applicatifs et du moteur,
+avec rootlesskit, VPNKit, containerd, shims, FUSE et publication de port.
+Des pages partagées peuvent être comptées plusieurs fois, comme avec les VM.
+La mesure disque exige les métadonnées overlay/fuse-overlayfs : couches uniques
+des images, couches modifiables des conteneurs et volume. Les vues fusionnées,
+archives d'export et caches de construction ne sont pas ajoutés.
+
+Sur un moteur rootless, l'inspection du stockage peut nécessiter de lancer
+le vérificateur dans l'espace utilisateur et de montage de ce daemon :
+
+```sh
+nsenter -t "$(cat "$DOCKER_PIDFILE")" -U -m --wd="$PWD" -- \
+  python3 docker/verifier-etape14.py \
+  --docker "$DOCKER_BIN" --env-file "$DOCKER_ENV_FILE" \
+  --project intern-verification --engine-pidfile "$DOCKER_PIDFILE"
+```
+
+Ce choix donne accès au stockage du moteur rootless concerné ; il ne nécessite
+pas de service Docker système. Les essais depuis l'hôte restent sur son réseau,
+car la commande ne rejoint pas l'espace réseau du daemon.
+
+### Générer le compte rendu
+
+Depuis la racine d'Intern, avec les dépendances documentaires installées dans
+un environnement dédié selon `analyse/requirements-docs.txt` :
+
+```sh
+python3 docker/rediger-comparaison.py
+python3 docker/generer-comparaison.py
+pdfinfo docs/compte_rendu_comparaison.pdf
+```
+
+La source [comparaison.md](../docs/comparaison.md) est générée depuis les mesures
+brutes VM et Docker. Le [PDF](../docs/compte_rendu_comparaison.pdf) contient
+deux pages. Le [rapport technique](docs/etape14.md) rassemble les contrôles
+des erreurs fréquentes et les limites de comparaison. Le temps humain de mise
+en place initial n'a pas été chronométré pour les VM ni pour les conteneurs.
