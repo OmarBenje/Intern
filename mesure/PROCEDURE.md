@@ -113,3 +113,58 @@ Après les essais, arrêter uniquement ce projet en conservant son volume :
 ```
 
 Référence technique : [composants JMeter](https://jmeter.apache.org/usermanual/component_reference.html).
+
+## Étalonnage en ligne de commande
+
+Les paramètres applicatifs sont centralisés dans [protocole.json](protocole.json).
+Le script conserve `plan.jmx` comme source du parcours : il génère un plan à
+durée limitée avec des itérations continues et retire l'écouteur graphique.
+Pour le statique, il conserve les paramètres HTTP du même plan et utilise
+uniquement la feuille CSS Nginx, sans cookies, connexion ni temporisation.
+Les plans générés sont conservés dans les dossiers des résultats.
+
+Sur l'hôte, une fois les images construites, démarrer seulement le projet
+isolé décrit plus haut. Les autres déploiements doivent être arrêtés pendant
+les contrôles. Vérifier les vingt comptes avant l'exécution. `JMETER_BIN`
+désigne le programme JMeter installé sur l'hôte. Depuis la racine d'Intern :
+
+```sh
+python3 mesure/scripts/etalonnage.py static --jmeter "$JMETER_BIN" \
+  --users 1 --output mesure/resultats/etape16/statique-1
+python3 mesure/scripts/etalonnage.py static --jmeter "$JMETER_BIN" \
+  --users 20 --output mesure/resultats/etape16/statique-20
+python3 mesure/scripts/etalonnage.py application --jmeter "$JMETER_BIN" \
+  --users 10 --output mesure/resultats/etape16/controle-1
+sleep 30
+python3 mesure/scripts/etalonnage.py application --jmeter "$JMETER_BIN" \
+  --users 10 --output mesure/resultats/etape16/controle-2
+python3 mesure/scripts/rediger_etalonnage.py
+```
+
+Les dossiers de sortie doivent être neufs. Pour refaire l'étalonnage, conserver
+les preuves existantes dans une archive puis choisir de nouveaux dossiers ;
+adapter les chemins du générateur de rapport à cette nouvelle série.
+Les mesures statiques archivées ont été réalisées sur le proxy de référence
+au port 8080, avant l'activation de la base isolée ; ajouter `--port 8080`
+pour reproduire ce point d'entrée. La procédure ci-dessus cible le proxy isolé
+au port 8081, avec les mêmes images.
+
+Le script vérifie une fenêtre complète, hors montée et stabilisation : les
+requêtes doivent commencer et finir dans cette fenêtre, chaque utilisateur
+doit y être présent et le nombre de fils actifs doit rester égal au palier.
+Les résultats comportent le débit total et réussi, les centiles et les erreurs,
+ainsi que les ressources CPU/RSS de l'injecteur et la charge globale de l'hôte.
+Le générateur refuse des contrôles dont le plan, les comptes, les scripts SQL,
+les paramètres appliqués ou l'hôte diffèrent. Il indique un échec de
+répétabilité si le débit ou le p95 diffère de plus de 10 %, ou si des erreurs
+ont été détectées. Le code de sortie JMeter seul ne suffit pas.
+
+Entre les paliers des futures campagnes, attendre quinze minutes pour que les
+connexions cumulées respectent la protection de trente essais/IP par fenêtre.
+Les deux contrôles à dix utilisateurs ne consomment que vingt connexions ;
+aucune autre connexion ne doit avoir épuisé ce budget. Attendre l'expiration
+de la fenêtre si HTTP 429 apparaît, sans supprimer les compteurs ni désactiver
+les protections.
+
+Après les essais, arrêter le projet isolé en conservant son volume, puis
+remettre le déploiement initial dans son état de fonctionnement.

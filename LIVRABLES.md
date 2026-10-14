@@ -22,7 +22,8 @@ nécessaires à sa revue.
 | 12 — Image métier | Image construite ; contenu et connexion SQL vérifiés sur Docker Engine à l'étape 14 | [Dockerfile](docker/metier.Dockerfile), [exclusions](docker/.dockerignore), [composition](docker/compose.yaml), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-metier.sh), [rapport](docker/docs/etape12.md), [preuve initiale](docker/docs/verification-image-etape12.txt), [tailles Docker](docker/docs/mesures-etape14.json) |
 | 13 — Proxy et composition | Trois services sains, persistance, 34 contrôles SQL et huit contrôles navigateur réussis sur Docker Engine à l'étape 14 | [Fichier de composition](docker/compose.yaml), [configuration du proxy](docker/proxy.conf), [Dockerfile du proxy](docker/proxy.Dockerfile), [commandes](docker/demarrer.sh), [capture initiale des services](docker/docs/etape13-services.png), [connexion Docker](docker/docs/etape14-connexion.png), [tableau de bord Docker](docker/docs/etape14-tableau-de-bord.png), [rapport initial](docker/docs/etape13.md), [preuves Docker](docker/docs/verification-etape14.json) |
 | 14 — Vérification et comparaison | Neuf liaisons conformes, trois séries Docker Engine et PDF de deux pages vérifiés ; temps initial non chronométré | [Matrice et tableau comparatif](docs/comparaison.md), [compte rendu PDF](docs/compte_rendu_comparaison.pdf), [matrice brute](docker/docs/joignabilite-etape14.json), [mesures brutes](docker/docs/mesures-etape14.json), [rapport technique](docker/docs/etape14.md), [contrôles des erreurs](docker/docs/verification-etape14.json) |
-| 15 — Plan JMeter | Scénario vérifié sur Docker isolé ; prérequis VM et données communes à confirmer avant l'étalonnage | [Plan](mesure/plan.jmx), [vingt comptes fictifs](mesure/comptes.csv), [procédure](mesure/PROCEDURE.md), [rapport et preuves](mesure/ETAPE15.md), [capture de réussite](mesure/resultats/etape15/reussite.png), [capture d'échec](mesure/resultats/etape15/echec.png) |
+| 15 — Plan JMeter | Scénario vérifié en CLI et GUI sur Docker isolé ; données communes VM/Docker à préparer avant les campagnes | [Plan](mesure/plan.jmx), [vingt comptes fictifs](mesure/comptes.csv), [procédure](mesure/PROCEDURE.md), [rapport et preuves](mesure/ETAPE15.md), [capture de réussite](mesure/resultats/etape15/reussite.png), [capture d'échec](mesure/resultats/etape15/echec.png) |
+| 16 — Étalonnage | Plafond statique mesuré ; deux contrôles identiques sans erreur, écarts de débit et p95 sous 10 % | [Court rapport d'étalonnage](mesure/ETAPE16.md), [protocole fixé](mesure/protocole.json), [mesures et empreintes](mesure/resultats/etape16/etalonnage.json), [contrôle 1](mesure/resultats/etape16/controle-1/brut.csv), [contrôle 2](mesure/resultats/etape16/controle-2/brut.csv), [reproduction](mesure/PROCEDURE.md#étalonnage-en-ligne-de-commande) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -500,4 +501,23 @@ Les deux exécutions ont été vérifiées dans l'interface graphique de JMeter
 contre un déploiement Docker isolé. La [procédure](mesure/PROCEDURE.md) et le
 [rapport technique](mesure/ETAPE15.md) donnent les commandes reproductibles,
 les résultats bruts et les prérequis restant à confirmer avant l'étalonnage.
+
+## Étape 16 — Étalonner le protocole
+
+**Livrable à remettre : [court rapport d'étalonnage](mesure/ETAPE16.md).**
+
+Le rapport présente le plafond observé sur une ressource statique du proxy,
+les paliers retenus, les durées fixées et les deux exécutions de contrôle
+avec leurs écarts. Les mesures sont réalisées avec JMeter en ligne de commande
+sur l'hôte. Les deux contrôles applicatifs portent sur le même déploiement
+Docker isolé, avec les mêmes comptes et données fictifs ; aucune erreur n'est
+détectée et les écarts de débit et de latence p95 restent sous 10 %.
+
+Les [résultats et empreintes](mesure/resultats/etape16/etalonnage.json),
+le [protocole commun](mesure/protocole.json) et la
+[procédure reproductible](mesure/PROCEDURE.md#étalonnage-en-ligne-de-commande)
+complètent le rapport. Les trois VM sont démarrées puis arrêtées proprement ;
+le déploiement Docker de référence est remis en marche après les contrôles.
+Une base VM dédiée avec le même jeu fictif reste à préparer avant les campagnes
+comparatives.
 

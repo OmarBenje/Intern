@@ -1,0 +1,17 @@
+{
+  "engine": "Docker Engine 28.3.3 rootless",
+  "project": "intern-etape15",
+  "proxy_port": 8081,
+  "images": {
+    "proxy": "sha256:04e484e980ad6eb722734d1a578c470f2cd6aa031c8e21067713550f319e0fe6",
+    "metier": "sha256:bb31ce64773904c17d899562c0d014e88b10833a08fd1c5e6701f7dbb95cfffc",
+    "donnees": "sha256:e8538db784b854a9baac5c1be6d059dcf0db257af2d94c8c5807b5fc15f11222"
+  },
+  "fixture_sha256": "11b3213956bb2c4dd069ed2b3d1a7099356dc69c7ab3914e559c2e6001893cff",
+  "fictional_accounts": 20,
+  "fixture_applications": 20,
+  "vm_running": false,
+  "reference_containers_running": false,
+  "fixture_file": "jeu-fictif.json",
+  "fixture_unchanged_after_controls": true
+}

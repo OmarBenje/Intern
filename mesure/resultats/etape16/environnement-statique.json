@@ -1,0 +1,26 @@
+{
+  "resource": "/static/admin/css/base.css",
+  "bytes": 24538,
+  "sha256": "34a63dad01b867195da348d8011e375b463bcc85476b5670376a8a342e220b1a",
+  "response_headers": [
+    "HTTP/1.1 200 OK",
+    "Server: nginx/1.28.0",
+    "Date: Wed, 14 Oct 2026 11:49:45 GMT",
+    "Content-Type: text/css",
+    "Content-Length: 24538",
+    "Last-Modified: Wed, 14 Oct 2026 09:27:08 GMT",
+    "Connection: keep-alive",
+    "ETag: \"6acf4aec-5fda\"",
+    "Accept-Ranges: bytes",
+    ""
+  ],
+  "engine": "Docker Engine 28.3.3 rootless",
+  "project": "intern-etape14",
+  "port": 8080,
+  "vm_running": false,
+  "images": {
+    "proxy": "sha256:04e484e980ad6eb722734d1a578c470f2cd6aa031c8e21067713550f319e0fe6",
+    "metier": "sha256:bb31ce64773904c17d899562c0d014e88b10833a08fd1c5e6701f7dbb95cfffc",
+    "donnees": "sha256:e8538db784b854a9baac5c1be6d059dcf0db257af2d94c8c5807b5fc15f11222"
+  }
+}

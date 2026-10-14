@@ -1,0 +1,25 @@
+{
+  "mode": "static",
+  "users": 1,
+  "ramp_s": 10,
+  "warmup_s": 5,
+  "plateau_s": 60,
+  "duration_s": 80,
+  "port": 8080,
+  "reflection_ms": 0,
+  "source_plan_sha256": "0fe2b1cd4c123294b3ad6fc9ddeeda6e3a6775dd28499e05216deaf925a39aef",
+  "run_plan_sha256": "5c25d6fb29803c4002af5503cf1797641d2e46f82acaedb8fcb18452b01cfe98",
+  "accounts_sha256": "b3738ea09a9a0ea2e773e456bbff4dfad91c6632f7b889a426da119d02658c84",
+  "sql_schema_sha256": "806b1ba2d921b2dd1a32d4f6bc5bb75cda6b1ec9c94410cd6471f0a1349243a1",
+  "sql_data_sha256": "dbfaa7d9f8d906fec4590188f14cce72727775bd26fe64404d3cb5d40bd361fa",
+  "seed_script_sha256": "5b278c974ceaedec277f08dedace2bd6352ee071b2f0165fffe6a7756248e995",
+  "host": {
+    "system": "Linux",
+    "release": "6.19.14-108.fc42.x86_64",
+    "logical_cpus": 12
+  },
+  "cpu_units": "100 percent injector CPU = one logical CPU; host busy percent = all CPUs",
+  "started_epoch_s": 1791978737.561766,
+  "finished_epoch_s": 1791978826.9275618,
+  "exit_code": 0
+}
