@@ -169,5 +169,17 @@ Cette mesure ne représente pas la place totale de toutes les couches partagées
 sur disque.
 L'accès navigateur attend le proxy de l'étape 13.
 
+### Taille et contenu effectivement vérifiés
+
+Le 14 octobre 2026, la recette actuelle a été construite avec Podman :
+**388 668 114 octets**, soit **388,668114 Mo** non compressés.
+La réduction par rapport à l'image locale antérieure est de **62,73 %**.
+Git, uv et le cache uv sont absents de l'image finale ; Gunicorn démarre
+et répond sur `/health/live/`. Les sources copiées ne contiennent pas les
+fichiers locaux exclus. Le [rapport](docs/etape12.md) et la
+[preuve](docs/verification-image-etape12.txt) détaillent ces contrôles.
+La construction et la connexion PostgreSQL avec Docker Engine restent
+à valider séparément.
+
 Références : [image officielle Python](https://hub.docker.com/_/python),
 [installation uv et cache Docker](https://docs.astral.sh/uv/guides/integration/docker/).

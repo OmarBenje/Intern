@@ -19,7 +19,7 @@ nécessaires à sa revue.
 | 9 — Déploiement des couches | Services installés et vérifiés après redémarrage ; huit contrôles navigateur réussis | [Configurations et procédure](deploiement/DEPLOIEMENT.md), [rapport](deploiement/docs/etape9.md), [preuves VM](deploiement/docs/preuves-etape9.txt), [recette navigateur](deploiement/docs/recette-etape9.txt), [capture réelle](deploiement/docs/etape9-tableau-de-bord.png) |
 | 10 — Vérification et mesures | Neuf liaisons conformes, trois séries mesurées et trois OVA créés et contrôlés | [Procédure](deploiement/VERIFICATION.md), [rapport](deploiement/docs/etape10.md), [mesures](deploiement/docs/mesures.md), [preuves réseau](deploiement/docs/preuves-etape10.txt), [manifeste des OVA](deploiement/docs/exports-etape10.json) |
 | 11 — Données conteneurisées | Configuration préparée et contrôlée statiquement ; peuplement et persistance Docker à vérifier | [Service et volume](docker/compose.yaml), [configuration](docker/.env.example), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-donnees.sh), [rapport et limites](docker/docs/etape11.md) |
-| 12 — Image métier | Livrables préparés ; construction, connexion et taille Docker à vérifier | [Dockerfile](docker/metier.Dockerfile), [exclusions](docker/.dockerignore), [composition](docker/compose.yaml), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-metier.sh), [rapport](docker/docs/etape12.md) |
+| 12 — Image métier | Image construite et contrôlée avec Podman : 388 668 114 octets ; connexion SQL et Docker Engine à vérifier | [Dockerfile](docker/metier.Dockerfile), [exclusions](docker/.dockerignore), [composition](docker/compose.yaml), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-metier.sh), [rapport](docker/docs/etape12.md), [preuve](docker/docs/verification-image-etape12.txt) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -360,4 +360,10 @@ aucun port. Son démarrage attend la santé de la base et vérifie les migration
 La [procédure](docker/PROCEDURE.md) fournit les commandes de construction,
 de vérification SQL depuis le métier et de mesure de taille. Les contrôles
 statiques sont documentés dans le [rapport](docker/docs/etape12.md).
-La construction et les résultats réels restent à obtenir sur Docker Engine.
+La recette actuelle est construite et inspectée avec Podman :
+**388 668 114 octets**, contre **1 042 844 117 octets** pour l'image locale
+antérieure. Git, uv et le cache uv sont absents de l'image finale. Gunicorn
+démarre sous le compte `intern` et `/health/live/` répond HTTP 200.
+La [preuve](docker/docs/verification-image-etape12.txt) conserve les identifiants
+et les empreintes. La connexion SQL et l'exécution sur Docker Engine restent
+à vérifier.

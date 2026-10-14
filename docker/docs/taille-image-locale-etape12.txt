@@ -1,0 +1,8 @@
+Date de mesure : 14 octobre 2026
+Moteur : Podman, inspection locale hors du sandbox
+Commande : podman image inspect localhost/intern-tp-metier:local --format 'id={{.Id}} taille_exacte_octets={{.Size}} creation={{.Created}}'
+Image : localhost/intern-tp-metier:local
+ID : f7527281ff0f432293d6e0cada14f9d210b3f312beb90ee344fbce5bceeeb007
+Taille exacte non compressée : 1042844117 octets
+Création : 2026-10-12 13:08:12.392166088 +0000 UTC
+L'étiquette intern-metier:etape12 n'est pas présente dans le stockage inspecté.

@@ -1,0 +1,33 @@
+Date : 14 octobre 2026
+Moteur : Podman, exécution hors du sandbox
+Construction : podman build -f docker/metier.Dockerfile -t localhost/intern-metier:etape12 .
+Résultat : construction réussie, 43 dépendances installées depuis uv.lock
+Image : localhost/intern-metier:etape12
+ID : 473e52810e94a783bb04f8a64be17557324839d814c1081197a2d0c9541bf773
+Taille exacte non compressée : 388668114 octets
+Ancienne image intern-tp-metier:local : 1042844117 octets
+Différence : 654176003 octets ; réduction arrondie : 62,73 %
+
+SHA256 des sources construites :
+docker/metier.Dockerfile : 07cc604b9c2bfc91d19344bc59febd42c1a9abee0ad1ba5ca2dfc67c13c82e4f
+.dockerignore : bb7bf9c4e35031c96aa6c1b599164d67cd47a60ff71afb437c66a0e520f04cf7
+metier/uv.lock : c43b2f0a9daa3019a27efcad52d73a056adfd97012d42e2724de078c3d1c66ce
+metier/pyproject.toml : abe38ec3b9bee3a897ff31506d8e2fea45ffd7ec69e3cbf228b655ec3feae971
+
+Contrôles statiques : base slim versionnée, installation avant copie du code,
+exclusion de .venv, .git, __pycache__, *.tmp et *.log ; deux phases ; droits limités.
+Contrôles réels dans un conteneur temporaire sans réseau, en lecture seule :
+- Git absent du PATH.
+- uv absent du PATH et des paquets globaux Python.
+- /root/.cache/uv absent.
+- Aucun .git, .venv, __pycache__, .env, *.pyc, *.log ou *.tmp dans les sources copiées.
+- /app/metier/app et /app/metier/.venv détenus par root.
+- /app/.private-media et /app/staticfiles détenus par UID 10001.
+- Imports django, gunicorn, psycopg, PIL, numpy, pandas, curl_cffi et jobspy réussis.
+- Trois CV privés identiques au PDF fictif livré.
+- Démarrage de la commande Gunicorn de l'image sous UID 10001 réussi.
+- /health/live/ : HTTP 200, corps {"status": "ok"}.
+
+Limites : pas de connexion à PostgreSQL ni de recette trois-tiers dans cet essai.
+La sonde testée est /health/live/, distincte de /health/ready/ qui interroge SQL.
+Cette construction Podman ne constitue pas une validation Docker Engine.
