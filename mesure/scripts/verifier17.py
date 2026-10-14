@@ -32,11 +32,11 @@ def export(path, rows):
         writer.writerows(rows)
 
 
-def main():
+def main(argv=None, write_outputs=True):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=ROOT / "resultats/etape17")
     parser.add_argument("--runtime", type=Path)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     root = args.output.resolve()
     require(root.is_relative_to(ROOT), "Results must stay inside mesure/")
     manifest = json.loads((root / "manifest.json").read_text())
@@ -120,8 +120,9 @@ def main():
                             f"Server summary differs: {run['path']} {service} {key}")
                     record[key] = value
             servers.append(record)
-    export(root / "releve-paliers.csv", clients)
-    export(root / "releve-serveurs.csv", servers)
+    if write_outputs:
+        export(root / "releve-paliers.csv", clients)
+        export(root / "releve-serveurs.csv", servers)
     for name in ("releve-paliers.csv", "releve-serveurs.csv", "restauration.json"):
         if (root / name).exists():
             hashes[name] = digest(root / name)
@@ -133,9 +134,11 @@ def main():
                         restoration_event_present=True, private_snapshot_checked=bool(args.runtime),
                         incidents=[e for e in events if e["action"] == "campaigns_failed"],
                         raw_files_sha256=hashes)
-    save(root / "verification.json", verification)
-    (root / "SHA256SUMS").write_text("".join(f"{value}  {name}\n" for name, value in sorted(hashes.items())))
+    if write_outputs:
+        save(root / "verification.json", verification)
+        (root / "SHA256SUMS").write_text("".join(f"{value}  {name}\n" for name, value in sorted(hashes.items())))
     print(json.dumps({k: v for k, v in verification.items() if k != "raw_files_sha256"}, indent=2))
+    return verification
 
 
 if __name__ == "__main__":

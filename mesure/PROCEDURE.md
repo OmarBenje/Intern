@@ -298,3 +298,25 @@ Les détails et limites sont dans [ETAPE17.md](ETAPE17.md#relevés-livrés-et-v�
 La santé des services doit être vérifiée séparément en direct. Conserver et
 signaler les incidents qui peuvent affecter la comparaison. L'analyse
 comparative relève de l'étape 18.
+
+## Analyse et comparaison de l'étape 18
+
+Suivre [ETAPE18.md](ETAPE18.md) pour les commandes d'analyse et l'export du
+rapport. Recalculer les statistiques sur les preuves de l'étape 17, contrôler
+leurs empreintes, puis tracer chaque répétition séparément. Comparer les deux
+déploiements au même nombre d'utilisateurs. Le débit moyen est une moyenne
+des deux débits mesurés ; conserver chaque p95 séparé, sans prétendre qu'une
+moyenne de p95 représente le p95 de l'ensemble des requêtes.
+
+Rechercher un débit qui cesse de progresser, une hausse durable de latence ou
+des erreurs, puis rapprocher ces signes des ressources serveur. Si la plage
+testée ne montre pas de saturation, écrire « non observée » sur les courbes
+et dans le tableau. Le composant ayant le CPU le plus élevé n'est pas, à lui
+seul, un goulot démontré. Signaler la temporisation, les variations entre
+séries et les incidents avant toute conclusion sur la capacité du système.
+
+Le [rapport](docs/rapport-charge.md) reprend le tableau demandé et répond dans
+l'ordre : écart chiffré, explication technique et hypothèses, premier composant
+limitant, limites de la mesure. Le PDF doit comporter trois à quatre pages ;
+l'export livré comporte quatre pages A4. Les graphes, valeurs et sources doivent
+être lisibles et cohérents avec les données conservées.

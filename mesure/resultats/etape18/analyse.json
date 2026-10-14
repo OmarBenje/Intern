@@ -1,0 +1,80 @@
+{
+  "comparison": [
+    {
+      "users": 1,
+      "vm_mean_rps": 0.975,
+      "docker_mean_rps": 0.9833333333333333,
+      "docker_throughput_gain_pct": 0.8547008547008517,
+      "vm_p95_s1_ms": 33.39999999999998,
+      "vm_p95_s2_ms": 28.39999999999992,
+      "docker_p95_s1_ms": 21.14999999999999,
+      "docker_p95_s2_ms": 19.0,
+      "docker_p95_reduction_s1_pct": 36.676646706586816,
+      "docker_p95_reduction_s2_pct": 33.098591549295584
+    },
+    {
+      "users": 5,
+      "vm_mean_rps": 4.870833333333334,
+      "docker_mean_rps": 4.904166666666667,
+      "docker_throughput_gain_pct": 0.6843455945252375,
+      "vm_p95_s1_ms": 49.0,
+      "vm_p95_s2_ms": 27.0,
+      "docker_p95_s1_ms": 18.0,
+      "docker_p95_s2_ms": 19.0,
+      "docker_p95_reduction_s1_pct": 63.26530612244898,
+      "docker_p95_reduction_s2_pct": 29.629629629629626
+    },
+    {
+      "users": 10,
+      "vm_mean_rps": 9.7375,
+      "docker_mean_rps": 9.833333333333334,
+      "docker_throughput_gain_pct": 0.9841677364142098,
+      "vm_p95_s1_ms": 46.0,
+      "vm_p95_s2_ms": 29.0,
+      "docker_p95_s1_ms": 20.0,
+      "docker_p95_s2_ms": 20.0,
+      "docker_p95_reduction_s1_pct": 56.52173913043479,
+      "docker_p95_reduction_s2_pct": 31.034482758620683
+    },
+    {
+      "users": 20,
+      "vm_mean_rps": 19.479166666666664,
+      "docker_mean_rps": 19.641666666666666,
+      "docker_throughput_gain_pct": 0.8342245989304997,
+      "vm_p95_s1_ms": 44.0,
+      "vm_p95_s2_ms": 29.0,
+      "docker_p95_s1_ms": 20.25,
+      "docker_p95_s2_ms": 20.0,
+      "docker_p95_reduction_s1_pct": 53.97727272727273,
+      "docker_p95_reduction_s2_pct": 31.034482758620683
+    }
+  ],
+  "startup_and_idle": {
+    "vm": {
+      "startup_s": 20.47319529000015,
+      "idle_rss_mib": 1489.01953125,
+      "source_sha256": "1d49c19d3bdb46327d55349ea516d1c95ccc2f72faefee730518c5eac7250b8e"
+    },
+    "docker": {
+      "startup_s": 49.84438339400003,
+      "idle_rss_mib": 581.9609375,
+      "source_sha256": "1d23fd7e225fa234b86aeb6a7e42c3ee442e8861ccd7e50a71a4a08afea9a3f8"
+    }
+  },
+  "saturation_observed": false,
+  "tested_users": [
+    1,
+    5,
+    10,
+    20
+  ],
+  "saturation_assessment": "Manual interpretation for the archived inputs; see docs/rapport-charge.md",
+  "p95_aggregation": "Separate repetitions; no average or pooled p95",
+  "input_hashes": {
+    "manifest.json": "299122fc1913330c703adb6e68ad2a03176eeecb79b9519d12ff4a97e31c9a94",
+    "journal.jsonl": "d41142a01189a4e730f6abd5f23f78e7f513dfa2e585a84e56960bd5294227e2",
+    "releve-paliers.csv": "b04b2e1532573e736175e4ceb5daafcdd0eb101ea5bcfff120c9a6342cb75ec5",
+    "releve-serveurs.csv": "86cf5bd16075fc6f57289a96a1af131fca8a8de9b8976339d23c0cb868c3f095"
+  },
+  "incident": "Docker stopped after first VM campaign; campaign resumed"
+}

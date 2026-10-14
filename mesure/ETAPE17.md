@@ -55,8 +55,8 @@ La vérification des fichiers ne sonde pas les services en direct : la preuve de
 restauration est datée séparément. Les versions Python diffèrent entre VM et
 Docker ; les VM ont des ressources fixes, les conteneurs n'ont pas de quotas
 CPU/mémoire explicites. Les méthodes CPU/I/O indiquées dans les relevés doivent
-être prises en compte lors de leur comparaison. L'analyse comparative reste
-à effectuer à l'étape 18.
+être prises en compte lors de leur comparaison. L'analyse comparative est
+documentée à l'[étape 18](ETAPE18.md).
 
 ## Protocole
 

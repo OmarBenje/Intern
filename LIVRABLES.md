@@ -25,6 +25,7 @@ nécessaires à sa revue.
 | 15 — Plan JMeter | Scénario vérifié en CLI et GUI sur Docker isolé ; données communes VM/Docker à préparer avant les campagnes | [Plan](mesure/plan.jmx), [vingt comptes fictifs](mesure/comptes.csv), [procédure](mesure/PROCEDURE.md), [rapport et preuves](mesure/ETAPE15.md), [capture de réussite](mesure/resultats/etape15/reussite.png), [capture d'échec](mesure/resultats/etape15/echec.png) |
 | 16 — Étalonnage | Plafond statique mesuré ; deux contrôles identiques sans erreur, écarts de débit et p95 sous 10 % | [Court rapport d'étalonnage](mesure/ETAPE16.md), [protocole fixé](mesure/protocole.json), [mesures et empreintes](mesure/resultats/etape16/etalonnage.json), [contrôle 1](mesure/resultats/etape16/controle-1/brut.csv), [contrôle 2](mesure/resultats/etape16/controle-2/brut.csv), [reproduction](mesure/PROCEDURE.md#étalonnage-en-ligne-de-commande) |
 | 17 — Campagnes | Seize paliers vérifiés, zéro erreur ; interruption et reprise documentées | [Rapport et résultats bruts](mesure/ETAPE17.md), [relevé serveur](mesure/resultats/etape17/releve-serveurs.csv), [vérification](mesure/resultats/etape17/verification.json) |
+| 18 — Analyse | Courbes et rapport de quatre pages vérifiés ; saturation non observée jusqu'à vingt utilisateurs | [Rapport PDF](mesure/docs/rapport-charge.pdf), [tableau et analyse](mesure/docs/rapport-charge.md), [livrables et reproduction](mesure/ETAPE18.md) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -550,6 +551,22 @@ la [vérification](mesure/resultats/etape17/verification.json) et les
 La [restauration finale](mesure/resultats/etape17/restauration.json) est contrôlée :
 trois services de référence sains, HTTP 200 et aucune VM active.
 L'interruption du moteur Docker et la reprise sont documentées ; elles limitent
-l'interprétation de l'effet de l'ordre de passage. L'analyse comparative reste
-à effectuer à l'étape 18.
+l'interprétation de l'effet de l'ordre de passage. L'analyse comparative est
+présentée à l'étape 18 ci-dessous.
+
+## Étape 18 — Analyser et comparer
+
+Les [courbes](mesure/docs/courbes/ensemble.png), le tableau rempli et le
+[rapport de quatre pages](mesure/docs/rapport-charge.pdf) établissent les écarts
+de débit et de p95, puis répondent aux quatre questions dans leur ordre.
+La [source Markdown](mesure/docs/rapport-charge.md) et les
+[calculs vérifiables](mesure/resultats/etape18/analyse.json) sont conservés.
+
+Les mesures ne montrent aucune saturation jusqu'à vingt utilisateurs : le
+rapport l'indique dans les courbes et le tableau, sans inventer de goulot.
+Le métier est le composant le plus chargé en CPU mesuré, sans saturation
+démontrée. L'incident Docker et les autres limites de comparaison sont explicités.
+Les métriques de démarrage et de repos viennent des étapes 10 et 14, avec
+leurs périmètres distincts. La [reproduction](mesure/ETAPE18.md) documente les
+commandes, les fichiers d'entrée et les contrôles techniques effectués.
 

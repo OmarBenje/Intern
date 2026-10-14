@@ -1,0 +1,2 @@
+# Optional dependency for offline charts and PDF report export.
+matplotlib==3.10.9
