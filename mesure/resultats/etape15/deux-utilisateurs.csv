@@ -1,0 +1,9 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1791977356784,54,00 — CSRF,200,OK,Candidats 1-1,text,true,,557,134,1,1,http://127.0.0.1:8081/api/v1/auth/csrf/,54,0,35
+1791977357100,9,00 — CSRF,200,OK,Candidats 1-2,text,true,,557,134,2,2,http://127.0.0.1:8081/api/v1/auth/csrf/,9,0,2
+1791977358847,725,01 — Connexion,200,OK,Candidats 1-2,text,true,,820,376,2,2,http://127.0.0.1:8081/api/v1/auth/login/,725,0,0
+1791977358847,860,01 — Connexion,200,OK,Candidats 1-1,text,true,,819,376,2,2,http://127.0.0.1:8081/api/v1/auth/login/,860,0,0
+1791977360659,25,02 — Mes candidatures,200,OK,Candidats 1-2,text,true,,574,246,2,2,http://127.0.0.1:8081/api/v1/applications/?page_size=20,25,0,0
+1791977360713,26,02 — Mes candidatures,200,OK,Candidats 1-1,text,true,,574,246,2,2,http://127.0.0.1:8081/api/v1/applications/?page_size=20,26,0,0
+1791977361841,32,02 — Mes candidatures,200,OK,Candidats 1-2,text,true,,574,246,2,2,http://127.0.0.1:8081/api/v1/applications/?page_size=20,32,0,0
+1791977361841,32,02 — Mes candidatures,200,OK,Candidats 1-1,text,true,,574,246,2,2,http://127.0.0.1:8081/api/v1/applications/?page_size=20,32,0,0

@@ -1,0 +1,13 @@
+# Overlay for an isolated fixture database and proxy on port 8081.
+services:
+  proxy:
+    ports: !override
+      - "127.0.0.1:8081:80"
+  metier:
+    environment:
+      CSRF_TRUSTED_ORIGINS: http://127.0.0.1:8081
+      PUBLIC_BASE_URL: http://127.0.0.1:8081
+  donnees:
+    # SQL inputs are mounted read-only; required on the tested SELinux host.
+    security_opt:
+      - label=disable

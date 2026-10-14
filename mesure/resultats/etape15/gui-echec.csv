@@ -1,0 +1,3 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1791977335611,86,00 — CSRF,200,OK,Candidats 1-1,text,true,,557,134,1,1,http://127.0.0.1:8081/api/v1/auth/csrf/,86,0,59
+1791977337993,754,01 — Connexion,401,Unauthorized,Candidats 1-1,text,false,java.lang.AssertionError: HTTP 401. Expression: (prev.getResponseCode() == 200),465,365,1,1,http://127.0.0.1:8081/api/v1/auth/login/,754,0,0

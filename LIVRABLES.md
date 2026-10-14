@@ -22,6 +22,7 @@ nécessaires à sa revue.
 | 12 — Image métier | Image construite ; contenu et connexion SQL vérifiés sur Docker Engine à l'étape 14 | [Dockerfile](docker/metier.Dockerfile), [exclusions](docker/.dockerignore), [composition](docker/compose.yaml), [procédure](docker/PROCEDURE.md), [vérificateur](docker/verifier-metier.sh), [rapport](docker/docs/etape12.md), [preuve initiale](docker/docs/verification-image-etape12.txt), [tailles Docker](docker/docs/mesures-etape14.json) |
 | 13 — Proxy et composition | Trois services sains, persistance, 34 contrôles SQL et huit contrôles navigateur réussis sur Docker Engine à l'étape 14 | [Fichier de composition](docker/compose.yaml), [configuration du proxy](docker/proxy.conf), [Dockerfile du proxy](docker/proxy.Dockerfile), [commandes](docker/demarrer.sh), [capture initiale des services](docker/docs/etape13-services.png), [connexion Docker](docker/docs/etape14-connexion.png), [tableau de bord Docker](docker/docs/etape14-tableau-de-bord.png), [rapport initial](docker/docs/etape13.md), [preuves Docker](docker/docs/verification-etape14.json) |
 | 14 — Vérification et comparaison | Neuf liaisons conformes, trois séries Docker Engine et PDF de deux pages vérifiés ; temps initial non chronométré | [Matrice et tableau comparatif](docs/comparaison.md), [compte rendu PDF](docs/compte_rendu_comparaison.pdf), [matrice brute](docker/docs/joignabilite-etape14.json), [mesures brutes](docker/docs/mesures-etape14.json), [rapport technique](docker/docs/etape14.md), [contrôles des erreurs](docker/docs/verification-etape14.json) |
+| 15 — Plan JMeter | Scénario vérifié sur Docker isolé ; prérequis VM et données communes à confirmer avant l'étalonnage | [Plan](mesure/plan.jmx), [vingt comptes fictifs](mesure/comptes.csv), [procédure](mesure/PROCEDURE.md), [rapport et preuves](mesure/ETAPE15.md), [capture de réussite](mesure/resultats/etape15/reussite.png), [capture d'échec](mesure/resultats/etape15/echec.png) |
 
 « Livrables préparés » indique que les fichiers existent. La revue interactive
 du prototype et son accès lecture restent à confirmer.
@@ -469,4 +470,34 @@ et snapshots sont expliquées dans le compte rendu. Les conteneurs consomment
 moins de mémoire et de stockage, mais sont plus lents dans cette configuration.
 Le temps humain initial n'est pas inventé ; la comparaison ne prétend pas
 isoler l'effet de la seule technique de virtualisation.
+
+## Étape 15 — Construire le plan de test
+
+### Livrables à remettre
+
+| Livrable | Fichier |
+| --- | --- |
+| Fichier du plan de test JMeter | [plan.jmx](mesure/plan.jmx) |
+| Fichier des vingt comptes fictifs | [comptes.csv](mesure/comptes.csv) |
+| Capture d'une exécution à un utilisateur et une itération : parcours réussi | [reussite.png](mesure/resultats/etape15/reussite.png) |
+| Capture d'une exécution à un utilisateur et une itération : parcours en échec | [echec.png](mesure/resultats/etape15/echec.png) |
+
+### Parcours réussi
+
+La préparation CSRF, la connexion et la consultation des candidatures
+personnelles réussissent ; les trois appels apparaissent en vert dans JMeter.
+
+![Exécution JMeter à un utilisateur : parcours réussi](mesure/resultats/etape15/reussite.png)
+
+### Parcours en échec
+
+Avec un mot de passe erroné, la préparation CSRF réussit puis la connexion
+reçoit HTTP 401 et déclenche l'assertion. Le fil s'arrête avant la consultation.
+
+![Exécution JMeter à un utilisateur : parcours en échec](mesure/resultats/etape15/echec.png)
+
+Les deux exécutions ont été vérifiées dans l'interface graphique de JMeter
+contre un déploiement Docker isolé. La [procédure](mesure/PROCEDURE.md) et le
+[rapport technique](mesure/ETAPE15.md) donnent les commandes reproductibles,
+les résultats bruts et les prérequis restant à confirmer avant l'étalonnage.
 
