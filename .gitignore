@@ -13,3 +13,4 @@ htmlcov/
 # Local audit exports; keep reviewed inputs and research summaries in docs/research.
 /docs/research/generated/
 *.log
+.execution/

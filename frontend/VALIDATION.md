@@ -64,6 +64,22 @@ les **8 tests du catalogue** et le parcours d'inscription utilisé pour la
 capture ont été rejoués avec succès ; le build et le lint ont aussi été relancés.
 Les trois scénarios ignorés concernent le fournisseur externe de logos.
 
-Les captures utilisent uniquement des identités fictives. La revue du
+La série de livraison couvre les écrans publics, candidat, recruteur et
+administration sur React/Vite, Django et PostgreSQL réels, sans interception
+des réponses API. Le script `scripts/capturer_ecrans.mjs` et le manifeste
+`captures/ecrans/manifest.json` permettent de reproduire et de retrouver chaque
+écran. Les quatre captures historiques avec API contrôlée restent identifiées
+séparément dans l’index. Les captures utilisent uniquement des identités fictives. La revue du
 prototype et l'installation sur une machine vierge restent à vérifier avant
 présentation au jury.
+
+
+## Contrôle des captures réelles
+
+L’ouverture de la fiche recruteur sur une candidature transmise avec un profil
+minimal a révélé une liste de compétences absente. La fiche affiche désormais
+« Non renseignées » sans planter ; le type du profil accepte aussi l’absence
+de titre professionnel. Le test navigateur ciblé avec ces deux champs absents
+passe, ainsi que le build et le lint (trois avertissements préexistants).
+La recette réelle T01–T15 passe aussi sur une base dédiée avec les ports
+8001 et 5175, en conservant la démonstration sur 8000 et 5173.

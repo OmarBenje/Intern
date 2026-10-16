@@ -134,6 +134,21 @@ test('ATS URL is saved with an honest pending state', async ({ page }) => {
   await expect(card.getByText('Activation en attente')).toBeVisible()
 })
 
+test('candidate drawer accepts a transmitted profile without skills or headline', async ({ page }) => {
+  await session(page)
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.route('**/api/v1/recruiter/candidates/2/', route => route.fulfill({
+    json: { ...applicant, profile: { full_name: 'Ada Lovelace', email: 'ada@example.test' } },
+  }))
+  await page.goto('/recruiter/candidates/2')
+  const drawer = page.getByRole('dialog')
+  await expect(drawer.getByRole('heading', { name: 'Ada Lovelace' })).toBeVisible()
+  await expect(drawer.getByText('Non renseignées', { exact: true })).toBeVisible()
+  await expect(drawer.getByRole('link', { name: 'Contacter par e-mail' })).toHaveAttribute('href', 'mailto:ada%40example.test')
+  expect(errors).toEqual([])
+})
+
 test('candidate cannot enter recruiter pages', async ({ page }) => {
   await session(page, { ...user, role: 'candidate' })
   await page.route('**/api/v1/dashboard/?*', route => route.fulfill({ json: { full_name: 'Alice', offers: [], counts: {}, results: [], applications: { results: [], count: 0 }, suggestions: [] } }))

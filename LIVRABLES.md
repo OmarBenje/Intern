@@ -5,6 +5,8 @@ Ce dossier suit les quatre cahiers des charges, étape par étape :
 Pour chaque étape, lire la consigne résumée, puis ouvrir les livrables à présenter.
 Les procédures et preuves détaillées sont accessibles séparément.
 
+Les commandes de chaque étape sont réunies dans [EXECUTION.md](EXECUTION.md).
+
 Les consignes ci-dessous sont reformulées et adaptées à Intern. Les résultats
 rapportés proviennent des vérifications archivées ; ils ne constituent pas une
 approbation pédagogique ni un contrôle en direct des services.
@@ -95,12 +97,13 @@ Détail : [validation](metier/VALIDATION.md) · [architecture et lancement](meti
 reproduire les maquettes, communiquer uniquement avec l'API et traiter attente,
 erreurs et listes vides avec une URL d'API configurable.
 
-**À présenter : [code du client](frontend/src/) · [captures des parcours](frontend/captures/README.md).**
+**À présenter : [code du client](frontend/src/) · [captures de chaque écran principal](frontend/captures/README.md).**
 
 **Réponse.** React/TypeScript centralise les appels REST et utilise
 `VITE_API_ROOT`. Le build et le lint passent ; **104 tests navigateur réussis,
-3 scénarios de logos externes ignorés** sont consignés. Ces captures et tests
-utilisent des réponses API contrôlées. La conformité visuelle au Figma reste à vérifier.
+3 scénarios de logos externes ignorés** sont consignés. Les tests utilisent des réponses API contrôlées ; la nouvelle série de captures
+présente chaque écran principal sur React, Django et PostgreSQL réels.
+La conformité visuelle au Figma reste à vérifier.
 
 Détail : [validation et limites](frontend/VALIDATION.md) · [lancement](frontend/README.md).
 

@@ -1,0 +1,443 @@
+{
+  "complete": true,
+  "base": "http://127.0.0.1:5173",
+  "adminBase": "http://127.0.0.1:8000",
+  "backend": "Django + PostgreSQL réels",
+  "api_interception": false,
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "screens": [
+    {
+      "label": "Connexion",
+      "filename": "01-connexion.png",
+      "url": "http://127.0.0.1:5173/login",
+      "captured_at": "2026-10-14T20:56:13.218Z"
+    },
+    {
+      "label": "Connexion : mot de passe incorrect",
+      "filename": "02-connexion-erreur.png",
+      "url": "http://127.0.0.1:5173/login",
+      "captured_at": "2026-10-14T20:56:15.919Z"
+    },
+    {
+      "label": "Connexion : compte en attente",
+      "filename": "03-compte-inactif.png",
+      "url": "http://127.0.0.1:5173/login",
+      "captured_at": "2026-10-14T20:56:19.710Z"
+    },
+    {
+      "label": "Demande de réinitialisation",
+      "filename": "04-mot-de-passe-oublie.png",
+      "url": "http://127.0.0.1:5173/reset-password",
+      "captured_at": "2026-10-14T20:56:23.670Z"
+    },
+    {
+      "label": "Formulaire de nouveau mot de passe (jeton fictif, sans envoi)",
+      "filename": "05-nouveau-mot-de-passe.png",
+      "url": "http://127.0.0.1:5173/reset-password?uid=demo&token=demo",
+      "captured_at": "2026-10-14T20:56:26.009Z"
+    },
+    {
+      "label": "Inscription candidat : choix du rôle",
+      "filename": "6-inscription-candidate-role.png",
+      "url": "http://127.0.0.1:5173/register",
+      "captured_at": "2026-10-14T20:56:28.918Z"
+    },
+    {
+      "label": "Inscription candidat : e-mail",
+      "filename": "7-inscription-candidate-email.png",
+      "url": "http://127.0.0.1:5173/register",
+      "captured_at": "2026-10-14T20:56:29.888Z"
+    },
+    {
+      "label": "Inscription candidat : nom",
+      "filename": "8-inscription-candidate-nom.png",
+      "url": "http://127.0.0.1:5173/register",
+      "captured_at": "2026-10-14T20:56:31.252Z"
+    },
+    {
+      "label": "Inscription candidat : mot de passe",
+      "filename": "9-inscription-candidate-mot-de-passe.png",
+      "url": "http://127.0.0.1:5173/register",
+      "captured_at": "2026-10-14T20:56:32.296Z"
+    },
+    {
+      "label": "Inscription candidat : confirmation en attente",
+      "filename": "10-inscription-candidate-attente.png",
+      "url": "http://127.0.0.1:5173/register",
+      "captured_at": "2026-10-14T20:56:34.829Z"
+    },
+    {
+      "label": "Inscription recruteur : choix du rôle",
+      "filename": "11-inscription-recruiter-role.png",
+      "url": "http://127.0.0.1:5173/recruiter/signup",
+      "captured_at": "2026-10-14T20:56:37.368Z"
+    },
+    {
+      "label": "Inscription recruteur : e-mail",
+      "filename": "12-inscription-recruiter-email.png",
+      "url": "http://127.0.0.1:5173/recruiter/signup",
+      "captured_at": "2026-10-14T20:56:38.452Z"
+    },
+    {
+      "label": "Inscription recruteur : nom",
+      "filename": "13-inscription-recruiter-nom.png",
+      "url": "http://127.0.0.1:5173/recruiter/signup",
+      "captured_at": "2026-10-14T20:56:40.020Z"
+    },
+    {
+      "label": "Inscription recruteur : mot de passe",
+      "filename": "14-inscription-recruiter-mot-de-passe.png",
+      "url": "http://127.0.0.1:5173/recruiter/signup",
+      "captured_at": "2026-10-14T20:56:41.211Z"
+    },
+    {
+      "label": "Inscription recruteur : confirmation en attente",
+      "filename": "15-inscription-recruiter-attente.png",
+      "url": "http://127.0.0.1:5173/recruiter/signup",
+      "captured_at": "2026-10-14T20:56:43.710Z"
+    },
+    {
+      "label": "Tableau de bord candidat",
+      "filename": "16-tableau-de-bord.png",
+      "url": "http://127.0.0.1:5173/dashboard",
+      "captured_at": "2026-10-14T21:00:24.142Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Catalogue des stages",
+      "filename": "17-catalogue-stages.png",
+      "url": "http://127.0.0.1:5173/stages",
+      "captured_at": "2026-10-14T21:00:28.782Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Candidatures du candidat",
+      "filename": "18-candidatures.png",
+      "url": "http://127.0.0.1:5173/candidatures",
+      "captured_at": "2026-10-14T21:00:31.475Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Candidatures à valider",
+      "filename": "19-a-valider.png",
+      "url": "http://127.0.0.1:5173/a-valider",
+      "captured_at": "2026-10-14T21:00:35.258Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Suivi des candidatures",
+      "filename": "20-tracker.png",
+      "url": "http://127.0.0.1:5173/tracker",
+      "captured_at": "2026-10-14T21:00:37.550Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Profil et CV candidat",
+      "filename": "21-profil.png",
+      "url": "http://127.0.0.1:5173/profil",
+      "captured_at": "2026-10-14T21:00:41.960Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Moteur de candidatures",
+      "filename": "22-moteur.png",
+      "url": "http://127.0.0.1:5173/engine",
+      "captured_at": "2026-10-14T21:00:45.746Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Configuration : CV",
+      "filename": "23-onboarding-cv.png",
+      "url": "http://127.0.0.1:5173/onboarding/resume",
+      "captured_at": "2026-10-14T21:00:47.909Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Configuration : adresse",
+      "filename": "24-onboarding-adresse.png",
+      "url": "http://127.0.0.1:5173/onboarding/address",
+      "captured_at": "2026-10-14T21:00:50.860Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Configuration : droit au travail",
+      "filename": "25-onboarding-eligibilite.png",
+      "url": "http://127.0.0.1:5173/onboarding/work-eligibility",
+      "captured_at": "2026-10-14T21:00:53.355Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Page introuvable",
+      "filename": "26-page-introuvable.png",
+      "url": "http://127.0.0.1:5173/page-inconnue",
+      "captured_at": "2026-10-14T21:00:56.622Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Détail d’un stage",
+      "filename": "27-detail-stage.png",
+      "url": "http://127.0.0.1:5173/offers/4",
+      "captured_at": "2026-10-14T21:00:59.565Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Page entreprise",
+      "filename": "28-entreprise.png",
+      "url": "http://127.0.0.1:5173/companies/2",
+      "captured_at": "2026-10-14T21:01:03.891Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Détail d’une candidature",
+      "filename": "29-detail-candidature.png",
+      "url": "http://127.0.0.1:5173/applications/1",
+      "captured_at": "2026-10-14T21:01:08.161Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Candidat sans candidature",
+      "filename": "30-candidatures-vides.png",
+      "url": "http://127.0.0.1:5173/candidatures",
+      "captured_at": "2026-10-14T21:01:14.783Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Tableau de bord recruteur",
+      "filename": "31-recruteur-tableau-de-bord.png",
+      "url": "http://127.0.0.1:5173/recruiter/dashboard",
+      "captured_at": "2026-10-14T21:01:21.038Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Offres du recruteur",
+      "filename": "32-recruteur-offres.png",
+      "url": "http://127.0.0.1:5173/recruiter/jobs",
+      "captured_at": "2026-10-14T21:01:25.769Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Candidatures reçues",
+      "filename": "33-recruteur-candidats.png",
+      "url": "http://127.0.0.1:5173/recruiter/candidates",
+      "captured_at": "2026-10-14T21:01:28.069Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Entreprise vérifiée",
+      "filename": "34-recruteur-entreprise.png",
+      "url": "http://127.0.0.1:5173/recruiter/verify",
+      "captured_at": "2026-10-14T21:01:30.688Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Intégrations ATS",
+      "filename": "35-recruteur-integrations.png",
+      "url": "http://127.0.0.1:5173/recruiter/integrations",
+      "captured_at": "2026-10-14T21:01:33.760Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Nouvelle offre : informations générales",
+      "filename": "36-recruteur-nouvelle-offre.png",
+      "url": "http://127.0.0.1:5173/recruiter/jobs/new",
+      "captured_at": "2026-10-14T21:01:36.174Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Modifier une offre : informations générales",
+      "filename": "37-recruteur-modifier-offre.png",
+      "url": "http://127.0.0.1:5173/recruiter/jobs/1/edit",
+      "captured_at": "2026-10-14T21:01:38.639Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Offre : missions et compétences",
+      "filename": "38-recruteur-missions.png",
+      "url": "http://127.0.0.1:5173/recruiter/jobs/1/edit",
+      "captured_at": "2026-10-14T21:01:39.433Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Offre : critères de matching",
+      "filename": "39-recruteur-matching.png",
+      "url": "http://127.0.0.1:5173/recruiter/jobs/1/edit",
+      "captured_at": "2026-10-14T21:01:40.045Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Offre : aperçu avant publication (sans publier)",
+      "filename": "40-recruteur-apercu.png",
+      "url": "http://127.0.0.1:5173/recruiter/jobs/1/edit",
+      "captured_at": "2026-10-14T21:01:40.562Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Candidatures reçues pour une offre",
+      "filename": "41-recruteur-candidatures-offre.png",
+      "url": "http://127.0.0.1:5173/recruiter/jobs/1/applicants",
+      "captured_at": "2026-10-14T21:01:42.988Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Fiche du candidat reçu",
+      "filename": "42-recruteur-fiche-candidat.png",
+      "url": "http://127.0.0.1:5173/recruiter/candidates/1",
+      "captured_at": "2026-10-14T21:01:49.235Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1800
+      }
+    },
+    {
+      "label": "Vérification professionnelle requise",
+      "filename": "43-recruteur-verification.png",
+      "url": "http://127.0.0.1:5173/recruiter/verify",
+      "captured_at": "2026-10-14T21:01:56.664Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Connexion Django Admin",
+      "filename": "44-administration-connexion.png",
+      "url": "http://127.0.0.1:8000/admin/login/?next=/admin/",
+      "captured_at": "2026-10-14T21:01:58.791Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Accueil administration",
+      "filename": "45-administration-accueil.png",
+      "url": "http://127.0.0.1:8000/admin/",
+      "captured_at": "2026-10-14T21:02:01.800Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Administration : utilisateurs",
+      "filename": "46-administration-utilisateurs.png",
+      "url": "http://127.0.0.1:8000/admin/auth/user/",
+      "captured_at": "2026-10-14T21:02:04.435Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Administration : détail et activation d’un utilisateur",
+      "filename": "47-administration-utilisateur.png",
+      "url": "http://127.0.0.1:8000/admin/auth/user/5/change/",
+      "captured_at": "2026-10-14T21:02:07.814Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Administration : offres",
+      "filename": "48-administration-offres.png",
+      "url": "http://127.0.0.1:8000/admin/jobboard/offer/",
+      "captured_at": "2026-10-14T21:02:09.872Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    },
+    {
+      "label": "Administration : détail d’une offre",
+      "filename": "49-administration-offre.png",
+      "url": "http://127.0.0.1:8000/admin/jobboard/offer/4/change/",
+      "captured_at": "2026-10-14T21:02:12.142Z",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      }
+    }
+  ]
+}
