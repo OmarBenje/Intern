@@ -75,7 +75,10 @@ def main():
         standalone, standalone_ax = plt.subplots(figsize=(8, 4.4), layout="constrained")
         plot(standalone_ax, metric, label)
         for extension in ("png", "svg"):
-            standalone.savefig(charts / f"{name}.{extension}", dpi=180)
+            path = charts / f"{name}.{extension}"
+            standalone.savefig(path, dpi=180)
+            if extension == "svg":
+                path.write_text("\n".join(line.rstrip() for line in path.read_text().splitlines()) + "\n")
         plt.close(standalone)
     fig.savefig(charts / "ensemble.png", dpi=180)
     fig.savefig(charts / "ensemble.pdf")

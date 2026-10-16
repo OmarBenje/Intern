@@ -40,11 +40,26 @@ vm_start() {
     VBoxManage controlvm vm-proxy natpf2 'ssh-verification,tcp,127.0.0.1,2221,,22'
   fi
   test -f "$VM_WORK/access/ssh-etape8-interne.conf"
-  for vm in vm-donnees vm-metier vm-proxy; do
-    local deadline=$((SECONDS + 240))
-    until vmssh "$vm" true; do
-      (( SECONDS < deadline )) || fail "SSH indisponible : $vm après 240 s."
-      sleep 3
+  mkdir -p .execution
+  local ssh_wait=${VM_SSH_WAIT_SECONDS:-240}
+  [[ $ssh_wait =~ ^[1-9][0-9]*$ ]] || fail 'VM_SSH_WAIT_SECONDS doit être un entier positif.'
+  # Private SSH connections use ProxyJump: wait for the proxy first.
+  for vm in vm-proxy vm-donnees vm-metier; do
+    local deadline=$((SECONDS + ssh_wait))
+    local error_log=".execution/ssh-$vm.log"
+    echo "Attente SSH : $vm (maximum $ssh_wait s)."
+    while true; do
+      local remaining=$((deadline - SECONDS))
+      if (( remaining <= 0 )); then
+        cat "$error_log" >&2
+        fail "SSH indisponible : $vm après $ssh_wait s. Voir $error_log."
+      fi
+      local attempt=$remaining
+      (( attempt <= 15 )) || attempt=15
+      if (cd "$VM_WORK/access" && timeout --kill-after=2 "$attempt" ssh -F ssh-etape8-interne.conf "$vm" true) 2> "$error_log"; then
+        break
+      fi
+      (( SECONDS >= deadline )) || sleep 1
     done
   done
 }
@@ -121,7 +136,10 @@ jmeter_ready() {
       cd "$install_dir"
       curl -fLO https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
       curl -fLO https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz.sha512
-      printf '%s  apache-jmeter-5.6.3.tgz\n' "$(cat apache-jmeter-5.6.3.tgz.sha512)" | sha512sum -c -
+      local checksum
+      checksum=$(awk '{print $1}' apache-jmeter-5.6.3.tgz.sha512)
+      [[ $checksum =~ ^[[:xdigit:]]{128}$ ]] || fail 'Empreinte SHA-512 JMeter invalide.'
+      printf '%s  apache-jmeter-5.6.3.tgz\n' "$checksum" | sha512sum -c -
       tar -xf apache-jmeter-5.6.3.tgz
     )
   fi

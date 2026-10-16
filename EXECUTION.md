@@ -275,6 +275,31 @@ bash outils/preparer_vm.sh
 VBoxManage list vms
 ```
 
+Si une VM apparaît `<inaccessible>`, vérifier d'abord sa configuration et ses
+disques. Pour récupérer un fichier `.vbox` absent depuis sa copie `.vbox-prev`,
+sans supprimer les disques :
+
+```bash
+python3 outils/reinitialiser_vm.py
+```
+
+Pour reprendre volontairement à l'étape 7 sur les trois snapshots `base propre`,
+avec les VM arrêtées :
+
+```bash
+python3 outils/reinitialiser_vm.py --base-propre
+bash outils/preparer_vm.sh
+VBoxManage list vms
+```
+
+Cette commande conserve les états actuels et les anciens snapshots sous des noms
+`archive-*`, puis restaure les disques et les paramètres des snapshots initiaux.
+Les changements applicatifs postérieurs quittent donc l'état actif, mais restent
+dans les archives. Elle vérifie les fichiers de disque et les snapshots avant
+de commencer et applique `paravirtprovider minimal`, nécessaire sur l'hôte testé.
+`VM_WORK` ou `--vm-work CHEMIN` permet de choisir un autre stockage.
+Elle n'efface ni les exports OVA ni les résultats de mesure.
+
 Le script [outils/preparer_vm.sh](outils/preparer_vm.sh) regroupe le téléchargement
 vérifié, la préparation du modèle, les clones, leurs identités et leurs snapshots
 `base propre`. Si les trois VM existent, il les conserve sans les modifier ni
@@ -319,7 +344,20 @@ SSH temporaire à la fin) :
 bash outils/executer_etape.sh 8 verifier
 ```
 
+Pendant les arrêts, les erreurs temporaires de session VirtualBox sont
+réessayées dans un délai borné. L’attente SSH commence par le proxy ; chaque
+tentative est limitée et son dernier diagnostic est conservé dans
+`.execution/ssh-NOM_VM.log`. Un délai SSH expiré fait échouer la commande :
+les nouvelles preuves réseau ne sont écrites qu’après la vérification complète.
+Si une VM reste indisponible, consulter sa console VirtualBox et le journal
+SSH indiqué avant de relancer le test.
+Une expiration SSH pendant l'échange de bannière, avant authentification, est
+réessayée au plus trois fois. Une erreur d'authentification ou une commande
+distante déjà commencée n'est pas rejouée automatiquement.
+
 Preuves et plan : [deploiement/reseau/README.md](deploiement/reseau/README.md).
+Résultat du contrôle des commandes :
+[validation-commandes-etape8.md](deploiement/docs/validation-commandes-etape8.md).
 
 ## Étape 9 — Déployer les couches
 
@@ -333,6 +371,8 @@ La commande prépare les VM et le réseau s’ils manquent, démarre les VM arr�
 attend SSH, puis installe les couches absentes. Elle conserve les bases et les
 services disponibles. La première installation peut redémarrer la VM concernée
 pour appliquer sa configuration. Le proxy est vérifié avant l’ouverture du navigateur.
+Les applications Netplan disposent de 120 secondes ; les vérifications SSH
+simples gardent leur délai de 30 secondes.
 Application : `http://127.0.0.1:8080/login` ; administration :
 `http://127.0.0.1:8080/admin/`. Comptes fictifs : voir étape 5.
 

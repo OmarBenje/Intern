@@ -97,6 +97,36 @@ esac''')
         self.assertNotEqual(self.run_step(99).returncode, 0)
         self.assertEqual(self.calls(), '')
 
+    def test_jmeter_install_checks_official_and_digest_only_manifests(self):
+        import hashlib
+        import io
+        import tarfile
+        archive = Path(self.temp.name) / 'fixture.tgz'
+        with tarfile.open(archive, 'w:gz') as bundle:
+            payload = b'#!/bin/sh\nexit 0\n'
+            member = tarfile.TarInfo('apache-jmeter-5.6.3/bin/jmeter')
+            member.size, member.mode = len(payload), 0o755
+            bundle.addfile(member, io.BytesIO(payload))
+        checksum = hashlib.sha512(archive.read_bytes()).hexdigest()
+        manifest = Path(self.temp.name) / 'fixture.sha512'
+        self.stub('curl', f'''case "$*" in
+*.sha512) cp '{manifest}' apache-jmeter-5.6.3.tgz.sha512 ;;
+*) cp '{archive}' apache-jmeter-5.6.3.tgz ;;
+esac''')
+        for index, content in enumerate((checksum + '  apache-jmeter-5.6.3.tgz\n', checksum + '\n', '0' * 128 + '\n')):
+            with self.subTest(manifest=content[:15], index=index):
+                manifest.write_text(content)
+                executable = self.root / f'jmeter-{index}/apache-jmeter-5.6.3/bin/jmeter'
+                env = dict(self.env, JMETER_BIN=str(executable))
+                result = subprocess.run(['bash', '-ec', 'source outils/etapes/commun.sh; jmeter_ready'],
+                                        cwd=self.root, env=env, capture_output=True, text=True, timeout=15)
+                if index == 2:
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertFalse(executable.exists())
+                else:
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertTrue(executable.exists())
+
     def test_reading_proofs_never_uses_docker_or_virtualbox(self):
         for step in (10, 14, 16, 17):
             with self.subTest(step=step):
@@ -111,8 +141,15 @@ esac''')
         self.assertEqual(result.returncode, 0, result.stderr)
         for command in ('startvm', 'controlvm', 'clonevm', 'deployer_etape9.py', 'reseau_etape8.py'):
             self.assertNotIn(command, self.calls())
+        self.assertLess(self.calls().index('vm-proxy true'), self.calls().index('vm-donnees true'))
         self.assertIn('systemctl is-active', self.calls())
         self.assertIn('8080/health/ready/', self.calls())
+
+    def test_hanging_ssh_readiness_has_a_real_deadline(self):
+        self.stub('ssh', 'sleep 30')
+        result = self.run_step(9, env=dict(self.env, VM_SSH_WAIT_SECONDS='1'))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('SSH indisponible : vm-proxy après 1 s', result.stderr)
 
     def test_network_verification_is_explicit(self):
         self.assertEqual(self.run_step(8).returncode, 0)

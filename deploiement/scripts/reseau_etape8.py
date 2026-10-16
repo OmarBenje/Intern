@@ -27,25 +27,64 @@ def vbox(*args):
     return run(["VBoxManage", *args]).stdout
 
 
-def info(name):
-    return {key.strip('"'): value.strip('"') for key, value in
-            (line.split("=", 1) for line in vbox("showvminfo", name, "--machinereadable").splitlines()
-             if "=" in line)}
+def info(name, *, timeout=30):
+    """Wait through transient VirtualBox session changes, never trust partial output."""
+    command = ["VBoxManage", "showvminfo", name, "--machinereadable"]
+    print(shlex.join(command), flush=True)
+    deadline = time.monotonic() + timeout
+    announced = False
+    while True:
+        try:
+            result = run(command, check=False, timeout=max(0.1, deadline - time.monotonic()))
+        except subprocess.TimeoutExpired as error:
+            raise RuntimeError(f"VirtualBox ne répond pas pour {name} après {timeout:.0f} s.") from error
+        if result.returncode == 0:
+            values = {key.strip('"'): value.strip('"') for key, value in
+                      (line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)}
+            if "VMState" not in values:
+                raise RuntimeError(f"État VirtualBox absent pour {name} : sortie incomplète.")
+            return values
+        transient = any(message in result.stderr for message in (
+            "The object is not ready", "The session is not locked",
+            "VBOX_E_INVALID_VM_STATE", "VBOX_E_INVALID_SESSION_STATE",
+            "VBOX_E_INVALID_OBJECT_STATE",
+        ))
+        if not transient:
+            raise RuntimeError(f"{shlex.join(command)}\n{result.stdout}\n{result.stderr}")
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise RuntimeError(f"Session VirtualBox indisponible pour {name} après {timeout:.0f} s.\n{result.stderr}")
+        if not announced:
+            print(f"{name} : session VirtualBox en transition, attente…", flush=True)
+            announced = True
+        time.sleep(min(1, remaining))
 
 
 def wait_off(name):
     end = time.monotonic() + 120
     while time.monotonic() < end:
-        if info(name)["VMState"] == "poweroff":
+        if info(name, timeout=max(0.1, end - time.monotonic()))["VMState"] == "poweroff":
             return
         time.sleep(3)
     raise RuntimeError(f"Arrêt non confirmé : {name}")
 
 
-def ssh(config, name, command, *, input=None, check=True):
+def ssh(config, name, command, *, input=None, check=True, timeout=30):
     # ProxyJump reconstruit une commande shell : utiliser un nom de config sans espaces.
-    return run(["ssh", "-F", config.name, name, command], input=input, check=check,
-               timeout=30, cwd=config.parent)
+    args = ["ssh", "-F", config.name, name, command]
+    for attempt in range(3):
+        result = run(args, input=input, check=False, timeout=timeout, cwd=config.parent)
+        # Une expiration pendant la bannière précède l'authentification et donc
+        # l'exécution distante. Ne jamais rejouer une commande déjà commencée.
+        banner_timeout = (result.returncode == 255 and not result.stdout and
+                          "Connection timed out during banner exchange" in result.stderr)
+        if not banner_timeout or attempt == 2:
+            break
+        print(f"SSH {name} : bannière indisponible, nouvelle tentative {attempt + 2}/3.", flush=True)
+        time.sleep(2)
+    if check and result.returncode:
+        raise RuntimeError(f"{shlex.join(args)}\n{result.stdout}\n{result.stderr}")
+    return result
 
 
 def wait_ssh(config, name):
@@ -75,7 +114,7 @@ def ssh_config(root, machines, *, internal):
             lines.append("  ProxyJump vm-proxy")
     lines.extend(["Host *", "  User adminvm", f'  IdentityFile "{access / "id_ed25519"}"',
                   f'  UserKnownHostsFile "{access / "known_hosts"}"',
-                  "  BatchMode yes", "  IdentitiesOnly yes", "  ConnectTimeout 5",
+                  "  BatchMode yes", "  IdentitiesOnly yes", "  ConnectTimeout 10",
                   "  ServerAliveInterval 5", "  ServerAliveCountMax 2",
                   "  StrictHostKeyChecking yes"])
     config.write_text("\n".join(lines) + "\n")
@@ -225,7 +264,7 @@ def main():
             proof.append(f"{key}={current[key]}")
         proof.extend(["Redirections=" + json.dumps(forwarding), ""])
     docs = deployment / "docs"
-    (docs / "preuves-etape8.txt").write_text("\n".join(line.rstrip() for line in proof) + "\n")
+    (docs / "preuves-etape8.txt").write_text("\n".join(line.rstrip() for line in "\n".join(proof).splitlines()) + "\n")
     (docs / "interfaces-etape8.json").write_text(json.dumps(observed, indent=2) + "\n")
     print("Réseau vérifié : six pings réussis, topologie finale contrôlée, VM éteintes.", flush=True)
 

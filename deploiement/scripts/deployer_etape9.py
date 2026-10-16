@@ -77,11 +77,11 @@ def prepare(config, name, snapshot, *, temporary_nat):
         nic = interface_for_mac(links, current["macaddress2"])
         yaml = f"network:\n  version: 2\n  ethernets:\n    {nic}:\n      dhcp4: true\n      dhcp6: false\n"
         script = "set -eu\ncat > /etc/netplan/90-installation.yaml <<'YAML'\n" + yaml + "YAML\nchmod 600 /etc/netplan/90-installation.yaml\nnetplan generate\nnetplan apply\n"
-        ssh(config, name, "sudo bash -s", input=script)
+        ssh(config, name, "sudo bash -s", input=script, timeout=120)
 
 
 def close_nat(config, name):
-    ssh(config, name, "sudo rm -f /etc/netplan/90-installation.yaml; sudo netplan apply")
+    ssh(config, name, "sudo rm -f /etc/netplan/90-installation.yaml; sudo netplan apply", timeout=120)
     ssh(config, name, "sudo systemctl poweroff", check=False)
     wait_off(name)
     vbox("modifyvm", name, "--nic2", "none")

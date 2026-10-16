@@ -7,7 +7,7 @@
   "all_errors": 0,
   "minimum_stable_server_samples": 22,
   "restoration_event_present": true,
-  "private_snapshot_checked": true,
+  "private_snapshot_checked": false,
   "incidents": [
     {
       "epoch_s": 1791989315.6891341,
