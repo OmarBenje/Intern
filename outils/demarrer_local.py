@@ -6,6 +6,7 @@ import os
 import shutil
 import socket
 import subprocess
+import sys
 import time
 from pathlib import Path
 from urllib.request import urlopen
@@ -70,9 +71,47 @@ def start(name, command, env, port, check):
     wait(check, name)
 
 
+def local_environment(frontend_url, api_url):
+    env = dict(os.environ)
+    engine = RUNTIME / 'moteur.env'
+    if engine.exists():
+        # Same explicitly configured Bash file as the Docker execution steps.
+        output = subprocess.check_output([
+            'bash', '-c',
+            'set -ae; source "$1" >&2; exec "$2" -c '
+            "'import json, os; print(json.dumps(dict(os.environ)))'",
+            'intern-config', str(engine), sys.executable,
+        ], env=env, cwd=ROOT, text=True)
+        env = json.loads(output)
+    # uv must use metier/.venv, even when the caller activated another venv.
+    env.pop('VIRTUAL_ENV', None)
+    env.update(POSTGRES_HOST='127.0.0.1', POSTGRES_PORT='5433',
+               POSTGRES_USER='intern_user', POSTGRES_PASSWORD='1234',
+               POSTGRES_DB='intern_execution', PRIVATE_STORAGE_BACKEND='local',
+               PRIVATE_STORAGE_ROOT=str(RUNTIME / 'media'), DJANGO_DEBUG='true',
+               CSRF_TRUSTED_ORIGINS=frontend_url,
+               DJANGO_ALLOWED_HOSTS='localhost,127.0.0.1,[::1]',
+               PUBLIC_BASE_URL=api_url)
+    config = RUNTIME / 'local.env'
+    if config.exists():
+        for number, line in enumerate(config.read_text().splitlines(), 1):
+            if line.strip() and not line.lstrip().startswith('#'):
+                key, separator, value = line.partition('=')
+                if not separator or not key.strip().isidentifier():
+                    raise SystemExit(f'{config.name}:{number} : ligne CLE=valeur attendue.')
+                env[key.strip()] = value.strip()
+    return env
+
+
+def postgres_environment(env):
+    return dict(env, PGHOST=env['POSTGRES_HOST'], PGPORT=env['POSTGRES_PORT'],
+                PGUSER=env['POSTGRES_USER'], PGPASSWORD=env['POSTGRES_PASSWORD'],
+                PGDATABASE=env['POSTGRES_DB'])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('layer', choices=['donnees', 'metier', 'presentation'])
+    parser.add_argument('layer', choices=['donnees', 'metier', 'presentation', 'sql'])
     parser.add_argument('--database', help='Dedicated database name; created only if absent.')
     parser.add_argument('--api-port', type=int, default=8000)
     parser.add_argument('--frontend-port', type=int, default=5173)
@@ -84,30 +123,21 @@ def main():
     frontend_url = f'http://127.0.0.1:{args.frontend_port}'
     os.chdir(ROOT)
     RUNTIME.mkdir(exist_ok=True)
-    for tool in ['uv', 'psql'] + (['node', 'npm'] if args.layer == 'presentation' else []):
-        if not shutil.which(tool):
-            raise SystemExit(f'Outil absent : {tool}. Voir EXECUTION.md, installation.')
-    run('uv', 'sync', '--project', 'metier', '--frozen')
-    # These defaults are exclusively for the dedicated local demonstration.
-    env = dict(os.environ)
-    env.update(POSTGRES_HOST='127.0.0.1', POSTGRES_PORT='5433',
-               POSTGRES_USER='intern_user', POSTGRES_PASSWORD='1234',
-               POSTGRES_DB='intern_execution', PRIVATE_STORAGE_BACKEND='local',
-               PRIVATE_STORAGE_ROOT=str(RUNTIME / 'media'), DJANGO_DEBUG='true',
-               CSRF_TRUSTED_ORIGINS=frontend_url,
-               DJANGO_ALLOWED_HOSTS='localhost,127.0.0.1,[::1]',
-               PUBLIC_BASE_URL=api_url)
-    # Optional ignored configuration must contain explicit KEY=VALUE lines.
-    config = RUNTIME / 'local.env'
-    if config.exists():
-        for line in config.read_text().splitlines():
-            if line.strip() and not line.lstrip().startswith('#'):
-                key, value = line.split('=', 1)
-                env[key.strip()] = value.strip()
+    env = local_environment(frontend_url, api_url)
+    tools = ['psql'] if args.layer == 'sql' else ['uv', 'psql']
+    if args.layer == 'presentation':
+        tools += ['node', 'npm']
+    for tool in tools:
+        if not shutil.which(tool, path=env.get('PATH')):
+            raise SystemExit(f'Outil absent : {tool}. Voir REQUIREMENT.md.')
     if args.database:
         env['POSTGRES_DB'] = args.database
     if env['POSTGRES_HOST'] not in ['127.0.0.1', 'localhost']:
         raise SystemExit('Ce lanceur utilise uniquement PostgreSQL local.')
+    if args.layer == 'sql':
+        run('psql', '-X', env=postgres_environment(env))
+        return
+    run('uv', 'sync', '--project', 'metier', '--frozen', env=env)
     port = int(env['POSTGRES_PORT'])
     def database_available():
         probe = dict(env, PGHOST=env['POSTGRES_HOST'], PGPORT=str(port),
@@ -120,10 +150,20 @@ def main():
             wait(database_available, 'PostgreSQL (vérifier aussi les identifiants)')
         else:
             docker = env.get('DOCKER_BIN', 'docker')
+            if not shutil.which(docker, path=env.get('PATH')):
+                raise SystemExit(f'Client Docker introuvable : {docker}. Voir REQUIREMENT.md.')
             info = subprocess.run([docker, 'info', '--format', '{{.ServerVersion}}'],
                                   env=env, capture_output=True, text=True)
-            if info.returncode or 'podman' in (info.stdout + info.stderr).lower():
-                raise SystemExit('Docker Engine absent ou arrêté. Voir EXECUTION.md ; aucun volume modifié.')
+            if 'podman' in (info.stdout + info.stderr).lower():
+                raise SystemExit(
+                    f'{docker} utilise Podman. Configurer DOCKER_BIN vers Docker Engine '
+                    'dans .execution/moteur.env (voir REQUIREMENT.md). Aucun volume modifié.')
+            if info.returncode:
+                print(info.stderr.strip(), file=sys.stderr)
+                raise SystemExit(
+                    f'Docker Engine inaccessible via {docker}. Vérifier docker info dans ce '
+                    'terminal, le contexte Docker, les droits et .execution/moteur.env. '
+                    'Voir REQUIREMENT.md ; aucun volume modifié.')
             if port != 5433:
                 raise SystemExit('Démarrer votre serveur PostgreSQL personnalisé avant de continuer.')
             # --no-recreate retains an already existing Compose container.
@@ -144,9 +184,7 @@ with psycopg.connect(dbname='postgres', host=os.environ['POSTGRES_HOST'],
         print('Base existante conservée :', name)
 '''
     run(PYTHON, '-c', preparation, env=env)
-    pgenv = dict(env, PGHOST=env['POSTGRES_HOST'], PGPORT=str(port),
-                 PGUSER=env['POSTGRES_USER'], PGPASSWORD=env['POSTGRES_PASSWORD'],
-                 PGDATABASE=env['POSTGRES_DB'])
+    pgenv = postgres_environment(env)
     count = subprocess.check_output(['psql', '-X', '-Atc',
         "SELECT count(*) FROM pg_tables WHERE schemaname='public'"], env=pgenv, text=True).strip()
     if count == '0':
