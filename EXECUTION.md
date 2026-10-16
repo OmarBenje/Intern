@@ -404,6 +404,27 @@ existe déjà, le script refuse une nouvelle mesure avant toute modification.
 Conserver ou déplacer volontairement ces exports avant de recommencer.
 Les rapports canoniques sont remplacés après sauvegarde.
 
+### Arrêter les VM avant de passer à Docker
+
+Depuis Intern :
+
+```bash
+bash outils/executer_etape.sh 10 arreter
+VBoxManage list runningvms
+```
+
+La commande demande l'arrêt propre des trois VM par ACPI, puis attend leur
+extinction (jusqu'à 120 secondes par VM). Une VM déjà arrêtée est conservée.
+Si l'arrêt n'aboutit pas, la commande échoue sans forcer la coupure.
+Les disques et les snapshots sont conservés. Cela libère notamment le port
+8080 du proxy VM pour le proxy Docker de l'étape 13.
+
+Pour revenir ensuite au déploiement VM :
+
+```bash
+bash outils/executer_etape.sh 10 demarrer
+```
+
 ## Étape 11 — Couche données Docker
 
 Prérequis : Python et Docker Engine/Compose selon [REQUIREMENT.md](REQUIREMENT.md).
@@ -514,6 +535,11 @@ sauvegarde s’il change et refuse une identité incompatible.
 
 ## Étape 16 — Étalonnage
 
+Les nouveaux essais utilisent la [configuration de performance](mesure/PERFORMANCE.md) :
+limitation des connexions désactivée uniquement sur les services de mesure.
+L'image dédiée est reconstruite lors de la préparation. Le déploiement normal
+conserve sa protection.
+
 Pour lire le rapport livré, sans lancer de charge :
 
 ```bash
@@ -576,7 +602,10 @@ bash outils/executer_etape.sh 17 statut
 bash outils/executer_etape.sh 17 arreter
 ```
 
-Laisser l’hôte allumé : environ 3 h 45 min, plus préparation et transitions.
+Laisser l’hôte allumé : 45 min 20 s de paliers, plus des repos dynamiques
+d'au moins 30 s, la préparation et les transitions. Le détail des seuils et des
+limites est dans [la configuration de performance](mesure/PERFORMANCE.md).
+Réétalonner à l'étape 16 avant de lancer ce nouveau protocole.
 Le pilote alterne volontairement les déploiements, conserve leurs bases initiales
 et rétablit le projet de référence. L’arrêt demandé attend cette restauration.
 Le script refuse une campagne déjà active ou complète ; pour une nouvelle

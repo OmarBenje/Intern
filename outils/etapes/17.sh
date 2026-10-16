@@ -27,9 +27,7 @@ etape_17() {
   # Prepare secrets/images if absent; do not bind 8080 while the VMs use it.
   export EXECUTION_PROJECT=intern-mesure EXECUTION_MESURE=1
   bash outils/demarrer_docker.sh donnees
-  if ! "$DOCKER_BIN" image inspect intern-metier:etape12 >/dev/null 2>&1; then
-    "$DOCKER_BIN" compose --env-file "$DOCKER_ENV_FILE" -f docker/compose.yaml -f mesure/compose.test.yaml -p intern-mesure build metier
-  fi
+  "$DOCKER_BIN" compose --env-file "$DOCKER_ENV_FILE" -f docker/compose.yaml -f mesure/compose.test.yaml -p intern-mesure build metier
   if ! "$DOCKER_BIN" image inspect intern-proxy:etape13 >/dev/null 2>&1; then
     "$DOCKER_BIN" compose --env-file "$DOCKER_ENV_FILE" -f docker/compose.yaml -f mesure/compose.test.yaml -p intern-mesure build proxy
   fi

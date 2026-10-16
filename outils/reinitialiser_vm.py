@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """Revenir à l'étape 7 en conservant les états précédents en snapshots."""
 import argparse

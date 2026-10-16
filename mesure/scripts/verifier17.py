@@ -10,7 +10,8 @@ import math
 from pathlib import Path
 import statistics
 
-from etalonnage import ROOT, analyse, digest, save
+from etalonnage import ROOT, analyse, digest, save, saved_protocol
+from repos import idle_window
 
 
 SERVICES = ("proxy", "metier", "donnees")
@@ -40,9 +41,8 @@ def main(argv=None, write_outputs=True):
     root = args.output.resolve()
     require(root.is_relative_to(ROOT), "Results must stay inside mesure/")
     manifest = json.loads((root / "manifest.json").read_text())
-    protocol = json.loads((ROOT / "protocole.json").read_text())
+    protocol = saved_protocol(manifest["protocol_sha256"])
     require(manifest["status"] == "complete", "Campaigns are incomplete")
-    require(manifest["protocol_sha256"] == digest(ROOT / "protocole.json"), "Protocol changed")
     require(manifest["source_plan_sha256"] == digest(ROOT / "plan.jmx"), "Source plan changed")
     require(manifest["accounts_sha256"] == digest(ROOT / "comptes.csv"), "Accounts changed")
     expected = [(series, deployment, users) for series, deployments in
@@ -67,6 +67,43 @@ def main(argv=None, write_outputs=True):
         require(digest(args.runtime / "sources.tar") == manifest["sources_sha256"], "Private sources changed")
 
     hashes = {name: digest(root / name) for name in ("manifest.json", "journal.jsonl")}
+    if "repos_dynamique" in protocol:
+        checks = [e for e in events if e["action"] == "login_rate_limit_checked"]
+        require([e["deployment"] for e in checks] == ["vm", "docker", "docker", "vm"]
+                and all(e["enabled"] is False for e in checks), "Measurement login settings differ")
+        expected_rests = [(s, d, u) for s, d, u in expected
+                          if u != protocol["paliers_utilisateurs"][-1]]
+        for action in ("cooldown_start", "cooldown_complete"):
+            require([(e["series"], e["deployment"], e["users"]) for e in events
+                     if e["action"] == action] == expected_rests, "Missing or out-of-order rest evidence")
+        for i, event in enumerate(events):
+            if event["action"] != "cooldown_start":
+                continue
+            finish = events[i + 1]
+            require(finish["action"] == "cooldown_complete" and finish["path"] == event["path"],
+                    "Incomplete adaptive rest")
+            policy = protocol["repos_dynamique"]
+            elapsed = finish["epoch_s"] - event["epoch_s"]
+            require(policy["minimum_s"] <= elapsed <= policy["maximum_s"] + 10,
+                    "Adaptive rest outside frozen bounds")
+            require(finish.get("ready") is True, "Readiness check missing")
+            idle_epoch = finish["idle_epoch_s"]
+            require(event["epoch_s"] <= idle_epoch <= finish["epoch_s"]
+                    and finish["epoch_s"] - idle_epoch <= policy["fraicheur_s"],
+                    "Idle decision missing or stale")
+            next_start = events[i + 2]
+            require(next_start["action"] == "palier_start" and next_start["epoch_s"] >= finish["epoch_s"],
+                    "Next plateau began before rest finished")
+            folder = (root / finish["path"]).resolve()
+            require(folder.is_relative_to(root), "Rest evidence outside results")
+            samples = {}
+            for service in SERVICES:
+                path = folder / f"serveur-{service}.jsonl"
+                hashes[str(path.relative_to(root))] = digest(path)
+                # Readings collected after the decision do not justify that decision.
+                samples[service] = [row for line in path.read_text().splitlines()
+                                    if (row := json.loads(line))["epoch_s"] <= idle_epoch]
+            require(idle_window(samples, idle_epoch, policy), "Services were not idle at restart")
     clients, servers, common, plans = [], [], {}, {}
     for run in manifest["runs"]:
         folder = root / run["path"]

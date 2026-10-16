@@ -97,6 +97,13 @@ esac''')
         self.assertNotEqual(self.run_step(99).returncode, 0)
         self.assertEqual(self.calls(), '')
 
+    def test_step10_stop_only_calls_shutdown_helper(self):
+        result = self.run_step(10, 'arreter')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('python3 outils/arreter_vm.py', self.calls())
+        self.assertNotIn('docker ', self.calls())
+        self.assertNotIn('VBoxManage ', self.calls())
+
     def test_jmeter_install_checks_official_and_digest_only_manifests(self):
         import hashlib
         import io

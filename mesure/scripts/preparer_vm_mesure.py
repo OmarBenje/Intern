@@ -42,6 +42,7 @@ def main():
                 key, value = line.split("=", 1)
                 values[key] = value.strip().strip('"').strip("'")
         values.update({
+            "AUTH_LOGIN_RATE_LIMIT_ENABLED": "false",
             "POSTGRES_DB": DATABASE, "DJANGO_DEBUG": "true",
             "DJANGO_ALLOWED_HOSTS": "localhost,127.0.0.1,10.10.10.20",
             "CSRF_TRUSTED_ORIGINS": "http://127.0.0.1:8081,http://localhost:8081",

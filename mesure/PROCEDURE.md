@@ -52,7 +52,7 @@ déploiement pendant son exécution.
 | --- | --- | --- |
 | `plan.jmx` | Décrit les requêtes, sessions, comptes et assertions | Un HTTP 200 ne suffit pas : l'identité et la candidature attendue sont contrôlées |
 | `scripts/preparer_comptes.py` | Ajoute vingt candidats fictifs avec leurs candidatures | Une transaction protège le peuplement ; un compte incompatible provoque un refus |
-| `protocole.json` | Fixe les paliers et les durées | Changer ces paramètres entre déploiements invaliderait la comparaison |
+| `protocole-performance.json` | Fixe les paliers, durées et critères de repos des nouvelles mesures | Changer ces paramètres entre déploiements invaliderait la comparaison |
 | `scripts/etalonnage.py` | Génère un plan CLI, lance JMeter et analyse la fenêtre stable | La montée et la stabilisation sont exclues des statistiques |
 | `scripts/rediger_etalonnage.py` | Compare les contrôles et produit le rapport | Les chiffres viennent des fichiers mesurés, avec vérification des empreintes |
 | `scripts/campagnes17.py` | Prépare les bases dédiées, alterne les déploiements et collecte les preuves | Les bases initiales sont conservées ; chaque campagne restaure le même export |
@@ -174,8 +174,10 @@ détecter un échec, avant de lui confier une campagne de charge.
 Paramètres disponibles : `hote`, `port`, `protocole`, `comptes`, `utilisateurs`,
 `montee`, `iterations`, `reflexion` et `mot_de_passe` (contrôle négatif).
 Le CSV ne recycle pas les comptes ; préparer davantage de comptes pour dépasser
-vingt utilisateurs. Les limites de connexion restent actives : trente essais
-par IP et dix par identité sur quinze minutes. Les paliers, la montée et la
+vingt utilisateurs. Pour les nouvelles mesures, les limites de connexion sont
+désactivées uniquement sur les services isolés, selon la
+[configuration de performance](PERFORMANCE.md). Le déploiement normal conserve
+trente essais par IP et dix par identité sur quinze minutes. Les paliers, la montée et la
 durée stable seront fixés lors de l'étalonnage. Désactiver l'écouteur graphique
 pendant les campagnes, qui s'exécutent exclusivement en CLI.
 
@@ -190,7 +192,8 @@ Référence technique : [composants JMeter](https://jmeter.apache.org/usermanual
 
 ## Étalonnage en ligne de commande
 
-Les paramètres applicatifs sont centralisés dans [protocole.json](protocole.json).
+Les paramètres des nouvelles mesures sont centralisés dans
+[protocole-performance.json](protocole-performance.json).
 Le script conserve `plan.jmx` comme source du parcours : il génère un plan à
 durée limitée avec des itérations continues et retire l'écouteur graphique.
 Pour le statique, il conserve les paramètres HTTP du même plan et utilise
@@ -233,12 +236,11 @@ les paramètres appliqués ou l'hôte diffèrent. Il indique un échec de
 répétabilité si le débit ou le p95 diffère de plus de 10 %, ou si des erreurs
 ont été détectées. Le code de sortie JMeter seul ne suffit pas.
 
-Entre les paliers des futures campagnes, attendre quinze minutes pour que les
-connexions cumulées respectent la protection de trente essais/IP par fenêtre.
-Les deux contrôles à dix utilisateurs ne consomment que vingt connexions ;
-aucune autre connexion ne doit avoir épuisé ce budget. Attendre l'expiration
-de la fenêtre si HTTP 429 apparaît, sans supprimer les compteurs ni désactiver
-les protections.
+Entre les paliers des nouvelles campagnes, le pilote applique le
+[repos dynamique](PERFORMANCE.md#pauses-entre-les-paliers-de-létape-17) : au moins
+30 s et un retour au repos démontré par les relevés. Les protections de connexion
+restent actives dans le déploiement normal. Les anciennes preuves et leur
+protocole à quinze minutes de repos sont conservés séparément.
 
 Après les essais, arrêter le projet isolé en conservant son volume, puis
 remettre le déploiement initial dans son état de fonctionnement.

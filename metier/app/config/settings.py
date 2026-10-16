@@ -216,6 +216,10 @@ if not isinstance(GREENHOUSE_API_KEYS, dict) or any(
     )
 AGENT_LEASE_SECONDS = 120
 AUTH_RATE_LIMIT = 10
+# Only the dedicated performance services set this to false.
+AUTH_LOGIN_RATE_LIMIT_ENABLED = (
+    os.getenv("AUTH_LOGIN_RATE_LIMIT_ENABLED", "true").lower() != "false"
+)
 
 if MAILERS["default"]["BACKEND"] == "django.core.mail.backends.smtp.EmailBackend":
     MAILERS["default"]["OPTIONS"] = {

@@ -149,8 +149,19 @@ def analyse(csv_path, users, ramp, warmup, plateau):
     return result
 
 
+PERFORMANCE_PROTOCOL = ROOT / "protocole-performance.json"
+
+
+def saved_protocol(expected_digest):
+    # Historical evidence retains its original fixed-rest protocol.
+    for path in (PERFORMANCE_PROTOCOL, ROOT / "protocole.json"):
+        if digest(path) == expected_digest:
+            return json.loads(path.read_text())
+    raise RuntimeError("Unknown or changed campaign protocol")
+
+
 def main():
-    protocol = json.loads((ROOT / "protocole.json").read_text())
+    protocol = json.loads(PERFORMANCE_PROTOCOL.read_text())
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=["static", "application"])
     parser.add_argument("--jmeter", required=True)
@@ -199,7 +210,7 @@ def main():
         "sql_schema_sha256": digest(ROOT.parent / "donnees/schema.sql"),
         "sql_data_sha256": digest(ROOT.parent / "donnees/data.sql"),
         "seed_script_sha256": digest(ROOT / "scripts/preparer_comptes.py"),
-        "protocol_sha256": digest(ROOT / "protocole.json"),
+        "protocol_sha256": digest(PERFORMANCE_PROTOCOL),
         "host": {"system": platform.system(), "release": platform.release(), "logical_cpus": os.cpu_count()},
         "cpu_units": "100 percent injector CPU = one logical CPU; host busy percent = all CPUs",
         "started_epoch_s": time.time(),

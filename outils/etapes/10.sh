@@ -4,6 +4,7 @@ etape_10() {
       cat deploiement/docs/etape10.md deploiement/docs/mesures.md deploiement/docs/exports-etape10.json
       ;;
     demarrer) vm_deploy; python3 outils/ouvrir.py http://127.0.0.1:8080/login ;;
+    arreter) python3 outils/arreter_vm.py ;;
     mesurer)
       vm_workspace
       [[ ! -e $VM_WORK/exports-etape10 ]] || fail "Exports déjà présents : $VM_WORK/exports-etape10. Les conserver avant une nouvelle mesure ; aucun écrasement automatique."

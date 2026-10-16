@@ -60,6 +60,13 @@ documentée à l'[étape 18](ETAPE18.md).
 
 ## Protocole
 
+**Nouvelles campagnes :** le pilote utilise désormais la
+[configuration de performance](PERFORMANCE.md) : limitation des connexions
+désactivée uniquement pour les mesures, et repos dynamique de 30 à 180 s.
+Réétalonner à l'étape 16 et utiliser de nouveaux dossiers de travail et de
+résultats. Les preuves archivées décrites ci-dessous gardent leur protocole
+historique avec pauses de quinze minutes.
+
 Méthode commune et critères de vérification :
 [procédure des étapes 15 à 17](PROCEDURE.md#méthode-de-travail-et-points-de-contrôle).
 
@@ -94,7 +101,7 @@ configurations temporaires sont retirées et le déploiement initial est rétabl
 | 5 | Installer les services VM dédiés | Nouvelle unité `intern-mesure17`, nouvelle entrée Nginx et règle PostgreSQL limitée |
 | 6 | Restaurer la base dédiée avant chaque campagne | Événement `database_restored` avec l'empreinte du même export |
 | 7 | Exécuter les paliers 1, 5, 10 et 20 | Plan CLI sauvegardé, CSV brut et métriques de trois services |
-| 8 | Attendre quinze minutes entre deux paliers | Événement `cooldown` et heure de fin prévue |
+| 8 | Attendre le retour au repos entre deux paliers | Événements `cooldown_start` et `cooldown_complete`, relevés dans `repos/` |
 | 9 | Changer de déploiement et inverser l'ordre pour la seconde série | Ordre VM/Docker puis Docker/VM visible dans le journal |
 | 10 | Arrêter la mesure et rétablir la référence | Événement `reference_restored`, conteneurs sains et VM arrêtées |
 
@@ -241,11 +248,12 @@ python3 mesure/scripts/campagnes17.py \
   --docker "$DOCKER_BIN" --docker-host "$DOCKER_HOST" \
   --docker-config "$DOCKER_CONFIG" --env-file "$DOCKER_ENV_FILE" \
   --ssh-config "$MESURE_SSH_CONFIG" --jmeter "$JMETER_BIN" \
-  --runtime "$MESURE_RUNTIME" --output mesure/resultats/etape17
+  --runtime "$MESURE_RUNTIME" --output "$MESURE_OUTPUT"
 ```
 
-La durée nominale est de 3 h 45 min pour seize paliers et leurs repos, à laquelle
-s'ajoutent préparation, restaurations et démarrages. Le pilote refuse de remplacer
+Les seize paliers représentent 45 min 20 s, auxquels s'ajoutent les repos
+dynamiques, la préparation, les restaurations et les démarrages. Avec douze
+repos de 30 s, compter environ 51 min 20 s hors transitions. Le pilote refuse de remplacer
 un volume ou une base de mesure qui ne lui appartient pas. Les dossiers partiels
 doivent être conservés et examinés avant reprise.
 
@@ -281,7 +289,7 @@ l'erreur initiale d'une erreur pendant le nettoyage.
 | --- | --- | --- |
 | `preparing` | Préparation ou reprise des environnements | Attendre et consulter le journal |
 | `running` + `palier_start` | Mesure en cours | Laisser tourner sans modifier les paramètres |
-| `running` + `cooldown` | Repos prévu de quinze minutes | Attendre l'heure indiquée, sans lancer de connexion supplémentaire |
+| `running` + `cooldown_start` | Observation du retour au repos | Attendre `cooldown_complete` ; échec si le repos dépasse 180 s |
 | `failed` | Exception dans le pilote | Examiner les journaux, les fichiers partiels et la restauration |
 | `complete` + `reference_restored` | Collecte terminée et restauration signalée | Vérifier les seize dossiers et la santé réelle de la référence |
 

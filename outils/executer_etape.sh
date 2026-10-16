@@ -7,7 +7,7 @@ usage() {
 Usage : bash outils/executer_etape.sh ETAPE [ACTION]
   8  configurer (défaut), verifier
   9  demarrer (défaut)
- 10  consulter (défaut), demarrer, mesurer
+ 10  consulter (défaut), demarrer, arreter, mesurer
  11  demarrer (défaut)
  12  demarrer (défaut)
  13  demarrer (défaut)

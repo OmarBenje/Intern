@@ -65,6 +65,8 @@ def text(data, key, maximum=254):
 
 
 def rate(request, action, username=""):
+    if action == "login" and not settings.AUTH_LOGIN_RATE_LIMIT_ENABLED:
+        return
     # REMOTE_ADDR only: trusting arbitrary X-Forwarded-For permits bypass.
     throttle(action + ":ip", request.META.get("REMOTE_ADDR", "unknown"), limit=30)
     if username:

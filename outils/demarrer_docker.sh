@@ -34,12 +34,22 @@ dc() {
 }
 dc config --quiet
 if [ "$layer" != donnees ]; then
-  if ! "$DOCKER_BIN" image inspect intern-metier:etape12 >/dev/null 2>&1; then dc build metier; fi
+  if [ "${EXECUTION_MESURE:-0}" = 1 ]; then
+    # A separate tag keeps the normal deployment's image intact.
+    dc build metier
+  elif ! "$DOCKER_BIN" image inspect intern-metier:etape12 >/dev/null 2>&1; then
+    dc build metier
+  fi
 fi
 if [ "$layer" = proxy ]; then
   if ! "$DOCKER_BIN" image inspect intern-proxy:etape13 >/dev/null 2>&1; then dc build proxy; fi
 fi
 # Compose's --no-recreate also starts stopped containers and creates missing ones.
 # It does not restart running containers, including ones whose health is pending.
-dc up -d --no-build --no-recreate --wait --wait-timeout 180 "$layer"
+if [ "${EXECUTION_MESURE:-0}" = 1 ]; then
+  # Apply the measurement overlay and freshly built API to this dedicated project.
+  dc up -d --no-build --wait --wait-timeout 180 "$layer"
+else
+  dc up -d --no-build --no-recreate --wait --wait-timeout 180 "$layer"
+fi
 dc ps

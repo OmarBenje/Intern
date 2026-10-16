@@ -4,7 +4,9 @@ services:
     ports: !override
       - "127.0.0.1:8081:80"
   metier:
+    image: intern-metier:mesure
     environment:
+      AUTH_LOGIN_RATE_LIMIT_ENABLED: "false"
       CSRF_TRUSTED_ORIGINS: http://127.0.0.1:8081
       PUBLIC_BASE_URL: http://127.0.0.1:8081
   donnees:

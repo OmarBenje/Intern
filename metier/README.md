@@ -59,6 +59,10 @@ ressource n'existe pas dans le périmètre du compte connecté.
 Le fichier [api.http](api.http) montre l'inscription, l'activation manuelle, la
 connexion, la lecture de la session et un contrôle d'accès par propriétaire.
 
+La limitation des connexions est active par défaut
+(`AUTH_LOGIN_RATE_LIMIT_ENABLED=true`). Seuls les services dédiés aux tests de
+performance la désactivent : voir [la configuration de mesure](../mesure/PERFORMANCE.md).
+
 ## Vérifier
 
 Avec une base PostgreSQL de test isolée configurée dans `.env` :

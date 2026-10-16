@@ -27,6 +27,11 @@ Réétalonner avant d'augmenter cette charge ou de réduire la temporisation.
 
 ## Profil fixé
 
+Les chiffres archivés ci-dessous utilisent le protocole historique, avec
+limitation des connexions. Pour les nouveaux essais, utiliser la
+[configuration de performance](PERFORMANCE.md), puis refaire les deux contrôles
+de répétabilité. Les anciennes mesures ne valident pas ce nouveau réglage.
+
 - **Paliers : 1, 5, 10, 20 candidats distincts.**
 - **Montée : 30 s ; stabilisation : 15 s ; fenêtre stable : 120 s.**
 - Réflexion : 1000 ms ; une seule connexion par candidat.

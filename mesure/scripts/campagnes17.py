@@ -16,7 +16,8 @@ import tarfile
 import time
 import urllib.request
 
-from etalonnage import ROOT, digest, save
+from etalonnage import ROOT, PERFORMANCE_PROTOCOL, digest, save
+from repos import idle_window
 
 DATABASE = "intern_mesure17"
 PROJECT = "intern-etape17"
@@ -39,7 +40,7 @@ class Campaigns:
         if not self.output.is_relative_to(ROOT):
             raise RuntimeError("Results must be inside mesure/")
         self.output.mkdir(parents=True, exist_ok=True)
-        self.protocol = json.loads((ROOT / "protocole.json").read_text())
+        self.protocol = json.loads(PERFORMANCE_PROTOCOL.read_text())
         if max(self.protocol["paliers_utilisateurs"]) > 20:
             raise RuntimeError("This calibrated campaign supports at most twenty users")
         self.env = {**os.environ, "DOCKER_HOST": args.docker_host, "DOCKER_CONFIG": str(args.docker_config)}
@@ -52,11 +53,11 @@ class Campaigns:
         self.collectors = []
         self.manifest_path = self.output / "manifest.json"
         self.manifest = json.loads(self.manifest_path.read_text()) if self.manifest_path.exists() else {
-            "status": "preparing", "protocol_sha256": digest(ROOT / "protocole.json"),
+            "status": "preparing", "protocol_sha256": digest(PERFORMANCE_PROTOCOL),
             "source_plan_sha256": digest(ROOT / "plan.jmx"), "order": ["vm", "docker", "docker", "vm"],
             "runs": [], "started_epoch_s": time.time(),
         }
-        if self.manifest["protocol_sha256"] != digest(ROOT / "protocole.json"):
+        if self.manifest["protocol_sha256"] != digest(PERFORMANCE_PROTOCOL):
             raise RuntimeError("Protocol changed since campaign preparation")
 
     def event(self, action, **fields):
@@ -223,6 +224,23 @@ class Campaigns:
             self.ssh("donnees", "sudo -u postgres psql -X -v ON_ERROR_STOP=1 -d intern_mesure17", data=b"SET ROLE intern_user;\n" + snapshot)
             self.ssh("metier", "sudo systemctl start intern-mesure17")
         self.wait_http()
+        if deployment == "docker":
+            effective = self.dc("exec", "-T", "metier", ".venv/bin/python", "app/manage.py",
+                                "shell", "--verbosity", "0", "--command",
+                                "from django.conf import settings; print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)")
+        else:
+            code = b"""import os, sys
+from pathlib import Path
+os.environ.update(dict(line.split('=', 1) for line in Path('/etc/intern/mesure17.env').read_text().splitlines() if '=' in line and not line.startswith('#')))
+os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings'
+sys.path.insert(0, '/opt/intern-mesure17/metier/app')
+from django.conf import settings
+print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
+"""
+            effective = self.ssh("metier", "sudo -u intern /opt/intern/metier/.venv/bin/python -", data=code)
+        if effective.stdout.decode().strip() != "False":
+            raise RuntimeError("Measurement login rate limit is still enabled; rebuild the measurement image")
+        self.event("login_rate_limit_checked", deployment=deployment, enabled=False)
         self.event("database_restored", deployment=deployment, snapshot_sha256=digest(self.runtime / "base.sql"))
 
     def collect(self, deployment, folder):
@@ -325,11 +343,51 @@ class Campaigns:
             self.event("palier_complete", series=series, deployment=deployment, users=users,
                        requests=client["requests"], errors=client["all_errors"])
             if index + 1 < len(self.protocol["paliers_utilisateurs"]):
-                end = time.time() + self.protocol["repos_minimal_entre_paliers_s"]
-                self.event("cooldown", until_epoch_s=end, series=series, deployment=deployment)
-                while time.time() < end:
-                    self.check_stop()
-                    time.sleep(min(5, end - time.time()))
+                self.cooldown(deployment, series, users)
+
+    def cooldown(self, deployment, series, users):
+        policy = self.protocol["repos_dynamique"]
+        folder = self.output / f"repos/serie-{series}/{deployment}/{users}"
+        folder.mkdir(parents=True, exist_ok=False)
+        started = time.monotonic()
+        self.event("cooldown_start", series=series, deployment=deployment, users=users,
+                   path=str(folder.relative_to(self.output)))
+        try:
+            self.collect(deployment, folder)
+            while time.monotonic() - started < policy["maximum_s"]:
+                self.check_stop()
+                time.sleep(2)
+                elapsed = time.monotonic() - started
+                if elapsed < policy["minimum_s"]:
+                    continue
+                idle_epoch = time.time()
+                samples = {}
+                for service in SERVICES:
+                    lines = (folder / f"serveur-{service}.jsonl").read_text().splitlines()
+                    # A collector can be in the middle of writing its last line.
+                    samples[service] = []
+                    for line in lines:
+                        try:
+                            row = json.loads(line)
+                            if row["epoch_s"] <= idle_epoch:
+                                samples[service].append(row)
+                        except json.JSONDecodeError:
+                            break
+                if idle_window(samples, idle_epoch, policy):
+                    try:
+                        with urllib.request.urlopen("http://127.0.0.1:8081/health/ready/", timeout=5) as response:
+                            ready = response.status == 200
+                    except OSError:
+                        ready = False
+                    if ready:
+                        self.event("cooldown_complete", series=series, deployment=deployment,
+                                   users=users, path=str(folder.relative_to(self.output)),
+                                   elapsed_s=time.monotonic() - started, ready=True,
+                                   idle_epoch_s=idle_epoch)
+                        return
+            raise RuntimeError("Services did not return to idle within the frozen maximum rest")
+        finally:
+            self.stop_collectors()
 
     def restore(self):
         self.stop_collectors()
