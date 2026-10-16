@@ -5,6 +5,15 @@ services:
       - "127.0.0.1:8081:80"
   metier:
     image: intern-metier:mesure
+    # Keep the readiness request and cadence; avoid urllib/TLS import overhead
+    # in a short-lived Python process every five seconds during measurement.
+    healthcheck:
+      test:
+        - CMD
+        - .venv/bin/python
+        - -S
+        - -c
+        - "import socket; s=socket.create_connection(('127.0.0.1',8000),timeout=4); s.sendall(b'GET /health/ready/ HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n'); status=s.makefile('rb').readline().split(); s.close(); raise SystemExit(0 if len(status)>1 and status[1]==b'200' else 1)"
     environment:
       AUTH_LOGIN_RATE_LIMIT_ENABLED: "false"
       CSRF_TRUSTED_ORIGINS: http://127.0.0.1:8081

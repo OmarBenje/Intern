@@ -2,7 +2,6 @@
 
 import argparse
 import csv
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -13,15 +12,17 @@ import statistics
 import subprocess
 import sys
 import tarfile
+import tempfile
 import time
 import urllib.request
 
 from etalonnage import ROOT, PERFORMANCE_PROTOCOL, digest, save
-from repos import idle_window
+from repos import idle_window, idle_blockers
 
 DATABASE = "intern_mesure17"
 PROJECT = "intern-etape17"
 SERVICES = ("proxy", "metier", "donnees")
+NAT_RULES = ("ssh-mesure17,tcp,127.0.0.1,2221,,22", "http-mesure17,tcp,127.0.0.1,8081,,8082")
 QUERY = """SELECT json_build_object(
 'db_connections',(SELECT count(*) FROM pg_stat_activity WHERE datname='intern_mesure17'),
 'db_active_connections',(SELECT count(*) FROM pg_stat_activity WHERE datname='intern_mesure17' AND state='active'),
@@ -44,9 +45,23 @@ class Campaigns:
         if max(self.protocol["paliers_utilisateurs"]) > 20:
             raise RuntimeError("This calibrated campaign supports at most twenty users")
         self.env = {**os.environ, "DOCKER_HOST": args.docker_host, "DOCKER_CONFIG": str(args.docker_config)}
+        self.owner_path = self.runtime / "measurement-project.json"
+        if self.owner_path.exists():
+            self.project = json.loads(self.owner_path.read_text())["project"]
+        elif (self.runtime / "base.sql").exists():
+            self.project = PROJECT  # Resume campaigns created by the original controller.
+        else:
+            self.project = PROJECT + "-" + secrets.token_hex(6)
+        self.reference_touched = False
+        self.measurement_touched = False
+        self.vm_touched = False
+        self.suspended_containers = []
+        self.calibration_touched = False
+        self.nat_path = self.runtime / "nat-rules.json"
+        self.created_nat_rules = json.loads(self.nat_path.read_text()) if self.nat_path.exists() else []
         self.compose = [args.docker, "compose", "--env-file", str(self.runtime / "docker.env"),
                         "-f", str(ROOT.parent / "docker/compose.yaml"),
-                        "-f", str(ROOT / "compose.test.yaml"), "-p", PROJECT]
+                        "-f", str(ROOT / "compose.test.yaml"), "-p", self.project]
         self.reference = [args.docker, "compose", "--env-file", str(args.env_file.resolve()),
                           "-f", str(ROOT.parent / "docker/compose.yaml"), "-p", args.reference_project]
         self.ssh_config = args.ssh_config.resolve()
@@ -89,38 +104,94 @@ class Campaigns:
     def ssh(self, service, command, **kwargs):
         return self.run(["ssh", "-F", self.ssh_config.name, f"vm-{service}", command], cwd=self.ssh_config.parent, **kwargs)
 
+    def vm_info(self, service):
+        command = ["VBoxManage", "showvminfo", f"vm-{service}", "--machinereadable"]
+        # VirtualBox can briefly reject a shared lock while a guest powers off.
+        for attempt in range(6):
+            result = self.run(command, check=False)
+            if result.returncode == 0:
+                break
+            if b"VBOX_E_INVALID_OBJECT_STATE" not in result.stderr or attempt == 5:
+                (self.runtime / "last-error.txt").write_bytes(result.stderr)
+                raise RuntimeError(f"Cannot read vm-{service} state; inspect last-error.txt")
+            time.sleep(2)
+        return result.stdout.decode()
+
     def vm_state(self, service):
-        info = self.run(["VBoxManage", "showvminfo", f"vm-{service}", "--machinereadable"]).stdout.decode()
+        info = self.vm_info(service)
         return next(line.split("=", 1)[1].strip('"') for line in info.splitlines() if line.startswith("VMState="))
 
+    @staticmethod
+    def nat_rules(info):
+        return [line.split("=", 1)[1].strip('"') for line in info.splitlines()
+                if line.startswith("Forwarding(")]
+
+    @staticmethod
+    def nat_rule_needed(rule, existing):
+        desired = rule.split(",")
+        for current in existing:
+            fields = current.split(",")
+            if fields[1:] == desired[1:]:
+                return False  # Equivalent forwarding can have a different name.
+        for current in existing:
+            fields = current.split(",")
+            if fields[0] == desired[0] or (fields[1] == desired[1] and fields[3] == desired[3]
+                    and (fields[2] == desired[2] or not fields[2] or not desired[2])):
+                raise RuntimeError(f"Redirection NAT incompatible : {current} ; attendue : {rule}. Règle existante conservée.")
+        return True
+
     def boot_vm(self):
+        self.vm_touched = True
         self.dc("stop", check=False)
         for service in ("donnees", "metier", "proxy"):
             if self.vm_state(service) != "running":
                 self.run(["VBoxManage", "startvm", f"vm-{service}", "--type", "headless"])
-        info = self.run(["VBoxManage", "showvminfo", "vm-proxy", "--machinereadable"]).stdout.decode()
-        for rule in ("ssh-mesure17,tcp,127.0.0.1,2221,,22", "http-mesure17,tcp,127.0.0.1,8081,,8082"):
-            if rule.split(",", 1)[0] not in info:
+        rules = self.nat_rules(self.vm_info("proxy"))
+        for rule in NAT_RULES:
+            if self.nat_rule_needed(rule, rules):
+                if rule not in self.created_nat_rules:
+                    self.created_nat_rules.append(rule)
+                    save(self.nat_path, self.created_nat_rules)
                 self.run(["VBoxManage", "controlvm", "vm-proxy", "natpf2", rule])
+                rules.append(rule)
         for service in SERVICES:
             deadline = time.monotonic() + 240
-            while self.ssh(service, "true", check=False, timeout=10).returncode:
+            while True:
+                try:
+                    if self.ssh(service, "true", check=False, timeout=10).returncode == 0:
+                        break
+                except subprocess.TimeoutExpired:
+                    pass  # The guest may still be booting; respect the overall deadline.
                 if time.monotonic() > deadline:
-                    raise RuntimeError("SSH unavailable")
+                    raise RuntimeError(f"SSH indisponible sur vm-{service} après 240 s")
                 time.sleep(3)
 
     def stop_vm(self):
+        # ACPI works even when SSH or the proxy forwarding is unavailable.
         for service in ("metier", "donnees", "proxy"):
             if self.vm_state(service) == "running":
-                self.ssh(service, "sudo systemctl poweroff", check=False, timeout=20)
-        for service in SERVICES:
-            deadline = time.monotonic() + 120
-            while self.vm_state(service) == "running":
-                if time.monotonic() > deadline:
-                    raise RuntimeError("VM failed to stop")
-                time.sleep(2)
-        for name in ("ssh-mesure17", "http-mesure17"):
-            self.run(["VBoxManage", "modifyvm", "vm-proxy", "--natpf2", "delete", name], check=False)
+                self.run(["VBoxManage", "controlvm", f"vm-{service}", "acpipowerbutton"])
+        deadline = time.monotonic() + 120
+        next_acpi = time.monotonic() + 10
+        while True:
+            pending = {service: self.vm_state(service) for service in SERVICES}
+            pending = {service: state for service, state in pending.items() if state not in ("poweroff", "aborted")}
+            if not pending:
+                break
+            if time.monotonic() >= deadline:
+                raise RuntimeError(f"VM non arrêtées après 120 s (ACPI) : {pending}")
+            if time.monotonic() >= next_acpi:
+                for service, state in pending.items():
+                    if state == "running":
+                        self.run(["VBoxManage", "controlvm", f"vm-{service}", "acpipowerbutton"])
+                next_acpi = time.monotonic() + 10
+            time.sleep(2)
+        rules = self.nat_rules(self.vm_info("proxy"))
+        for rule in list(self.created_nat_rules):
+            if rule in rules:
+                self.run(["VBoxManage", "modifyvm", "vm-proxy", "--natpf2", "delete", rule.split(",", 1)[0]])
+            self.created_nat_rules.remove(rule)
+            save(self.nat_path, self.created_nat_rules)
 
     def wait_http(self):
         deadline = time.monotonic() + 120
@@ -134,7 +205,8 @@ class Campaigns:
             time.sleep(2)
         raise RuntimeError("Measurement proxy unavailable")
 
-    def bootstrap(self):
+    def preflight(self):
+        self.check_previous_rests()
         env_text = self.args.env_file.read_text()
         values = dict(line.split("=", 1) for line in env_text.splitlines() if "=" in line and not line.startswith("#"))
         self.pg_user = values["POSTGRES_USER"].strip().strip('"').strip("'")
@@ -143,34 +215,75 @@ class Campaigns:
         private.write_text("".join(f"{key}={value}\n" for key, value in values.items()))
         private.chmod(0o600)
         snapshot = self.runtime / "base.sql"
-        if not snapshot.exists():
+        if not snapshot.exists() and not self.owner_path.exists():
             existing = self.dc("ps", "-a", "-q").stdout.strip()
             if existing:
-                raise RuntimeError("Refuse to reuse an unowned measurement project")
-            if self.docker("volume", "inspect", f"{PROJECT}_pgdata", check=False).returncode == 0:
-                raise RuntimeError("Refuse to reuse an unowned measurement volume")
+                raise RuntimeError(f"Projet Docker {self.project} sans propriétaire : ressources conservées. Choisir un nouveau MESURE_RUNTIME et MESURE_OUTPUT.")
+            if self.docker("volume", "inspect", f"{self.project}_pgdata", check=False).returncode == 0:
+                raise RuntimeError(f"Volume Docker {self.project}_pgdata sans propriétaire : ressources conservées. Choisir un nouveau MESURE_RUNTIME et MESURE_OUTPUT.")
+        if snapshot.exists() and not (self.runtime / "sources.tar").exists():
+            raise RuntimeError("Snapshot sans sources.tar : préparation incomplète conservée. Choisir un nouveau MESURE_RUNTIME et MESURE_OUTPUT.")
+        for service in SERVICES:
+            self.vm_state(service)
+        rules = self.nat_rules(self.vm_info("proxy"))
+        for rule in NAT_RULES:
+            self.nat_rule_needed(rule, rules)
+        # Step 15/16 may still own the measurement port. Preserve their containers.
+        containers = self.docker("ps", "--filter", "publish=8081", "--format", "{{.ID}} {{.Label \"com.docker.compose.project\"}}").stdout.decode().splitlines()
+        for container in containers:
+            fields = container.split()
+            if len(fields) != 2 or fields[1] not in (self.project, "intern-mesure"):
+                raise RuntimeError("Port 8081 occupé par un autre projet : aucun service arrêté. Libérer ce port avant de relancer.")
+        self.suspended_containers = self.docker("ps", "--filter", "label=com.docker.compose.project=intern-mesure", "--format", "{{.ID}}").stdout.decode().split()
+        if not self.owner_path.exists():
+            self.owner_path.write_text(json.dumps({"project": self.project}) + "\n")
+        self.manifest["measurement_project"] = self.project
+        diagnostic = self.runtime / "last-error.txt"
+        if diagnostic.exists():
+            diagnostic.replace(self.runtime / "previous-error.txt")
+
+    def check_previous_rests(self):
+        journal = self.output / "journal.jsonl"
+        if not journal.exists():
+            return
+        events = [json.loads(line) for line in journal.read_text().splitlines()]
+        for index, event in enumerate(events):
+            if event["action"] != "cooldown_start":
+                continue
+            following = events[index + 1] if index + 1 < len(events) else {}
+            if following.get("action") != "cooldown_complete" or following.get("path") != event["path"]:
+                raise RuntimeError(f"Repos non validé : {event['path']}. Mesures conservées ; consulter les relevés de repos et choisir un nouveau MESURE_RUNTIME et MESURE_OUTPUT après correction. La reprise ne peut pas sauter ce repos.")
+
+    def bootstrap(self):
+        snapshot = self.runtime / "base.sql"
+        self.measurement_touched = True
+        if not snapshot.exists():
             self.dc("up", "-d", "--no-build", "--wait", "--wait-timeout", "180", timeout=240)
             seed = self.dc("exec", "-T", "metier", ".venv/bin/python", "app/manage.py", "shell",
                            "--verbosity", "0", "--command", 'exec(__import__("sys").stdin.read())',
                            data=(ROOT / "scripts/preparer_comptes.py").read_bytes()).stdout
             if seed != (ROOT / "comptes.csv").read_bytes():
                 raise RuntimeError("Fixture accounts differ")
-            snapshot.write_bytes(self.dc("exec", "-T", "donnees", "pg_dump", "-U", self.pg_user,
-                                        "-d", DATABASE, "--no-owner", "--no-privileges").stdout)
-            snapshot.chmod(0o600)
-            self.docker("cp", f"{PROJECT}-metier-1:/app/metier/app", str(self.runtime / "app"))
-            self.docker("cp", f"{PROJECT}-metier-1:/app/donnees", str(self.runtime / "donnees"))
-            self.docker("cp", f"{PROJECT}-proxy-1:/usr/share/nginx/html", str(self.runtime / "client"))
-            self.docker("cp", f"{PROJECT}-proxy-1:/usr/share/nginx/static", str(self.runtime / "static"))
-            with tarfile.open(self.runtime / "sources.tar", "w") as archive:
-                archive.add(self.runtime / "app", arcname="metier/app")
-                archive.add(self.runtime / "donnees", arcname="donnees")
-                archive.add(self.runtime / "client", arcname="client")
-                archive.add(self.runtime / "static", arcname="static")
+            sql = self.dc("exec", "-T", "donnees", "pg_dump", "-U", self.pg_user,
+                          "-d", DATABASE, "--no-owner", "--no-privileges").stdout
+            with tempfile.TemporaryDirectory(dir=self.runtime) as directory:
+                staging = Path(directory)
+                for service, source, target in (("metier", "/app/metier/app", "app"),
+                                                ("metier", "/app/donnees", "donnees"),
+                                                ("proxy", "/usr/share/nginx/html", "client"),
+                                                ("proxy", "/usr/share/nginx/static", "static")):
+                    self.docker("cp", f"{self.project}-{service}-1:{source}", str(staging / target))
+                with tarfile.open(staging / "sources.tar", "w") as archive:
+                    for target, name in (("app", "metier/app"), ("donnees", "donnees"), ("client", "client"), ("static", "static")):
+                        archive.add(staging / target, arcname=name)
+                (staging / "sources.tar").replace(self.runtime / "sources.tar")
+                (staging / "base.sql").write_bytes(sql)
+                (staging / "base.sql").chmod(0o600)
+                (staging / "base.sql").replace(snapshot)
         self.manifest["snapshot_sha256"] = digest(snapshot)
         self.manifest["accounts_sha256"] = digest(ROOT / "comptes.csv")
         self.manifest["sources_sha256"] = digest(self.runtime / "sources.tar")
-        images = json.loads(self.docker("inspect", *(f"{PROJECT}-{service}-1" for service in SERVICES)).stdout)
+        images = json.loads(self.docker("inspect", *(f"{self.project}-{service}-1" for service in SERVICES)).stdout)
         self.manifest["images"] = {item["Config"]["Labels"]["com.docker.compose.service"]: item["Image"] for item in images}
         self.manifest["docker_resources"] = {
             item["Config"]["Labels"]["com.docker.compose.service"]:
@@ -229,15 +342,20 @@ class Campaigns:
                                 "shell", "--verbosity", "0", "--command",
                                 "from django.conf import settings; print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)")
         else:
-            code = b"""import os, sys
+            code = b"""import os, pwd, sys
 from pathlib import Path
 os.environ.update(dict(line.split('=', 1) for line in Path('/etc/intern/mesure17.env').read_text().splitlines() if '=' in line and not line.startswith('#')))
+account = pwd.getpwnam('intern')
+os.initgroups(account.pw_name, account.pw_gid)
+os.setgid(account.pw_gid)
+os.setuid(account.pw_uid)
+sys.dont_write_bytecode = True
 os.environ['DJANGO_SETTINGS_MODULE'] = 'config.settings'
 sys.path.insert(0, '/opt/intern-mesure17/metier/app')
 from django.conf import settings
 print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
 """
-            effective = self.ssh("metier", "sudo -u intern /opt/intern/metier/.venv/bin/python -", data=code)
+            effective = self.ssh("metier", "sudo /opt/intern/metier/.venv/bin/python -", data=code)
         if effective.stdout.decode().strip() != "False":
             raise RuntimeError("Measurement login rate limit is still enabled; rebuild the measurement image")
         self.event("login_rate_limit_checked", deployment=deployment, enabled=False)
@@ -247,10 +365,10 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
         self.collectors = []
         for service in SERVICES:
             if deployment == "docker":
-                pid = self.docker("inspect", f"{PROJECT}-{service}-1", "--format", "{{.State.Pid}}").stdout.decode().strip()
+                pid = self.docker("inspect", f"{self.project}-{service}-1", "--format", "{{.State.Pid}}").stdout.decode().strip()
                 command = [sys.executable, str(ROOT / "scripts/metrics_serveur.py"), "--pid", pid, "--service", service]
                 if service == "donnees":
-                    sql = [self.args.docker, "exec", f"{PROJECT}-donnees-1", "psql", "-U", self.pg_user, "-d", "postgres", "-XAtc", QUERY]
+                    sql = [self.args.docker, "exec", f"{self.project}-donnees-1", "psql", "-U", self.pg_user, "-d", "postgres", "-XAtc", QUERY]
                     command += ["--sql-command", json.dumps(sql)]
             else:
                 pid_command = {"proxy": "cat /run/nginx.pid", "metier": "systemctl show intern-mesure17 -p MainPID --value", "donnees": "head -1 /var/run/postgresql/16-main.pid"}[service]
@@ -352,6 +470,7 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
         started = time.monotonic()
         self.event("cooldown_start", series=series, deployment=deployment, users=users,
                    path=str(folder.relative_to(self.output)))
+        blockers = [{"reason": "minimum_rest_not_reached"}]
         try:
             self.collect(deployment, folder)
             while time.monotonic() - started < policy["maximum_s"]:
@@ -373,36 +492,76 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
                                 samples[service].append(row)
                         except json.JSONDecodeError:
                             break
-                if idle_window(samples, idle_epoch, policy):
+                blockers = idle_blockers(samples, idle_epoch, policy)
+                if not blockers:
                     try:
                         with urllib.request.urlopen("http://127.0.0.1:8081/health/ready/", timeout=5) as response:
                             ready = response.status == 200
                     except OSError:
                         ready = False
+                    if not ready:
+                        blockers = [{"service": "proxy", "reason": "http_not_ready"}]
                     if ready:
                         self.event("cooldown_complete", series=series, deployment=deployment,
                                    users=users, path=str(folder.relative_to(self.output)),
                                    elapsed_s=time.monotonic() - started, ready=True,
                                    idle_epoch_s=idle_epoch)
                         return
-            raise RuntimeError("Services did not return to idle within the frozen maximum rest")
+            diagnostic = dict(policy=policy, blockers=blockers)
+            save(folder / "diagnostic.json", diagnostic)
+            self.event("cooldown_failed", series=series, deployment=deployment, users=users,
+                       path=str(folder.relative_to(self.output)), **diagnostic)
+            raise RuntimeError("Services did not return to idle within the frozen maximum rest: "
+                               + json.dumps(blockers, ensure_ascii=False))
         finally:
             self.stop_collectors()
 
-    def restore(self):
-        self.stop_collectors()
-        self.dc("stop", check=False)
+    def restore_vm(self):
         if self.vm_state("proxy") == "running":
             self.ssh("metier", "if [ -f /opt/intern-mesure17/.measurement-owned ]; then sudo systemctl stop intern-mesure17; sudo rm -f /etc/intern/mesure17.env /etc/systemd/system/intern-mesure17.service; sudo systemctl daemon-reload; sudo systemctl start intern; fi", check=False)
             self.ssh("proxy", "if [ -f /opt/intern-mesure17/.measurement-owned ]; then sudo rm -f /etc/nginx/conf.d/mesure17.conf; sudo nginx -t && sudo systemctl reload nginx; fi", check=False)
             self.ssh("donnees", "if [ -f /opt/intern-mesure17/.measurement-owned ] && [ -f /etc/postgresql/16/main/pg_hba.conf.before-mesure17 ]; then sudo cp /etc/postgresql/16/main/pg_hba.conf.before-mesure17 /etc/postgresql/16/main/pg_hba.conf; sudo systemctl reload postgresql@16-main; fi", check=False)
         self.stop_vm()
-        self.run([*self.reference, "up", "-d", "--no-build", "--wait", "--wait-timeout", "180"], timeout=240)
-        self.event("reference_restored")
+
+    def restore(self):
+        errors = []
+
+        def attempt(action, callback):
+            try:
+                callback()
+            except Exception as error:
+                errors.append(f"{action}: {error}")
+
+        attempt("collecteurs", self.stop_collectors)
+        if self.measurement_touched:
+            attempt("Docker de mesure", lambda: self.dc("stop"))
+        if self.vm_touched:
+            attempt("VM", self.restore_vm)
+        # A VM error must not prevent Docker restoration.
+        if self.reference_touched:
+            attempt("Docker de référence", lambda: self.run(
+                [*self.reference, "up", "-d", "--no-build", "--wait", "--wait-timeout", "180"], timeout=240))
+        if self.calibration_touched and self.suspended_containers:
+            attempt("Docker d’étalonnage", lambda: self.docker("start", *self.suspended_containers))
+        if errors:
+            self.manifest["restoration_errors"] = errors
+            self.event("restoration_failed", errors=errors)
+            raise RuntimeError("Restauration incomplète ; consulter statut et controller.log")
+        if self.reference_touched:
+            self.manifest.pop("restoration_errors", None)
+            self.event("reference_restored")
 
     def main(self):
+        primary_error = None
         try:
+            self.preflight()
+            self.manifest.pop("error", None)
+            self.manifest.pop("restoration_errors", None)
+            self.reference_touched = True
             self.run([*self.reference, "stop"])
+            if self.suspended_containers:
+                self.calibration_touched = True
+                self.docker("stop", *self.suspended_containers)
             self.bootstrap()
             self.boot_vm()
             self.prepare_vm()
@@ -420,11 +579,23 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
             self.manifest["finished_epoch_s"] = time.time()
             self.event("campaigns_complete")
         except BaseException as error:
+            primary_error = error
+            self.manifest["error"] = str(error)
+            if (self.runtime / "last-error.txt").exists():
+                (self.runtime / "campaign-error.txt").write_bytes((self.runtime / "last-error.txt").read_bytes())
             self.manifest["status"] = "stopped" if isinstance(error, InterruptedError) else "failed"
             self.event("campaigns_stopped" if isinstance(error, InterruptedError) else "campaigns_failed")
             raise
         finally:
-            self.restore()
+            try:
+                self.restore()
+            except Exception:
+                if primary_error is None:
+                    self.manifest["status"] = "failed"
+                    save(self.manifest_path, self.manifest)
+                    raise
+                # The restoration failure is already recorded; retain the original traceback.
+                print("Restauration incomplète ; consulter statut et controller.log", flush=True)
 
 
 def main():
@@ -438,7 +609,13 @@ def main():
     parser.add_argument("--runtime", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=ROOT / "resultats/etape17")
     parser.add_argument("--reference-project", default="intern-etape14")
-    Campaigns(parser.parse_args()).main()
+    parser.add_argument("--preflight", action="store_true")
+    args = parser.parse_args()
+    controller = Campaigns(args)
+    if args.preflight:
+        controller.preflight()
+    else:
+        controller.main()
 
 
 if __name__ == "__main__":

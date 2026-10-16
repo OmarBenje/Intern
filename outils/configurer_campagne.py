@@ -5,11 +5,16 @@ import json
 import os
 from pathlib import Path
 import sys
+from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def check_start(runtime):
+def default_runtime():
+    return ROOT.parent / '.execution-campagnes/active'
+
+
+def require_inactive(runtime):
     pidfile = runtime / 'controller.pid'
     if pidfile.exists():
         try:
@@ -18,14 +23,68 @@ def check_start(runtime):
             pass
         else:
             raise SystemExit('Une campagne est déjà active ; utiliser l’action statut.')
+
+
+def new_campaign(runtime):
+    output = ROOT / 'mesure/resultats/campagne'
+    if runtime != default_runtime().resolve():
+        raise SystemExit('L’action nouvelle utilise le dossier standard .execution-campagnes/active.')
+    require_inactive(runtime)
+    configfile = runtime / 'configuration.json'
+    if not configfile.exists():
+        if output.exists():
+            raise SystemExit('Résultats sans configuration : conservés, vérifier leur provenance.')
+        return
+    config = json.loads(configfile.read_text())
+    if Path(config['output']).resolve() != output.resolve():
+        raise SystemExit('La configuration doit utiliser mesure/resultats/campagne.')
+    manifest = output / 'manifest.json'
+    state = json.loads(manifest.read_text()) if manifest.exists() else {}
+    stamp = datetime.fromtimestamp(state.get('started_epoch_s', datetime.now(timezone.utc).timestamp()), timezone.utc).strftime('%Y-%m-%d_%H-%M-%S')
+    archive_runtime = runtime.parent / 'archives' / stamp
+    archive_output = output.parent / 'archives' / stamp
+    if archive_runtime.exists() or archive_output.exists():
+        raise SystemExit('Archive déjà présente : conservée, choisir un autre instant de création.')
+    archive_runtime.parent.mkdir(parents=True, exist_ok=True)
+    archive_output.parent.mkdir(parents=True, exist_ok=True)
+    runtime.rename(archive_runtime)
+    try:
+        if output.exists():
+            output.rename(archive_output)
+    except OSError:
+        archive_runtime.rename(runtime)
+        raise
+    config.update(runtime=str(archive_runtime), output=str(archive_output))
+    archived_config = archive_runtime / 'configuration.json'
+    archived_config.write_text(json.dumps(config, indent=2) + '\n')
+    archived_config.chmod(0o600)
+    (ROOT / '.execution/campagne-active.json').unlink(missing_ok=True)
+    print(f'Campagne conservée dans archives/{stamp}.')
+
+
+def activate(runtime):
+    config = json.loads((runtime / 'configuration.json').read_text())
+    path = ROOT / '.execution/campagne-active.json'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix('.tmp')
+    temporary.write_text(json.dumps({'runtime': str(runtime.resolve()), 'output': config['output']}) + '\n')
+    temporary.replace(path)
+
+
+def check_start(runtime):
+    require_inactive(runtime)
     if (runtime / 'stop-requested').exists():
         raise SystemExit('Arrêt précédent enregistré : inspecter le runtime avant une nouvelle campagne.')
     path = runtime / 'configuration.json'
     if path.exists():
         config = json.loads(path.read_text())
         manifest = Path(config['output']) / 'manifest.json'
-        if manifest.exists() and json.loads(manifest.read_text()).get('status') == 'complete':
-            raise SystemExit('Campagne déjà complète : choisir MESURE_RUNTIME et MESURE_OUTPUT neufs.')
+        if manifest.exists():
+            state = json.loads(manifest.read_text())
+            if state.get('status') == 'complete':
+                raise SystemExit('Campagne déjà complète : utiliser 17 nouvelle pour archiver et préparer la suivante.')
+            if state.get('error', '').startswith('Services did not return to idle'):
+                raise SystemExit('Repos non validé : mesures conservées. Corriger la cause puis utiliser 17 nouvelle ; la reprise ne peut pas sauter le repos échoué.')
 
 
 def configuration(env):
@@ -67,8 +126,24 @@ def save(config):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--verifier-lancement', action='store_true')
+    parser.add_argument('--selection', action='store_true')
+    parser.add_argument('--activer', action='store_true')
+    parser.add_argument('--nouvelle', action='store_true')
     args = parser.parse_args()
-    runtime = Path(os.environ.get('MESURE_RUNTIME', ROOT.parent / '.execution-campagnes')).resolve()
+    runtime = Path(os.environ.get('MESURE_RUNTIME', default_runtime())).resolve()
+    if args.nouvelle:
+        new_campaign(runtime)
+        return
+    if args.selection:
+        selected = json.loads((ROOT / '.execution/campagne-active.json').read_text())
+        if not (Path(selected['runtime']) / 'configuration.json').is_file():
+            raise SystemExit('Configuration de la campagne sélectionnée absente.')
+        print(selected['runtime'])
+        print(selected['output'])
+        return
+    if args.activer:
+        activate(runtime)
+        return
     if args.verifier_lancement:
         check_start(runtime)
         return

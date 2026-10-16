@@ -1,0 +1,27 @@
+{
+  "status": "idle_verified",
+  "scope": "Docker idle check only; not a load campaign or calibration of step 16",
+  "elapsed_s": 68.14045990299928,
+  "http_ready": true,
+  "policy": {
+    "minimum_s": 30,
+    "stabilite_s": 30,
+    "maximum_s": 180,
+    "fraicheur_s": 10,
+    "cpu_max_pct": 5,
+    "io_max_octets_s": 1048576,
+    "connexions_actives_max": 0
+  },
+  "blockers": [],
+  "cpu_last_window_max_pct": {
+    "proxy": 1.1606450324207167,
+    "metier": 4.667440309827157,
+    "donnees": 4.596283572258306
+  },
+  "raw_files_sha256": {
+    "journal.jsonl": "10b49acdece1e8f51ca6d2c5fb46a1640a7028aee5a4f91d13b79537612fdac4",
+    "repos/serie-0/docker/0/serveur-donnees.jsonl": "e6e5e643474dea857bccb0f356d635f7665b310920d084da3f13b71b5dab530f",
+    "repos/serie-0/docker/0/serveur-metier.jsonl": "209ba75b91b97d646b849a13a07c10de4d09723120e2ec262fd0d2edbb19e788",
+    "repos/serie-0/docker/0/serveur-proxy.jsonl": "c6b8a37458716935e3dbe2f47cfb13d2e9cdedcf2f87a3a17d86c67b75962205"
+  }
+}

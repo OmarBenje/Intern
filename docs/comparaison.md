@@ -18,11 +18,11 @@ Le seuil de démarrage est le premier catalogue HTTP 200 non vide.
 
 | Grandeur | Trois VM | Trois conteneurs | Écart Docker / VM |
 | --- | --- | --- | --- |
-| Démarrage jusqu'au catalogue | 20.473 s | 49.844 s | +143.5 % |
-| Mémoire RSS côté hôte | 1.454 Gio | 0.568 Gio | -60.9 % |
+| Démarrage jusqu'au catalogue | 20.473 s | 60.624 s | +196.1 % |
+| Mémoire RSS côté hôte | 1.454 Gio | 0.484 Gio | -66.7 % |
 | Disque : taille des fichiers | 10.783 Gio | 0.809 Gio | -92.5 % |
-| Disque : blocs alloués | 10.755 Gio | 0.864 Gio | -92.0 % |
-| Latence de consultation | 62.431 ms | 83.385 ms | +33.6 % |
+| Disque : blocs alloués | 10.755 Gio | 0.863 Gio | -92.0 % |
+| Latence de consultation | 62.431 ms | 120.213 ms | +92.6 % |
 | Mise en place humaine depuis zéro | Non chronométrée | Non chronométrée | Non calculable |
 
 RSS : trois processus VM, hors VBoxSVC ; côté Docker, processus des conteneurs,
@@ -50,18 +50,18 @@ Le proxy et la base n'ont aucun réseau partagé et seul le proxy publie un port
 
 | Série | Démarrage | RSS moteur inclus | Médiane de dix GET |
 | --- | --- | --- | --- |
-| 1 | 49.844 s | 0.568 Gio | 83.385 ms |
-| 2 | 42.337 s | 0.592 Gio | 88.268 ms |
-| 3 | 51.412 s | 0.567 Gio | 75.539 ms |
+| 1 | 61.084 s | 0.488 Gio | 120.213 ms |
+| 2 | 52.075 s | 0.484 Gio | 113.273 ms |
+| 3 | 60.624 s | 0.421 Gio | 132.306 ms |
 
 <!-- pagebreak -->
 
 ## 1. De combien les résultats diffèrent-ils ?
 
-Le démarrage Docker prend 29.371 s de plus
-(+143.5 %) et la consultation 20.955 ms
-de plus (+33.6 %). La mémoire RSS diminue de
-0.886 Gio (-60.9 %).
+Le démarrage Docker prend 40.151 s de plus
+(+196.1 %) et la consultation 57.782 ms
+de plus (+92.6 %). La mémoire RSS diminue de
+0.970 Gio (-66.7 %).
 Les blocs disque alloués diminuent de
 9.892 Gio
 (-92.0 %). Cette configuration économise donc mémoire

@@ -1,0 +1,48 @@
+{
+  "proxy": {
+    "samples": 23,
+    "cpu_io_methods": [
+      "processes_currently_alive"
+    ],
+    "cpu_pct_mean": 1.4471240885826409,
+    "cpu_pct_max": 1.5949252890443018,
+    "rss_bytes_mean": 7159808,
+    "rss_bytes_max": 7159808,
+    "read_bytes_per_s_mean": 0.0,
+    "read_bytes_per_s_max": 0.0,
+    "write_bytes_per_s_mean": 2200.618575071641,
+    "write_bytes_per_s_max": 2450.2115429257483
+  },
+  "metier": {
+    "samples": 23,
+    "cpu_io_methods": [
+      "processes_currently_alive"
+    ],
+    "cpu_pct_mean": 12.946347102740342,
+    "cpu_pct_max": 14.931451937898387,
+    "rss_bytes_mean": 224415922.08695653,
+    "rss_bytes_max": 224837632,
+    "read_bytes_per_s_mean": 0.0,
+    "read_bytes_per_s_max": 0.0,
+    "write_bytes_per_s_mean": 0.0,
+    "write_bytes_per_s_max": 0.0
+  },
+  "donnees": {
+    "samples": 22,
+    "cpu_io_methods": [
+      "processes_currently_alive"
+    ],
+    "cpu_pct_mean": 3.237070090412653,
+    "cpu_pct_max": 3.70803257586012,
+    "rss_bytes_mean": 144009402.1818182,
+    "rss_bytes_max": 147554304,
+    "read_bytes_per_s_mean": 0.0,
+    "read_bytes_per_s_max": 0.0,
+    "write_bytes_per_s_mean": 2401.5944286018075,
+    "write_bytes_per_s_max": 32067.083511978024,
+    "db_connections_mean": 2,
+    "db_connections_max": 2,
+    "db_active_connections_mean": 0,
+    "db_active_connections_max": 0
+  }
+}

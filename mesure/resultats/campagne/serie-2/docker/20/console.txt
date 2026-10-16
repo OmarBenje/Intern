@@ -1,0 +1,21 @@
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Creating summariser <summary>
+Created the tree successfully using resultats/campagne-sonde-legere/serie-2/docker/20/plan.jmx
+Starting standalone test @ 2026 Oct 16 23:40:37 CEST (1792186837164)
+Waiting for possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445
+summary +    192 in 00:00:22 =    8.5/s Avg:    39 Min:     4 Max:   404 Err:     0 (0.00%) Active: 15 Started: 15 Finished: 0
+summary +    582 in 00:00:30 =   19.4/s Avg:    18 Min:     6 Max:   316 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =    774 in 00:00:53 =   14.7/s Avg:    23 Min:     4 Max:   404 Err:     0 (0.00%)
+summary +    586 in 00:00:30 =   19.6/s Avg:    16 Min:    10 Max:    24 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =   1360 in 00:01:22 =   16.5/s Avg:    20 Min:     4 Max:   404 Err:     0 (0.00%)
+summary +    594 in 00:00:30 =   19.7/s Avg:    16 Min:     9 Max:    34 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =   1954 in 00:01:53 =   17.4/s Avg:    19 Min:     4 Max:   404 Err:     0 (0.00%)
+summary +    584 in 00:00:30 =   19.6/s Avg:    17 Min:    11 Max:    24 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =   2538 in 00:02:22 =   17.8/s Avg:    19 Min:     4 Max:   404 Err:     0 (0.00%)
+summary +    542 in 00:00:28 =   19.6/s Avg:    17 Min:    11 Max:    37 Err:     0 (0.00%) Active: 0 Started: 20 Finished: 20
+summary =   3080 in 00:02:50 =   18.1/s Avg:    18 Min:     4 Max:   404 Err:     0 (0.00%)
+Tidying up ...    @ 2026 Oct 16 23:43:27 CEST (1792187007620)
+... end of run

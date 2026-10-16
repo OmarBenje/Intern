@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).parents[1] / "scripts"))
 from campagnes17 import Campaigns
 from etalonnage import PERFORMANCE_PROTOCOL, digest, saved_protocol
-from repos import SERVICES, idle_window
+from repos import SERVICES, idle_window, idle_blockers
 
 
 class AdaptiveRestTests(unittest.TestCase):
@@ -70,6 +70,15 @@ class AdaptiveRestTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             saved_protocol("changed")
 
+    def test_diagnostic_identifies_only_busy_service_and_frozen_threshold(self):
+        self.samples['metier'][-1]['cpu_pct'] = 8
+        blockers = idle_blockers(self.samples, 100, self.policy)
+        self.assertEqual(len(blockers), 1)
+        self.assertEqual(blockers[0]['service'], 'metier')
+        self.assertEqual(blockers[0]['metric'], 'cpu_pct')
+        self.assertEqual(blockers[0]['value'], 8)
+        self.assertEqual(blockers[0]['maximum'], 5)
+
 
 class CampaignRestTests(unittest.TestCase):
     def setUp(self):
@@ -116,7 +125,9 @@ class CampaignRestTests(unittest.TestCase):
                 self.campaign.cooldown("vm", 1, 5)
         self.assertEqual(self.elapsed, 180)
         self.campaign.stop_collectors.assert_called_once()
-        self.assertEqual(self.campaign.event.call_count, 1)
+        self.assertEqual(self.campaign.event.call_args.args[0], 'cooldown_failed')
+        diagnostic = json.loads((self.campaign.output / 'repos/serie-1/vm/5/diagnostic.json').read_text())
+        self.assertTrue(diagnostic['blockers'])
 
     def test_failed_readiness_prevents_restart(self):
         with patch("campagnes17.time", self.clock), patch("campagnes17.urllib.request.urlopen", side_effect=OSError):

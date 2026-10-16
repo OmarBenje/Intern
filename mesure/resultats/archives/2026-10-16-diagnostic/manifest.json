@@ -1,0 +1,15 @@
+{
+  "status": "diagnostic",
+  "runs": [],
+  "progress": {
+    "epoch_s": 1792182550.235075,
+    "action": "cooldown_complete",
+    "series": 0,
+    "deployment": "docker",
+    "users": 0,
+    "path": "repos/serie-0/docker/0",
+    "elapsed_s": 68.14045990299928,
+    "ready": true,
+    "idle_epoch_s": 1792182550.2092094
+  }
+}

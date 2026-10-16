@@ -1,0 +1,33 @@
+{"epoch_s": 1792174815.313396, "action": "campaigns_failed"}
+{"epoch_s": 1792176649.9202673, "action": "common_snapshot_ready"}
+{"epoch_s": 1792176656.7951307, "action": "campaigns_failed"}
+{"epoch_s": 1792177014.571933, "action": "restoration_failed", "errors": ["VM: VM failed to stop"]}
+{"epoch_s": 1792179014.1855466, "action": "common_snapshot_ready"}
+{"epoch_s": 1792179032.0228844, "action": "isolated_vm_services_prepared"}
+{"epoch_s": 1792179044.7419086, "action": "campaigns_failed"}
+{"epoch_s": 1792179097.88892, "action": "reference_restored"}
+{"epoch_s": 1792179193.2202606, "action": "common_snapshot_ready"}
+{"epoch_s": 1792179211.2060387, "action": "isolated_vm_services_prepared"}
+{"epoch_s": 1792179224.218778, "action": "login_rate_limit_checked", "deployment": "vm", "enabled": false}
+{"epoch_s": 1792179224.220563, "action": "database_restored", "deployment": "vm", "snapshot_sha256": "a4dc307cc4e2772207c602f1bc80b05070ec03ebe82e7bca99fc8ea30e73f75b"}
+{"epoch_s": 1792179224.2276833, "action": "palier_start", "series": 1, "deployment": "vm", "users": 1}
+{"epoch_s": 1792179401.857194, "action": "palier_complete", "series": 1, "deployment": "vm", "users": 1, "requests": 117, "errors": 0}
+{"epoch_s": 1792179401.859288, "action": "cooldown_start", "series": 1, "deployment": "vm", "users": 1, "path": "repos/serie-1/vm/1"}
+{"epoch_s": 1792179440.4081326, "action": "cooldown_complete", "series": 1, "deployment": "vm", "users": 1, "path": "repos/serie-1/vm/1", "elapsed_s": 38.54903394200301, "ready": true, "idle_epoch_s": 1792179440.3643613}
+{"epoch_s": 1792179440.4723315, "action": "palier_start", "series": 1, "deployment": "vm", "users": 5}
+{"epoch_s": 1792179617.7078202, "action": "palier_complete", "series": 1, "deployment": "vm", "users": 5, "requests": 585, "errors": 0}
+{"epoch_s": 1792179617.7087388, "action": "cooldown_start", "series": 1, "deployment": "vm", "users": 5, "path": "repos/serie-1/vm/5"}
+{"epoch_s": 1792179652.7721388, "action": "cooldown_complete", "series": 1, "deployment": "vm", "users": 5, "path": "repos/serie-1/vm/5", "elapsed_s": 35.063524295001116, "ready": true, "idle_epoch_s": 1792179652.729898}
+{"epoch_s": 1792179652.8202717, "action": "palier_start", "series": 1, "deployment": "vm", "users": 10}
+{"epoch_s": 1792179829.2618015, "action": "palier_complete", "series": 1, "deployment": "vm", "users": 10, "requests": 1170, "errors": 0}
+{"epoch_s": 1792179829.262654, "action": "cooldown_start", "series": 1, "deployment": "vm", "users": 10, "path": "repos/serie-1/vm/10"}
+{"epoch_s": 1792179864.4450462, "action": "cooldown_complete", "series": 1, "deployment": "vm", "users": 10, "path": "repos/serie-1/vm/10", "elapsed_s": 35.182511770999554, "ready": true, "idle_epoch_s": 1792179864.4066203}
+{"epoch_s": 1792179864.4928372, "action": "palier_start", "series": 1, "deployment": "vm", "users": 20}
+{"epoch_s": 1792180040.8920648, "action": "palier_complete", "series": 1, "deployment": "vm", "users": 20, "requests": 2337, "errors": 0}
+{"epoch_s": 1792180101.1611168, "action": "login_rate_limit_checked", "deployment": "docker", "enabled": false}
+{"epoch_s": 1792180101.162193, "action": "database_restored", "deployment": "docker", "snapshot_sha256": "a4dc307cc4e2772207c602f1bc80b05070ec03ebe82e7bca99fc8ea30e73f75b"}
+{"epoch_s": 1792180101.166703, "action": "palier_start", "series": 1, "deployment": "docker", "users": 1}
+{"epoch_s": 1792180275.447612, "action": "palier_complete", "series": 1, "deployment": "docker", "users": 1, "requests": 117, "errors": 0}
+{"epoch_s": 1792180275.4483278, "action": "cooldown_start", "series": 1, "deployment": "docker", "users": 1, "path": "repos/serie-1/docker/1"}
+{"epoch_s": 1792180455.7678876, "action": "campaigns_failed"}
+{"epoch_s": 1792180483.6538272, "action": "reference_restored"}

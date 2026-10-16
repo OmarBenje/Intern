@@ -320,6 +320,10 @@ La préparation de la base commune, encore attendue à cette étape, est documen
 <a id="etape-17"></a>
 ### Étape 17 — Campagnes
 
+Campagne courante : **16 paliers, 22 206 échantillons, zéro erreur, aucun incident**
+([vérification](mesure/resultats/campagne/verification.json)). Les preuves ci-dessous
+restent celles utilisées par le rapport de l’étape 18.
+
 **Consigne.** Conserver les résultats bruts et les métriques serveur par palier.
 N'activer qu'un déploiement, restaurer les mêmes données, mesurer en CLI et
 inverser l'ordre VM/Docker dans une seconde série.

@@ -1,0 +1,263 @@
+{
+  "results": {
+    "statique-1": {
+      "window_start_ms": 1792173478328,
+      "window_end_ms": 1792173538328,
+      "plateau_s": 60,
+      "users": 1,
+      "effective_users": [
+        1
+      ],
+      "requests": 26575,
+      "errors": 0,
+      "error_pct": 0.0,
+      "throughput_rps": 442.9166666666667,
+      "successful_throughput_rps": 442.9166666666667,
+      "p50_ms": 1.0,
+      "p90_ms": 5.0,
+      "p95_ms": 6.0,
+      "p99_ms": 11.0,
+      "total_samples": 31808,
+      "all_errors": 0,
+      "request_types": {
+        "Statique Nginx": {
+          "samples": 31808,
+          "errors": 0
+        }
+      },
+      "injector_cpu_pct_mean": 39.30999017068246,
+      "injector_cpu_pct_max": 101.01028227526376,
+      "injector_rss_bytes_mean": 733515922.2857143,
+      "injector_rss_bytes_max": 846028800.0,
+      "host_busy_pct_mean": 99.61101039483587,
+      "host_busy_pct_max": 99.9260081391047
+    },
+    "statique-20": {
+      "window_start_ms": 1792173572645,
+      "window_end_ms": 1792173632645,
+      "plateau_s": 60,
+      "users": 20,
+      "effective_users": [
+        20
+      ],
+      "requests": 111348,
+      "errors": 0,
+      "error_pct": 0.0,
+      "throughput_rps": 1855.8,
+      "successful_throughput_rps": 1855.8,
+      "p50_ms": 9.0,
+      "p90_ms": 19.0,
+      "p95_ms": 23.0,
+      "p99_ms": 38.0,
+      "total_samples": 136539,
+      "all_errors": 0,
+      "request_types": {
+        "Statique Nginx": {
+          "samples": 136539,
+          "errors": 0
+        }
+      },
+      "injector_cpu_pct_mean": 74.68113954439322,
+      "injector_cpu_pct_max": 211.7899267641266,
+      "injector_rss_bytes_mean": 860097536.0,
+      "injector_rss_bytes_max": 863707136.0,
+      "host_busy_pct_mean": 99.59543246613956,
+      "host_busy_pct_max": 99.84496124031008
+    },
+    "controle-1": {
+      "window_start_ms": 1792173698589,
+      "window_end_ms": 1792173818589,
+      "plateau_s": 120,
+      "users": 10,
+      "effective_users": [
+        10
+      ],
+      "requests": 1157,
+      "errors": 0,
+      "error_pct": 0.0,
+      "throughput_rps": 9.641666666666667,
+      "successful_throughput_rps": 9.641666666666667,
+      "p50_ms": 28.0,
+      "p90_ms": 44.40000000000009,
+      "p95_ms": 51.200000000000045,
+      "p99_ms": 73.44000000000005,
+      "total_samples": 1507,
+      "all_errors": 0,
+      "request_types": {
+        "00 — CSRF": {
+          "samples": 10,
+          "errors": 0
+        },
+        "01 — Connexion": {
+          "samples": 10,
+          "errors": 0
+        },
+        "02 — Mes candidatures": {
+          "samples": 1487,
+          "errors": 0
+        }
+      },
+      "injector_cpu_pct_mean": 8.49567856022708,
+      "injector_cpu_pct_max": 40.98419160285742,
+      "injector_rss_bytes_mean": 298303488.0,
+      "injector_rss_bytes_max": 319520768.0,
+      "host_busy_pct_mean": 98.88119955768441,
+      "host_busy_pct_max": 99.96189024390245
+    },
+    "controle-2": {
+      "window_start_ms": 1792173912440,
+      "window_end_ms": 1792174032440,
+      "plateau_s": 120,
+      "users": 10,
+      "effective_users": [
+        10
+      ],
+      "requests": 1154,
+      "errors": 0,
+      "error_pct": 0.0,
+      "throughput_rps": 9.616666666666667,
+      "successful_throughput_rps": 9.616666666666667,
+      "p50_ms": 28.0,
+      "p90_ms": 43.0,
+      "p95_ms": 50.0,
+      "p99_ms": 68.47000000000003,
+      "total_samples": 1507,
+      "all_errors": 0,
+      "request_types": {
+        "00 — CSRF": {
+          "samples": 10,
+          "errors": 0
+        },
+        "01 — Connexion": {
+          "samples": 10,
+          "errors": 0
+        },
+        "02 — Mes candidatures": {
+          "samples": 1487,
+          "errors": 0
+        }
+      },
+      "injector_cpu_pct_mean": 8.79767646598501,
+      "injector_cpu_pct_max": 63.052022514414716,
+      "injector_rss_bytes_mean": 292319963.4285714,
+      "injector_rss_bytes_max": 321220608.0,
+      "host_busy_pct_mean": 98.67746881350857,
+      "host_busy_pct_max": 99.96073812328228
+    }
+  },
+  "configurations": {
+    "statique-1": {
+      "mode": "static",
+      "users": 1,
+      "ramp_s": 10,
+      "warmup_s": 5,
+      "plateau_s": 60,
+      "duration_s": 80,
+      "port": 8081,
+      "reflection_ms": 0,
+      "source_plan_sha256": "0fe2b1cd4c123294b3ad6fc9ddeeda6e3a6775dd28499e05216deaf925a39aef",
+      "run_plan_sha256": "5c25d6fb29803c4002af5503cf1797641d2e46f82acaedb8fcb18452b01cfe98",
+      "accounts_sha256": "b3738ea09a9a0ea2e773e456bbff4dfad91c6632f7b889a426da119d02658c84",
+      "sql_schema_sha256": "806b1ba2d921b2dd1a32d4f6bc5bb75cda6b1ec9c94410cd6471f0a1349243a1",
+      "sql_data_sha256": "dbfaa7d9f8d906fec4590188f14cce72727775bd26fe64404d3cb5d40bd361fa",
+      "seed_script_sha256": "5b278c974ceaedec277f08dedace2bd6352ee071b2f0165fffe6a7756248e995",
+      "protocol_sha256": "0afa972300051d44a97b9f35ae01d5769790ed4b5fb6527daf606fa37f91601f",
+      "host": {
+        "system": "Linux",
+        "release": "6.19.14-108.fc42.x86_64",
+        "logical_cpus": 12
+      },
+      "cpu_units": "100 percent injector CPU = one logical CPU; host busy percent = all CPUs",
+      "started_epoch_s": 1792173452.7978735,
+      "finished_epoch_s": 1792173545.509853,
+      "exit_code": 0
+    },
+    "statique-20": {
+      "mode": "static",
+      "users": 20,
+      "ramp_s": 10,
+      "warmup_s": 5,
+      "plateau_s": 60,
+      "duration_s": 80,
+      "port": 8081,
+      "reflection_ms": 0,
+      "source_plan_sha256": "0fe2b1cd4c123294b3ad6fc9ddeeda6e3a6775dd28499e05216deaf925a39aef",
+      "run_plan_sha256": "3ecaa05ea995cf31c30356e87b0dd18afb17daf84db5c92402a8d941601fdc2f",
+      "accounts_sha256": "b3738ea09a9a0ea2e773e456bbff4dfad91c6632f7b889a426da119d02658c84",
+      "sql_schema_sha256": "806b1ba2d921b2dd1a32d4f6bc5bb75cda6b1ec9c94410cd6471f0a1349243a1",
+      "sql_data_sha256": "dbfaa7d9f8d906fec4590188f14cce72727775bd26fe64404d3cb5d40bd361fa",
+      "seed_script_sha256": "5b278c974ceaedec277f08dedace2bd6352ee071b2f0165fffe6a7756248e995",
+      "protocol_sha256": "0afa972300051d44a97b9f35ae01d5769790ed4b5fb6527daf606fa37f91601f",
+      "host": {
+        "system": "Linux",
+        "release": "6.19.14-108.fc42.x86_64",
+        "logical_cpus": 12
+      },
+      "cpu_units": "100 percent injector CPU = one logical CPU; host busy percent = all CPUs",
+      "started_epoch_s": 1792173546.8207529,
+      "finished_epoch_s": 1792173639.7224622,
+      "exit_code": 0
+    },
+    "controle-1": {
+      "mode": "application",
+      "users": 10,
+      "ramp_s": 30,
+      "warmup_s": 15,
+      "plateau_s": 120,
+      "duration_s": 170,
+      "port": 8081,
+      "reflection_ms": 1000,
+      "source_plan_sha256": "0fe2b1cd4c123294b3ad6fc9ddeeda6e3a6775dd28499e05216deaf925a39aef",
+      "run_plan_sha256": "8203c519972980c8b10b3547f325a00c9fcc0af5583b167921c02dce412b13dd",
+      "accounts_sha256": "b3738ea09a9a0ea2e773e456bbff4dfad91c6632f7b889a426da119d02658c84",
+      "sql_schema_sha256": "806b1ba2d921b2dd1a32d4f6bc5bb75cda6b1ec9c94410cd6471f0a1349243a1",
+      "sql_data_sha256": "dbfaa7d9f8d906fec4590188f14cce72727775bd26fe64404d3cb5d40bd361fa",
+      "seed_script_sha256": "5b278c974ceaedec277f08dedace2bd6352ee071b2f0165fffe6a7756248e995",
+      "protocol_sha256": "0afa972300051d44a97b9f35ae01d5769790ed4b5fb6527daf606fa37f91601f",
+      "host": {
+        "system": "Linux",
+        "release": "6.19.14-108.fc42.x86_64",
+        "logical_cpus": 12
+      },
+      "cpu_units": "100 percent injector CPU = one logical CPU; host busy percent = all CPUs",
+      "started_epoch_s": 1792173643.2796094,
+      "finished_epoch_s": 1792173825.6595752,
+      "exit_code": 0
+    },
+    "controle-2": {
+      "mode": "application",
+      "users": 10,
+      "ramp_s": 30,
+      "warmup_s": 15,
+      "plateau_s": 120,
+      "duration_s": 170,
+      "port": 8081,
+      "reflection_ms": 1000,
+      "source_plan_sha256": "0fe2b1cd4c123294b3ad6fc9ddeeda6e3a6775dd28499e05216deaf925a39aef",
+      "run_plan_sha256": "8203c519972980c8b10b3547f325a00c9fcc0af5583b167921c02dce412b13dd",
+      "accounts_sha256": "b3738ea09a9a0ea2e773e456bbff4dfad91c6632f7b889a426da119d02658c84",
+      "sql_schema_sha256": "806b1ba2d921b2dd1a32d4f6bc5bb75cda6b1ec9c94410cd6471f0a1349243a1",
+      "sql_data_sha256": "dbfaa7d9f8d906fec4590188f14cce72727775bd26fe64404d3cb5d40bd361fa",
+      "seed_script_sha256": "5b278c974ceaedec277f08dedace2bd6352ee071b2f0165fffe6a7756248e995",
+      "protocol_sha256": "0afa972300051d44a97b9f35ae01d5769790ed4b5fb6527daf606fa37f91601f",
+      "host": {
+        "system": "Linux",
+        "release": "6.19.14-108.fc42.x86_64",
+        "logical_cpus": 12
+      },
+      "cpu_units": "100 percent injector CPU = one logical CPU; host busy percent = all CPUs",
+      "started_epoch_s": 1792173856.0762386,
+      "finished_epoch_s": 1792174038.8754559,
+      "exit_code": 0
+    }
+  },
+  "control_throughput_gap_pct": 0.25962786672436544,
+  "control_p95_gap_pct": 2.371541501976373,
+  "repeatability_criteria_passed": true,
+  "raw_files_sha256": {
+    "controle-1/brut.csv": "f49b50972c8e870d41e52df936785351b78e425f40627fec8ae0c8e98b4b8fe8",
+    "controle-2/brut.csv": "05296becbcf10feb4aa0f2539dc5984d82797b05fb5897c7e78ee05e375111a7",
+    "statique-1/brut.csv": "745f37367d4c4aee793f5c420949b1603569a6b18a640fdff857d6508f0df9dc",
+    "statique-20/brut.csv": "b4eb24f2d8cb49d929d83654cc9037ea71f654b06e3d71fcd8eda3edc083be9c"
+  }
+}

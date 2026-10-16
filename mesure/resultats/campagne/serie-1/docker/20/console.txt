@@ -1,0 +1,23 @@
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+WARN StatusConsoleListener The use of package scanning to locate plugins is deprecated and will be removed in a future release
+Creating summariser <summary>
+Created the tree successfully using resultats/campagne-sonde-legere/serie-1/docker/20/plan.jmx
+Starting standalone test @ 2026 Oct 16 23:26:22 CEST (1792185982706)
+Waiting for possible Shutdown/StopTestNow/HeapDump/ThreadDump message on port 4445
+summary +     24 in 00:00:07 =    3.4/s Avg:    82 Min:     6 Max:   406 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+summary +    444 in 00:00:30 =   14.8/s Avg:    25 Min:     5 Max:   357 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =    468 in 00:00:37 =   12.7/s Avg:    28 Min:     5 Max:   406 Err:     0 (0.00%)
+summary +    588 in 00:00:30 =   19.6/s Avg:    16 Min:    10 Max:    37 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =   1056 in 00:01:07 =   15.8/s Avg:    21 Min:     5 Max:   406 Err:     0 (0.00%)
+summary +    590 in 00:00:30 =   19.6/s Avg:    16 Min:    10 Max:    30 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =   1646 in 00:01:37 =   17.0/s Avg:    19 Min:     5 Max:   406 Err:     0 (0.00%)
+summary +    590 in 00:00:30 =   19.6/s Avg:    17 Min:    11 Max:    81 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =   2236 in 00:02:07 =   17.6/s Avg:    19 Min:     5 Max:   406 Err:     0 (0.00%)
+summary +    590 in 00:00:30 =   19.6/s Avg:    17 Min:    11 Max:    32 Err:     0 (0.00%) Active: 20 Started: 20 Finished: 0
+summary =   2826 in 00:02:37 =   18.0/s Avg:    18 Min:     5 Max:   406 Err:     0 (0.00%)
+summary +    253 in 00:00:13 =   19.4/s Avg:    17 Min:    10 Max:    46 Err:     0 (0.00%) Active: 0 Started: 20 Finished: 20
+summary =   3079 in 00:02:50 =   18.1/s Avg:    18 Min:     5 Max:   406 Err:     0 (0.00%)
+Tidying up ...    @ 2026 Oct 16 23:29:13 CEST (1792186153157)
+... end of run

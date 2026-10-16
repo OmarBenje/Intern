@@ -39,6 +39,18 @@ protocole à valider lors de l'étalonnage, pas des exigences du sujet.
 Ils restent identiques pour VM et Docker. Le journal et les relevés `repos/`
 conservent les durées réelles et la preuve du retour au repos.
 
+La sonde Docker de mesure vérifie le même endpoint toutes les cinq secondes avec
+un client HTTP léger de la bibliothèque standard, sans charger `urllib` et TLS
+dans un nouveau processus à chaque passage. Les contrôles de santé restent actifs.
+Cette réduction du coût de surveillance ne change aucun seuil de repos. Les
+campagnes réalisées avec l’ancienne sonde restent séparées des nouvelles mesures.
+
+Un repos refusé produit `repos/.../diagnostic.json` et un événement `cooldown_failed`
+avec le service, la métrique et le seuil bloquants. Une relance de la campagne
+interrompue est refusée : elle ne doit pas sauter ce repos. Après correction,
+utiliser `17 nouvelle` pour archiver les résultats partiels et préparer la
+campagne suivante dans les dossiers standards.
+
 Pour seize paliers, la durée programmée de mesure est de 45 min 20 s. Si chaque
 repos dure 30 s, le total devient environ 51 min 20 s, hors construction des
 images, démarrages, restaurations et collecte des relevés. La durée réelle
@@ -50,15 +62,18 @@ Réexécuter les contrôles de l'étape 16 avec cette configuration avant une
 nouvelle campagne. Ne pas comparer directement ses résultats avec les anciennes
 campagnes dont la protection était active.
 
-Pour l'étape 17, choisir un **nouveau dossier de résultats et un nouveau dossier
-privé de travail** : ne pas reprendre un ancien export de sources ni une campagne
-préparée avec le protocole précédent. Utiliser ensuite les actions habituelles
-`17 preparer`, `17 lancer`, `17 statut` et `17 arreter` décrites dans
-[EXECUTION.md](../EXECUTION.md). `17 preparer` ne lance pas la charge.
+Pour l’étape 17, `17 nouvelle` archive une campagne inactive et prépare les
+dossiers standards : `../.execution-campagnes/active` et `mesure/resultats/campagne`.
+Utiliser ensuite `17 lancer`, `17 statut` et `17 arreter`, décrits dans
+[EXECUTION.md](../EXECUTION.md). `17 preparer` et `17 nouvelle` ne lancent pas la charge.
 
-Après la campagne, vérifier sa nouvelle sortie avec
-`python3 mesure/scripts/verifier17.py --output "$MESURE_OUTPUT"`.
-L'action `17 verifier` sans paramètre continue de vérifier les preuves historiques.
+Après la campagne, vérifier les résultats courants avec :
+
+```sh
+python3 mesure/scripts/verifier17.py --output mesure/resultats/campagne --runtime ../.execution-campagnes/active
+```
+
+L’action `17 verifier` sans paramètre continue de vérifier les preuves historiques.
 
 Le fichier [protocole.json](protocole.json) reste associé aux preuves historiques.
 Le vérificateur sélectionne le protocole d'après l'empreinte du manifeste ;

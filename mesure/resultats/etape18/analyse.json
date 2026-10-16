@@ -56,9 +56,9 @@
       "source_sha256": "1d49c19d3bdb46327d55349ea516d1c95ccc2f72faefee730518c5eac7250b8e"
     },
     "docker": {
-      "startup_s": 49.84438339400003,
-      "idle_rss_mib": 581.9609375,
-      "source_sha256": "1d23fd7e225fa234b86aeb6a7e42c3ee442e8861ccd7e50a71a4a08afea9a3f8"
+      "startup_s": 60.6239160719997,
+      "idle_rss_mib": 496.01953125,
+      "source_sha256": "4465ebd51c3ecb0a31be483cae56d64fa47246d6be8a41d453b408c5bf558c3d"
     }
   },
   "saturation_observed": false,

@@ -290,7 +290,7 @@ Le vérificateur centralise le contrôle des preuves, sans relancer de charge :
 ```sh
 python3 mesure/scripts/verifier17.py
 # Inclure les sources et l'export privés, s'ils sont conservés :
-python3 mesure/scripts/verifier17.py --runtime ../.runtime-etape17
+python3 mesure/scripts/verifier17.py --runtime ../.execution-campagnes/archives/2026-10-14
 ```
 
 Il recalcule les statistiques des CSV bruts et des relevés serveur dans la

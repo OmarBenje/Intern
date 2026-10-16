@@ -91,6 +91,20 @@ manuel, y définir `DOCKER_BIN`, `DOCKER_HOST`, `DOCKER_CONFIG`,
 son installation existante. Le répertoire des données doit déjà exister :
 un lancement ne crée pas un autre stockage à la place du premier.
 
+Sur ce poste Fedora, la commande système `docker` peut être une émulation
+Podman. Les lanceurs `bash outils/executer_etape.sh ...` utilisent Docker Engine
+grâce à `.execution/moteur.env` : continuer à utiliser ces lanceurs pour suivre
+les étapes. Pour une commande Docker manuelle dans un nouveau terminal,
+charger cette même configuration et appeler l'exécutable configuré :
+
+```bash
+source .execution/moteur.env
+"$DOCKER_BIN" ps
+```
+
+Ne pas mélanger ces conteneurs avec ceux affichés par la commande système
+`docker` si elle indique « Emulate Docker CLI using podman ».
+
 Les comptes du jeu d'essai utilisent le mot de passe **`Intern-Demo-2026!`** :
 `alice@example.test` (candidat), `recruteur_a@example.test` (recruteur),
 `recruteur_non_verifie@example.test` (vérification entreprise),
@@ -489,8 +503,13 @@ bash outils/executer_etape.sh 14 mesurer
 ```
 
 Le mode `mesurer` utilise par défaut le projet dédié `intern-verification`.
-Il faut libérer le port 8080 des autres déploiements et disposer des mesures VM
-de l’étape 10. Il détecte le PID du daemon rootless configuré ou du service
+Il charge le même moteur que l'étape 13 et arrête automatiquement le projet
+`intern-docker` si celui-ci occupe le port 8080, sans supprimer ses données.
+Le projet de vérification devient alors le déploiement actif. Un autre projet
+occupant ce port est signalé avant le démarrage et doit être arrêté explicitement.
+Si les VM tournent encore, les arrêter avec `bash outils/executer_etape.sh 10 arreter`.
+Il faut disposer des mesures VM de l’étape 10.
+Le script détecte le PID du daemon rootless configuré ou du service
 Docker système ; `DOCKER_PIDFILE` permet de fournir un autre fichier PID.
 Pour rootless, le vérificateur utilise les espaces utilisateur et de montage
 du daemon via `nsenter`, comme dans [docker/PROCEDURE.md](docker/PROCEDURE.md).
@@ -580,17 +599,36 @@ bash outils/executer_etape.sh 17 preparer
 ```
 
 Vérifier le chemin de configuration affiché et le projet de référence avant le
-lancement. Par défaut : runtime `../.execution-campagnes`, sortie
-`mesure/resultats/nouvelle-campagne`, projet de référence `intern-docker`.
+lancement. Par défaut : runtime `../.execution-campagnes/active`, sortie
+`mesure/resultats/campagne`, projet de référence `intern-docker`.
 Les variables `MESURE_RUNTIME`, `MESURE_OUTPUT`, `MESURE_REFERENCE_PROJECT` et
 `VM_WORK` permettent de choisir leurs valeurs. Une configuration existante
 est conservée ; des paramètres différents sont refusés sans modifier le fichier.
+Une préparation ou un lancement réussi mémorise la campagne dans
+`.execution/campagne-active.json`. Les commandes `17 statut`, `17 arreter` et
+`17 lancer` la retrouvent dans un nouveau terminal. Les variables explicitement
+fournies restent prioritaires. Sans sélection mémorisée, les valeurs par défaut
+ci-dessus sont utilisées.
 
 Pour lancer la campagne en arrière-plan (la préparation est également incluse) :
 
 ```bash
 bash outils/executer_etape.sh 17 lancer
 ```
+
+La préparation attend SSH pendant 240 s par VM, en commençant par le proxy.
+Si le démarrage à froid est plus lent sur l’hôte, la limite est configurable :
+
+```bash
+VM_SSH_WAIT_SECONDS=600 bash outils/executer_etape.sh 17 lancer
+```
+
+Chaque tentative expirée termine ses processus de connexion et conserve son
+diagnostic dans `.execution/ssh-vm-proxy.log` (ou le fichier de la VM concernée).
+Un échec à ce stade précède le lancement du contrôleur de campagne.
+Éviter les recherches de fichiers sur les données brutes Docker et les disques
+VM pendant les essais. À la racine `virtualisation`, `.ignore` et les réglages
+VS Code `.vscode/settings.json` excluent `.runtime-*` et `.local-vms` des recherches.
 
 Pour consulter sa progression ou demander un arrêt propre :
 
@@ -609,8 +647,54 @@ Réétalonner à l'étape 16 avant de lancer ce nouveau protocole.
 Le pilote alterne volontairement les déploiements, conserve leurs bases initiales
 et rétablit le projet de référence. L’arrêt demandé attend cette restauration.
 Le script refuse une campagne déjà active ou complète ; pour une nouvelle
-campagne, choisir un runtime et une sortie neufs. Le projet de référence doit
+campagne, utiliser `17 nouvelle`. Le projet de référence doit
 correspondre au déploiement réel à restaurer.
+
+Chaque nouveau runtime reçoit un projet Docker de mesure distinct ; les anciens
+conteneurs et volumes ne sont pas supprimés. Un runtime ancien avec son snapshot
+conserve son projet pour la reprise. Le lancement contrôle les conflits et
+l’accès aux VM avant de passer en arrière-plan. Les conteneurs `intern-mesure`
+encore actifs après l’étalonnage sont arrêtés pendant la campagne puis redémarrés
+s’ils étaient actifs auparavant. Un autre projet occupant 8081 provoque un refus
+explicite. Ne pas lancer deux campagnes simultanément : elles partagent les VM
+et le port 8081.
+
+`statut` consulte uniquement les fichiers et le processus. Il affiche le chemin
+du journal et, en cas d’échec, ses dernières lignes ainsi que les erreurs de
+restauration. Pour suivre le journal depuis Intern :
+
+```bash
+tail -f ../.execution-campagnes/active/controller.log
+```
+
+Avec un runtime personnalisé, remplacer ce chemin par `$MESURE_RUNTIME/controller.log`.
+Après un échec avant le premier palier, relancer `17 lancer` avec la même
+configuration. Après un repos refusé, consulter `repos/.../diagnostic.json` et
+corriger la cause. Pour préparer une nouvelle campagne après une campagne
+terminée ou interrompue :
+
+```bash
+bash outils/executer_etape.sh 17 nouvelle
+bash outils/executer_etape.sh 17 lancer
+```
+
+`nouvelle` refuse un contrôleur actif, déplace les anciens fichiers privés et
+résultats dans leurs sous-dossiers `archives/` avec la même date UTC, puis prépare
+les dossiers standards. Cette action ne lance pas JMeter. Aucun nom de dossier
+lié à une correction n’est nécessaire. La sélection reste mémorisée pour
+`17 statut` dans tous les terminaux.
+Une erreur VirtualBox persistante doit être résolue avant le
+lancement ; les refus temporaires de verrouillage sont retentés pendant 10 s.
+Le contrôleur restaure seulement les ressources qu’il a utilisées et tente de
+rétablir Docker même si la restauration des VM échoue. Un palier partiellement
+écrit reste conservé pour examen et bloque sa reprise automatique.
+Les redirections NAT équivalentes sont réutilisées quel que soit leur nom
+(notamment `ssh-verification` sur 2221). Le nettoyage retire uniquement les
+règles ajoutées par la campagne. Les VM sont arrêtées proprement par ACPI,
+indépendamment de SSH et du proxy ; aucun arrêt forcé n’est effectué.
+Si un invité démarre encore, la demande ACPI est répétée toutes les 10 s pendant
+au plus 120 s. Une tentative SSH expirée est retentée dans la limite globale de
+240 s par VM.
 
 La commande sans action vérifie toujours `mesure/resultats/etape17` ; elle ne
 valide pas automatiquement une nouvelle sortie. Rattacher et vérifier les

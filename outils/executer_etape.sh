@@ -14,7 +14,7 @@ Usage : bash outils/executer_etape.sh ETAPE [ACTION]
  14  consulter (défaut), demarrer, mesurer
  15  preparer (défaut), gui, gui-echec, cli, tout
  16  consulter (défaut), mesurer
- 17  verifier (défaut : preuves livrées), preparer, lancer, statut, arreter
+ 17  verifier (défaut : preuves livrées), preparer, lancer, statut, arreter, nouvelle
  18  analyser (défaut)
 
 Les modes mesurer/lancer exécutent de vraies mesures. Ils ne sont jamais

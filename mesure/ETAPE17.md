@@ -6,6 +6,11 @@ Conserver les résultats JMeter bruts des deux déploiements et relever les
 métriques serveur pour chaque palier. Deux séries sont prévues, avec inversion
 de l'ordre : VM puis Docker, ensuite Docker puis VM.
 
+**Campagne courante : 16 paliers, 22 206 échantillons, zéro erreur et aucun
+incident**, vérifiés dans [resultats/campagne/verification.json](resultats/campagne/verification.json).
+
+Les preuves historiques présentées ci-dessous restent les entrées de l’étape 18.
+
 **État : seize paliers terminés et vérifiés techniquement.** Les deux séries
 contiennent les CSV bruts et les relevés des trois services pour chaque palier.
 Les 22 199 échantillons JMeter ne comportent aucune erreur ; 16 902 consultations
@@ -46,7 +51,7 @@ Depuis la racine d'Intern :
 ```sh
 python3 mesure/scripts/verifier17.py
 # Vérification supplémentaire de l'export et des sources privés, si conservés :
-python3 mesure/scripts/verifier17.py --runtime ../.runtime-etape17
+python3 mesure/scripts/verifier17.py --runtime ../.execution-campagnes/archives/2026-10-14
 # Contrôle des empreintes depuis le dossier de résultats :
 (cd mesure/resultats/etape17 && sha256sum -c SHA256SUMS)
 ```
@@ -172,209 +177,35 @@ et refuse les paliers avec moins de quinze relevés par service.
 
 ## Reproduction
 
-### Lancement autonome et suivi
-
-Depuis la racine d'Intern, la configuration locale de cette session est
-préparée dans le dossier de travail voisin `.runtime-etape17`, hors du dépôt.
-Le processus autonome continue après fermeture du terminal.
+Le mode opératoire est centralisé dans [EXECUTION.md, étape 17](../EXECUTION.md#étape-17--campagnes).
+Depuis Intern :
 
 ```sh
-# Consulter l'avancement (16 paliers attendus).
-python3 mesure/scripts/lancer17.py status --runtime ../.runtime-etape17
-
-# Demander un arrêt propre si nécessaire.
-python3 mesure/scripts/lancer17.py stop --runtime ../.runtime-etape17
+bash outils/executer_etape.sh 17 preparer
+bash outils/executer_etape.sh 17 lancer
+bash outils/executer_etape.sh 17 statut
 ```
 
-Garder l'hôte allumé, sans mise en veille, et conserver le même état de fond.
-Ne pas démarrer manuellement l'autre déploiement pendant une campagne.
-Attendre l'état `complete`, seize paliers enregistrés et l'événement
-`reference_restored` avant de considérer la campagne terminée. L'arrêt propre
-conserve les fichiers déjà produits et rétablit le déploiement initial.
-Un état `failed` ou `stopped` doit être examiné avant une nouvelle tentative.
-
-Pour un lancement neuf, préparer une nouvelle configuration locale puis utiliser :
+Le dossier privé courant est `../.execution-campagnes/active` et les résultats
+courants sont dans `resultats/campagne`. La sélection est conservée entre les
+terminaux. Pour contrôler cette campagne sans relancer de charge :
 
 ```sh
-python3 mesure/scripts/lancer17.py start --runtime ../.runtime-etape17
+python3 mesure/scripts/verifier17.py --output mesure/resultats/campagne --runtime ../.execution-campagnes/active
 ```
 
-### Paramètres du pilote
+Les anciens fichiers privés sont dans `../.execution-campagnes/archives/`.
+Les essais interrompus et diagnostics sont rangés dans `resultats/archives/`.
+Le dossier `resultats/etape17` conserve les preuves historiques utilisées par
+l’analyse de l’étape 18. Les CSV bruts, journaux et empreintes sont conservés.
+Le [classement des résultats](resultats/README.md) précise le rôle des dossiers.
 
-Les secrets, accès SSH et fichiers de travail restent dans une configuration
-locale hors du dépôt. Préparer les variables suivantes puis lancer depuis la
-racine d'Intern :
-
-Pour créer une configuration de lancement sur un nouveau poste, définir et
-exporter `DOCKER_BIN`, `DOCKER_HOST`, `DOCKER_CONFIG`, `DOCKER_ENV_FILE`,
-`MESURE_SSH_CONFIG`, `JMETER_BIN` et `MESURE_RUNTIME`. Les chemins doivent
-pointer vers les outils, accès et fichiers existants. `MESURE_RUNTIME` doit
-être hors du dépôt Intern, par exemple le dossier voisin `.runtime-etape17`.
-Définir aussi `MESURE_REFERENCE_PROJECT`, le nom exact du projet à arrêter
-puis à rétablir. `MESURE_OUTPUT` désigne un nouveau dossier de résultats dans
-`mesure/resultats/` ; conserver les preuves existantes.
-
-Le fichier contient des chemins locaux, pas une copie des mots de passe :
-
-```sh
-python3 - <<'PY'
-import json, os
-from pathlib import Path
-paths = {'docker': 'DOCKER_BIN', 'docker_config': 'DOCKER_CONFIG',
-         'env_file': 'DOCKER_ENV_FILE', 'ssh_config': 'MESURE_SSH_CONFIG',
-         'jmeter': 'JMETER_BIN', 'runtime': 'MESURE_RUNTIME',
-         'output': 'MESURE_OUTPUT'}
-config = {key: str(Path(os.environ[var]).resolve()) for key, var in paths.items()}
-config.update(docker_host=os.environ['DOCKER_HOST'],
-              reference_project=os.environ['MESURE_REFERENCE_PROJECT'])
-runtime = Path(config['runtime'])
-if runtime.is_relative_to(Path.cwd().resolve()):
-    raise SystemExit('Le dossier privé doit rester hors du dépôt Intern')
-runtime.mkdir(mode=0o700, parents=True, exist_ok=True)
-path = runtime / 'configuration.json'
-if path.exists():
-    raise SystemExit('Configuration existante : la conserver et la vérifier')
-path.write_text(json.dumps(config, indent=2) + '\n')
-path.chmod(0o600)
-print('Configuration créée ; vérifier Docker avant le lancement.')
-PY
-python3 mesure/scripts/lancer17.py start --runtime "$MESURE_RUNTIME"
-```
-
-La commande directe équivalente suivante reste au premier plan du terminal :
-
-```sh
-python3 mesure/scripts/campagnes17.py \
-  --docker "$DOCKER_BIN" --docker-host "$DOCKER_HOST" \
-  --docker-config "$DOCKER_CONFIG" --env-file "$DOCKER_ENV_FILE" \
-  --ssh-config "$MESURE_SSH_CONFIG" --jmeter "$JMETER_BIN" \
-  --runtime "$MESURE_RUNTIME" --output "$MESURE_OUTPUT"
-```
-
-Les seize paliers représentent 45 min 20 s, auxquels s'ajoutent les repos
-dynamiques, la préparation, les restaurations et les démarrages. Avec douze
-repos de 30 s, compter environ 51 min 20 s hors transitions. Le pilote refuse de remplacer
-un volume ou une base de mesure qui ne lui appartient pas. Les dossiers partiels
-doivent être conservés et examinés avant reprise.
-
-Vérifications locales reproductibles :
-
-```sh
-python3 -m unittest discover -s mesure/tests -p 'test_metrics_serveur.py'
-python3 -m py_compile mesure/scripts/campagnes17.py \
-  mesure/scripts/metrics_serveur.py mesure/scripts/collecteur_serveur.py \
-  mesure/scripts/preparer_vm_mesure.py
-```
-
-## Diagnostic et reprise après incident
-
-### Lire l'état sans modifier les services
-
-Depuis la racine d'Intern, ces commandes lisent les informations locales :
-
-```sh
-python3 mesure/scripts/lancer17.py status --runtime ../.runtime-etape17
-tail -n 30 mesure/resultats/etape17/journal.jsonl
-tail -n 60 ../.runtime-etape17/controller.log
-cat ../.runtime-etape17/last-error.txt
-```
-
-Les journaux privés peuvent contenir des chemins locaux ; conserver leur
-diagnostic utile dans le rapport sans publier les secrets ni les chemins personnels.
-`last-error.txt` contient la dernière erreur de commande et peut être remplacé
-par une erreur de restauration. Lire aussi la trace du contrôleur pour distinguer
-l'erreur initiale d'une erreur pendant le nettoyage.
-
-| État | Signification | Action |
-| --- | --- | --- |
-| `preparing` | Préparation ou reprise des environnements | Attendre et consulter le journal |
-| `running` + `palier_start` | Mesure en cours | Laisser tourner sans modifier les paramètres |
-| `running` + `cooldown_start` | Observation du retour au repos | Attendre `cooldown_complete` ; échec si le repos dépasse 180 s |
-| `failed` | Exception dans le pilote | Examiner les journaux, les fichiers partiels et la restauration |
-| `complete` + `reference_restored` | Collecte terminée et restauration signalée | Vérifier les seize dossiers et la santé réelle de la référence |
-
-Le manifeste et l'existence du processus sont deux informations distinctes.
-Si le processus est mort alors que le manifeste indique encore `running`,
-le fichier n'a pas été mis à jour après un arrêt brutal. Un processus actif
-pendant une reprise peut aussi précéder le premier nouvel événement.
-Ne pas interpréter ces seuls libellés comme une preuve de réussite.
-
-### Cas observé : moteur Docker indisponible
-
-La première campagne VM a enregistré les quatre paliers sans erreur.
-Au démarrage de Docker, le client a signalé qu'il ne pouvait plus joindre
-le moteur sur son socket. La remise en marche automatique de la référence
-a échoué pour la même raison. Aucun résultat Docker n'avait alors été enregistré.
-La cause de la disparition du moteur n'a pas été établie.
-
-La réparation a suivi cet ordre : vérifier l'absence du moteur, redémarrer
-le moteur rootless avec son répertoire de données existant, vérifier
-`docker info`, remettre en marche la composition de référence et attendre
-ses trois services sains, puis reprendre le pilote. Le script a été adapté
-pour démarrer les services nécessaires à la vérification des versions lors
-d'une reprise et ignorer une campagne dont les quatre paliers sont déjà complets.
-
-Pour reproduire le redémarrage du moteur rootless utilisé ici, uniquement si
-le pilote est arrêté et le moteur réellement absent, configurer les variables
-locales `MESURE_ENGINE_BIN` (dossier contenant `dockerd-rootless.sh`),
-`MESURE_ENGINE_RUNTIME` (ancien dossier du socket et des fichiers d'exécution)
-et `MESURE_ENGINE_DATA` (ancien répertoire des images et volumes).
-Ces emplacements doivent être ceux de l'installation existante : un nouveau
-répertoire de données donnerait l'impression que les images et volumes ont disparu.
-Ce bloc concerne cette installation rootless, pas un moteur géré autrement.
-
-```sh
-python3 - <<'PY'
-import os, subprocess
-from pathlib import Path
-binary = Path(os.environ['MESURE_ENGINE_BIN']).resolve()
-runtime = Path(os.environ['MESURE_ENGINE_RUNTIME']).resolve()
-data = Path(os.environ['MESURE_ENGINE_DATA']).resolve()
-work = Path(os.environ['MESURE_RUNTIME']).resolve()
-if not all(path.is_dir() for path in (binary, runtime, data, work)):
-    raise SystemExit("Vérifier les répertoires de l'installation existante")
-env = dict(os.environ, PATH=str(binary) + ':' + os.environ['PATH'],
-           XDG_RUNTIME_DIR=str(runtime))
-command = [str(binary / 'dockerd-rootless.sh'),
-           '--host=' + os.environ['DOCKER_HOST'], '--data-root=' + str(data),
-           '--exec-root=' + str(runtime / 'exec'),
-           '--storage-driver=fuse-overlayfs', '--pidfile=' + str(runtime / 'docker.pid')]
-with (work / 'docker-recovery.log').open('a') as log:
-    process = subprocess.Popen(command, env=env, stdin=subprocess.DEVNULL,
-                               stdout=log, stderr=log, start_new_session=True)
-print('Processus lancé :', process.pid, '; vérifier le journal puis docker info.')
-PY
-"$DOCKER_BIN" info --format '{{.ServerVersion}}'
-"$DOCKER_BIN" compose --env-file "$DOCKER_ENV_FILE" \
-  -f docker/compose.yaml -p "$MESURE_REFERENCE_PROJECT" \
-  up -d --no-build --wait --wait-timeout 180
-```
-
-Attendre que `docker info` réussisse avant la commande Compose. Un processus
-lancé n'est pas encore un moteur prêt. Un fichier socket présent peut être
-un vestige d'un moteur arrêté. Ne pas supprimer les volumes pour corriger
-une indisponibilité du moteur.
-
-### Conditions pour reprendre la collecte
-
-Conserver les dossiers complets. Examiner tout dossier commencé sans
-`serveurs.json` : le pilote refuse de l'écraser. La reprise peut conserver les
-paliers terminés, mais ne garantit pas les mêmes conditions qu'une exécution
-continue. Le fichier `stop-requested`, s'il existe, bloque un nouveau lancement ;
-en examiner la raison avant de préparer une reprise.
-
-Après diagnostic, moteur prêt et preuves conservées, la reprise utilise :
-
-```sh
-python3 mesure/scripts/lancer17.py start --runtime ../.runtime-etape17
-python3 mesure/scripts/lancer17.py status --runtime ../.runtime-etape17
-```
-
-L'interruption observée doit rester signalée dans l'analyse comparative.
-Si les écarts suggèrent un effet du changement de séance ou de l'état de
-l'hôte, refaire une série complète dans de nouveaux dossiers après stabilisation.
-Les paliers conservés sont des mesures réelles ; ils ne prouvent pas que
-la série reprise possède les conditions d'une séance ininterrompue.
+Pour demander un arrêt propre : `bash outils/executer_etape.sh 17 arreter`.
+Pour archiver une campagne inactive et préparer la suivante :
+`bash outils/executer_etape.sh 17 nouvelle`, puis `17 lancer`.
+Garder l’hôte allumé, sans mise en veille, et attendre `complete`, seize paliers
+et l’événement `reference_restored`. Les erreurs et critères de repos bloquants
+sont affichés par `17 statut` et conservés dans le journal.
 
 ## Présenter la méthode
 

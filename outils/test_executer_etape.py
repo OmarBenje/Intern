@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -31,7 +32,7 @@ class StepLauncherTests(unittest.TestCase):
         self.root = Path(self.temp.name) / 'Intern'
         tools = self.root / 'outils'
         tools.mkdir(parents=True)
-        for name in ('executer_etape.sh', 'preparer_vm.sh', 'demarrer_docker.sh'):
+        for name in ('executer_etape.sh', 'preparer_vm.sh', 'demarrer_docker.sh', 'attendre_ssh.py', 'configurer_campagne.py'):
             shutil.copy2(TOOLS / name, tools / name)
         shutil.copytree(TOOLS / 'etapes', tools / 'etapes')
         self.binary = Path(self.temp.name) / 'bin'
@@ -53,6 +54,7 @@ ps) echo intern-mesure ;;
 esac''')
         for name in ('python3', 'curl', 'ssh', 'java', 'jmeter', 'npm'):
             self.stub(name, 'exit 0')
+        self.stub('python3', f'if [[ "$1" == outils/attendre_ssh.py ]]; then exec "{sys.executable}" "$@"; fi\nexit 0')
         for name in ('etape10.md', 'mesures.md', 'exports-etape10.json'):
             self.write(f'deploiement/docs/{name}', 'saved evidence')
         self.write('mesure/ETAPE16.md', 'saved calibration')
@@ -103,6 +105,42 @@ esac''')
         self.assertIn('python3 outils/arreter_vm.py', self.calls())
         self.assertNotIn('docker ', self.calls())
         self.assertNotIn('VBoxManage ', self.calls())
+
+    def check_measurement_port14(self, owners):
+        self.stub('docker', """case "$1" in
+ps) printf '%s\\n' "$TEST_PORT_OWNERS" ;;
+compose) exit 0 ;;
+*) exit 90 ;;
+esac""")
+        env = dict(self.env, EXECUTION_PROJECT='intern-verification', TEST_PORT_OWNERS=owners)
+        return subprocess.run(
+            ['bash', '-c', 'source outils/etapes/commun.sh\nsource outils/etapes/14.sh\nprepare_measurement_port14'],
+            cwd=self.root, env=env, capture_output=True, text=True, timeout=15)
+
+    def test_step14_stops_step13_project_with_configured_engine(self):
+        result = self.check_measurement_port14('abc intern-docker')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('-p intern-docker stop', self.calls())
+        self.assertNotIn(' down', self.calls())
+        self.assertNotIn('rm ', self.calls())
+
+    def test_step14_keeps_its_own_proxy(self):
+        result = self.check_measurement_port14('abc intern-verification')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('compose ', self.calls())
+
+    def test_step14_checks_all_owners_before_stopping_anything(self):
+        for owner in ('abc intern-docker\ndef other-project', 'abc'):
+            with self.subTest(owner=owner):
+                result = self.check_measurement_port14(owner)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('Port 8080 occupé', result.stdout + result.stderr)
+                self.assertNotIn('compose ', self.calls())
+
+    def test_step14_free_port_needs_no_stop(self):
+        result = self.check_measurement_port14('')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('compose ', self.calls())
 
     def test_jmeter_install_checks_official_and_digest_only_manifests(self):
         import hashlib
@@ -157,6 +195,33 @@ esac''')
         result = self.run_step(9, env=dict(self.env, VM_SSH_WAIT_SECONDS='1'))
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('SSH indisponible : vm-proxy après 1 s', result.stderr)
+        self.assertNotIn('Processus arrêté', result.stderr)
+        self.assertIn('Tentative SSH expiree', (self.root / '.execution/ssh-vm-proxy.log').read_text())
+
+    def test_status_uses_saved_campaign_from_a_new_terminal_without_starting_tools(self):
+        runtime = Path(self.temp.name) / 'active campaign'
+        runtime.mkdir()
+        (runtime / 'configuration.json').write_text('{}')
+        self.write('.execution/campagne-active.json', json.dumps({'runtime': str(runtime), 'output': 'saved-output'}))
+        self.stub('python3', f'if [[ "$1" == outils/configurer_campagne.py && "$2" == --selection ]]; then exec "{sys.executable}" "$@"; fi\nexit 0')
+        env = dict(self.env)
+        env.pop('MESURE_RUNTIME', None)
+        env.pop('MESURE_OUTPUT', None)
+        result = self.run_step(17, 'statut', env=env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f'lancer17.py status --runtime {runtime}', self.calls())
+        self.assertNotIn('VBoxManage ', self.calls())
+        self.assertNotIn('docker ', self.calls())
+
+    def test_explicit_campaign_overrides_saved_selection(self):
+        self.write('.execution/campagne-active.json', 'invalid selection must not be read')
+        runtime = Path(self.temp.name) / 'explicit'
+        runtime.mkdir()
+        (runtime / 'configuration.json').write_text('{}')
+        result = self.run_step(17, 'statut', env=dict(self.env, MESURE_RUNTIME=str(runtime)))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f'lancer17.py status --runtime {runtime}', self.calls())
+        self.assertNotIn('--selection', self.calls())
 
     def test_network_verification_is_explicit(self):
         self.assertEqual(self.run_step(8).returncode, 0)
@@ -211,6 +276,48 @@ esac''')
 
 
 class EvidenceProtectionTests(unittest.TestCase):
+    def test_new_campaign_archives_results_and_private_files_without_overwriting(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(campaign, 'ROOT', Path(directory) / 'Intern'):
+            runtime = campaign.default_runtime()
+            output = campaign.ROOT / 'mesure/resultats/campagne'
+            runtime.mkdir(parents=True)
+            output.mkdir(parents=True)
+            (runtime / 'configuration.json').write_text(json.dumps({'output': str(output)}))
+            (runtime / 'base.sql').write_bytes(b'saved private snapshot')
+            (output / 'manifest.json').write_text(json.dumps({'status': 'complete', 'started_epoch_s': 1700000000}))
+            (output / 'brut.csv').write_bytes(b'original samples')
+            campaign.activate(runtime)
+            campaign.new_campaign(runtime)
+            archived = list((runtime.parent / 'archives').iterdir())
+            self.assertEqual(len(archived), 1)
+            self.assertEqual((archived[0] / 'base.sql').read_bytes(), b'saved private snapshot')
+            self.assertEqual((output.parent / 'archives' / archived[0].name / 'brut.csv').read_bytes(), b'original samples')
+            self.assertFalse(runtime.exists())
+            self.assertFalse(output.exists())
+            self.assertFalse((campaign.ROOT / '.execution/campagne-active.json').exists())
+
+    def test_archiving_refuses_a_live_controller(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(campaign, 'ROOT', Path(directory) / 'Intern'):
+            runtime = campaign.default_runtime()
+            runtime.mkdir(parents=True)
+            (runtime / 'controller.pid').write_text(str(os.getpid()))
+            with self.assertRaisesRegex(SystemExit, 'déjà active'):
+                campaign.new_campaign(runtime)
+            self.assertTrue(runtime.exists())
+
+    def test_campaign_selection_is_persistent_and_preserves_configuration(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            runtime = root / 'runtime'
+            runtime.mkdir()
+            original = json.dumps({'output': str(root / 'results')})
+            (runtime / 'configuration.json').write_text(original)
+            with patch.object(campaign, 'ROOT', root / 'Intern'):
+                campaign.activate(runtime)
+                selected = json.loads((campaign.ROOT / '.execution/campagne-active.json').read_text())
+            self.assertEqual(selected, dict(runtime=str(runtime), output=str(root / 'results')))
+            self.assertEqual((runtime / 'configuration.json').read_text(), original)
+
     def test_existing_campaign_configuration_is_never_silently_replaced(self):
         with tempfile.TemporaryDirectory() as directory:
             config = {'runtime': directory, 'output': str(Path(directory) / 'out')}
@@ -231,6 +338,15 @@ class EvidenceProtectionTests(unittest.TestCase):
                 campaign.check_start(root)
             (root / 'controller.pid').write_text(str(os.getpid()))
             with self.assertRaisesRegex(SystemExit, 'déjà active'):
+                campaign.check_start(root)
+
+    def test_failed_idle_check_blocks_relaunch_before_vm_preparation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'configuration.json').write_text(json.dumps({'output': directory}))
+            (root / 'manifest.json').write_text(json.dumps({
+                'status': 'failed', 'error': 'Services did not return to idle within the frozen maximum rest'}))
+            with self.assertRaisesRegex(SystemExit, 'Repos non validé'):
                 campaign.check_start(root)
 
     def test_calibration_detects_different_controls_and_records_raw_hashes(self):

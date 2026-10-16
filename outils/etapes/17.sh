@@ -5,9 +5,26 @@ etape_17() {
       python3 mesure/scripts/verifier17.py
       cat mesure/resultats/etape17/verification.json
       return ;;
+    statut|arreter|preparer|lancer|nouvelle) ;;
+    *) bad_action "$action" ;;
+  esac
+  if [[ -z ${MESURE_RUNTIME:-} && -f .execution/campagne-active.json ]]; then
+    local selection=()
+    mapfile -t selection < <(python3 outils/configurer_campagne.py --selection)
+    [[ ${#selection[@]} == 2 ]] || fail 'Impossible de lire la campagne sélectionnée.'
+    export MESURE_RUNTIME="${selection[0]}"
+    export MESURE_OUTPUT="${MESURE_OUTPUT:-${selection[1]}}"
+  fi
+  export MESURE_RUNTIME="${MESURE_RUNTIME:-$PWD/../.execution-campagnes/active}"
+  export MESURE_OUTPUT="${MESURE_OUTPUT:-$PWD/mesure/resultats/campagne}"
+  if [[ $action == nouvelle ]]; then
+    python3 outils/configurer_campagne.py --nouvelle
+    action=preparer
+  fi
+  case "$action" in
     statut|arreter)
       vm_workspace
-      local runtime=${MESURE_RUNTIME:-$PWD/../.execution-campagnes}
+      local runtime=$MESURE_RUNTIME
       test -f "$runtime/configuration.json" || fail 'Campagne non configurée : utiliser l’action preparer.'
       if [[ $action == statut ]]; then
         python3 mesure/scripts/lancer17.py status --runtime "$runtime"
@@ -18,7 +35,6 @@ etape_17() {
     preparer|lancer) ;;
     *) bad_action "$action" ;;
   esac
-  export MESURE_RUNTIME="${MESURE_RUNTIME:-$PWD/../.execution-campagnes}"
   python3 outils/configurer_campagne.py --verifier-lancement
   vm_deploy
   engine_ready
@@ -32,8 +48,6 @@ etape_17() {
     "$DOCKER_BIN" compose --env-file "$DOCKER_ENV_FILE" -f docker/compose.yaml -f mesure/compose.test.yaml -p intern-mesure build proxy
   fi
   export MESURE_SSH_CONFIG="$VM_WORK/access/ssh-etape8-interne.conf"
-  export MESURE_RUNTIME="${MESURE_RUNTIME:-$PWD/../.execution-campagnes}"
-  export MESURE_OUTPUT="${MESURE_OUTPUT:-$PWD/mesure/resultats/nouvelle-campagne}"
   export MESURE_REFERENCE_PROJECT="${MESURE_REFERENCE_PROJECT:-intern-docker}"
   export DOCKER_CONFIG="${DOCKER_CONFIG:-$HOME/.docker}"
   # Respect the selected Docker context instead of assuming /var/run/docker.sock.
@@ -47,5 +61,6 @@ etape_17() {
     python3 outils/configurer_campagne.py --verifier-lancement
     python3 mesure/scripts/lancer17.py start --runtime "$MESURE_RUNTIME"
   fi
+  python3 outils/configurer_campagne.py --activer
   python3 mesure/scripts/lancer17.py status --runtime "$MESURE_RUNTIME"
 }
