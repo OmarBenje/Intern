@@ -8,7 +8,7 @@ Le catalogue reconstruit `search_vector || to_tsvector(company.name)` dans le WH
 
 Les recommandations filtrent contrats, modes, exclusions et salaire, mais ne classent pas les résultats selon les métiers, lieux ou compétences. Les raisons sont calculées après pagination. La recherche `C++` est actuellement tokenisée comme `C`, ce qui mélange des technologies différentes.
 
-La [recherche concurrentielle et technique](research/search-engine-2026-10-01.md) décrit les références et leurs sources officielles. WTTJ et JobTeaser confirment l'intérêt des critères explicites et du profil ; Simplify distingue catalogue et matches personnalisés et explique les raisons. Leurs algorithmes privés et leurs performances ne sont pas connus. L'ADR-001 reste applicable : PostgreSQL, matching structuré, pas de service vectoriel nécessaire.
+La [recherche concurrentielle et technique](../research/search-engine-2026-10-01.md) décrit les références et leurs sources officielles. WTTJ et JobTeaser confirment l'intérêt des critères explicites et du profil ; Simplify distingue catalogue et matches personnalisés et explique les raisons. Leurs algorithmes privés et leurs performances ne sont pas connus. L'ADR-001 reste applicable : PostgreSQL, matching structuré, pas de service vectoriel nécessaire.
 
 ## Comportement attendu
 
@@ -57,7 +57,7 @@ Corpus identique de 11 247 offres, dont 7 145 publiables. Une mesure d'échauffe
 
 Les temps varient sur la machine partagée. Le résultat n'est pas un SLA. Les comptes Python (616) et Bosch software (97) restent identiques ; stage développeur passe de 360 à 384 avec les nouveaux alias. C++ passe de 786 à 108 parce que son token est désormais distinct de C ; cela ne constitue pas à lui seul une mesure de précision ou de rappel. La sélection SQL Python complète passe de 104 à environ 10 ms lors de la vérification du plan.
 
-[Mesures brutes, p95, comptes SQL et noms des index](research/search-engine-benchmark-2026-10-01.json). Chaque liste publique nécessite six requêtes SQL, indépendamment de la taille de la page. Les tests vérifient également un nombre constant de requêtes pour les recommandations et leurs autorisations de travail.
+Mesures brutes, p95, comptes SQL et noms des index (`search-engine-benchmark-2026-10-01.json`, export historique supprimé ; voir la [note sur les exports](../research/README.md)). Chaque liste publique nécessite six requêtes SQL, indépendamment de la taille de la page. Les tests vérifient également un nombre constant de requêtes pour les recommandations et leurs autorisations de travail.
 
 Validation finale : 407 tests backend passent sur une base PostgreSQL dédiée ; les 15 tests navigateur ciblant filtres, pagination et suggestions passent. Build frontend, contrôles des tokens, contrôles Django, absence de dérive des migrations, lint des fichiers modifiés et vérification du diff passent. Le lint frontend signale trois avertissements Fast Refresh existants. Le lint backend global relève des erreurs préexistantes hors de ces changements (anciennes migrations, imports et fichiers d'enrichissement) ; elles sont conservées avec le travail local déjà présent.
 

@@ -1,8 +1,8 @@
 # Fiche de stage : lecture structurée et faits justifiés
 
 Date : 1er octobre 2026. Décision : implémenter la variante « Essentiel d'abord ».
-Références : [recherche](research/2026-10-01-offer-description-enrichment.md) et
-[Simplify / Tsenta](research/2026-10-01-simplify-tsenta-job-descriptions.md).
+Références : [recherche](../research/2026-10-01-offer-description-enrichment.md) et
+[Simplify / Tsenta](../research/2026-10-01-simplify-tsenta-job-descriptions.md).
 
 ## Objectif
 
@@ -138,4 +138,4 @@ avant chargement de la page a nécessité une relance ciblée, réussie en 3,1 s
 
 Le traitement des langues a ensuite été remplacé par un module commun de
 propositions, modalités, alternatives et preuves. Il ne contient aucune exception
-pour une annonce ou une entreprise. Voir [la spécification du moteur de langues](LANGUAGE_ENGINE_SPEC.md).
+pour une annonce ou une entreprise. Voir [la spécification du moteur de langues](../moteur/LANGUAGE_ENGINE_SPEC.md).

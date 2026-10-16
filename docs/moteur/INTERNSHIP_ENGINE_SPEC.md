@@ -10,9 +10,9 @@ Construire un catalogue européen commun, alimenté en continu, puis produire de
 
 « Tous les stages en Europe » exprime l'ambition de couverture. Le produit affiche les sources et pays effectivement surveillés ; aucun compteur ne vaut preuve d'exhaustivité. Il ne réduit pas son catalogue à la tech ni aux stages anglophones.
 
-Cette spec précise le moteur de découverte de [VISION.md](VISION.md). Elle ne supprime pas les autres contrats du modèle général. Le parcours **Stages Europe** sélectionne les stages ; alternances, apprentissages, emplois étudiants et graduate programmes restent des catégories distinctes. Elle conserve l'approbation individuelle, les révisions et les garanties d'envoi de [BACKEND_SPEC.md](BACKEND_SPEC.md) et de [l'ADR-001](decisions/001-database-architecture.md).
+Cette spec précise le moteur de découverte de [VISION.md](../produit/VISION.md). Elle ne supprime pas les autres contrats du modèle général. Le parcours **Stages Europe** sélectionne les stages ; alternances, apprentissages, emplois étudiants et graduate programmes restent des catégories distinctes. Elle conserve l'approbation individuelle, les révisions et les garanties d'envoi de [BACKEND_SPEC.md](../backend/BACKEND_SPEC.md) et de [l'ADR-001](../decisions/001-database-architecture.md).
 
-Recherche publique actuelle : [Tsenta](research/2026-09-30-tsenta.md), [Simplify](research/2026-09-30-simplify.md). Les observations, déclarations éditeur et hypothèses y sont séparées. [La recherche du 28 septembre](COMPETITOR_DATABASE_RESEARCH.md) apporte le contexte historique ; les rapports datés du 30 prévalent pour les faits revérifiés. Aucune inspection de serveur privé ni validation de candidature réelle n'a été effectuée.
+Recherche publique actuelle : [Tsenta](../research/2026-09-30-tsenta.md), [Simplify](../research/2026-09-30-simplify.md). Les observations, déclarations éditeur et hypothèses y sont séparées. [La recherche du 28 septembre](../research/COMPETITOR_DATABASE_RESEARCH.md) apporte le contexte historique ; les rapports datés du 30 prévalent pour les faits revérifiés. Aucune inspection de serveur privé ni validation de candidature réelle n'a été effectuée.
 
 ## 2. Enseignements concurrentiels et décisions
 
@@ -291,7 +291,7 @@ Le périmètre « tous domaines, Europe » est décidé par l'utilisateur. Les c
 
 ## 13 bis. Priorité de couverture après audit InternHunt
 
-L'[audit public InternHunt](research/2026-09-30-internhunt-coverage.md) montre environ 6 600 annonces dans ses régions européennes contre 159 annonces admissibles dans notre pilote. Les périmètres diffèrent (emplois étudiants/apprentissages/programmes diplômés présents chez InternHunt), mais notre découverte reste nettement insuffisante. Le pilote n'est pas la livraison de l'ambition « tous les stages en Europe ». Cette section définit la cible de l'extension. La section 15 distingue les éléments maintenant implémentés des sources et mesures encore manquantes.
+L'[audit public InternHunt](../research/2026-09-30-internhunt-coverage.md) montre environ 6 600 annonces dans ses régions européennes contre 159 annonces admissibles dans notre pilote. Les périmètres diffèrent (emplois étudiants/apprentissages/programmes diplômés présents chez InternHunt), mais notre découverte reste nettement insuffisante. Le pilote n'est pas la livraison de l'ambition « tous les stages en Europe ». Cette section définit la cible de l'extension. La section 15 distingue les éléments maintenant implémentés des sources et mesures encore manquantes.
 
 ### Collecte prioritaire avant nouvelles fonctions de matching
 
@@ -303,7 +303,7 @@ L'[audit public InternHunt](research/2026-09-30-internhunt-coverage.md) montre e
 | Couverture 4 | Prioriser les grands ATS et portails nationaux selon les stages manqués du panel, pas selon la facilité d'ajouter un énième board de startup | Liste des stages de référence récupérés et toujours manqués, ventilée par domaine et pays |
 | Couverture 5 | Résoudre les villes avec preuves et contexte ; isoler les fiches contradictoires sans bloquer indéfiniment un employeur entier | Tests homonymes/multilieux ; annonces valides importables, fiche invalide en quarantaine, aucune fermeture déduite d'un détail en échec |
 
-Les [sources et conditions d'accès vérifiées](research/2026-09-30-europe-coverage-strategy.md) déterminent les essais possibles. EURES, JobTeaser et WTTJ ne sont pas présumés fournir un export global libre. JobSpy est une option d'expérience, pas une dépendance déjà validée ni un outil attribué à InternHunt.
+Les [sources et conditions d'accès vérifiées](../research/2026-09-30-europe-coverage-strategy.md) déterminent les essais possibles. EURES, JobTeaser et WTTJ ne sont pas présumés fournir un export global libre. JobSpy est une option d'expérience, pas une dépendance déjà validée ni un outil attribué à InternHunt.
 
 ### Contrats de découverte et reprise
 
@@ -338,7 +338,7 @@ Les migrations additives 0017 à 0020 sont appliquées dans la base locale. Une 
 - La présence dans un board public vérifié récemment atteste la présence dans cette source, pas une confirmation humaine que le recrutement continue. Les traductions et annonces proches peuvent rester séparées lorsque la fusion n'est pas suffisamment sûre.
 - Les alertes sont internes à l'application. Aucun email, message Telegram, candidature réelle ni soumission ATS n'a été envoyé. L'activation d'un connecteur de collecte ne constitue pas une capacité de candidature automatique.
 
-Le [runbook](INTERNSHIP_ENGINE_RUNBOOK.md) donne les commandes d'exploitation et le [registre vérifié](research/2026-09-30-europe-source-registry.md) documente les sources ajoutées. Les modifications locales restent non commitées avec le travail préexistant du dépôt.
+Le [runbook](../exploitation/INTERNSHIP_ENGINE_RUNBOOK.md) donne les commandes d'exploitation et le [registre vérifié](../research/2026-09-30-europe-source-registry.md) documente les sources ajoutées. Les modifications locales restent non commitées avec le travail préexistant du dépôt.
 
 ### Contrôles réalisés
 
@@ -400,7 +400,7 @@ Sauvegarde préalable : `/Users/omarbenjelloun/.codex/backups/intern-coverage-20
 
 Exemples : Bosch 356, Airbus 216, Sanofi 52, NVIDIA 3. La découverte a retrouvé ou ajouté automatiquement Vattenfall, Legora, Hitachi Energy, Electrolux et Husqvarna ; certains boards valides peuvent ne contenir aucun stage publiable. Le registre, le nombre de pistes et le compteur public sont des mesures distinctes.
 
-La découverte comptait 874 pistes et 11 requêtes ayant terminé au moins une lecture, sur 16 configurées ; elle continuait en arrière-plan. Une piste n'est pas un stage validé. Les exemples, la ventilation par entreprise/pays et les invariants vérifiés sont consignés dans [l'audit machine](research/2026-09-30-coverage-implementation-audit.json).
+La découverte comptait 874 pistes et 11 requêtes ayant terminé au moins une lecture, sur 16 configurées ; elle continuait en arrière-plan. Une piste n'est pas un stage validé. Les exemples, la ventilation par entreprise/pays et les invariants vérifiés sont consignés dans [l'audit machine](../research/2026-09-30-coverage-implementation-audit.json).
 
 ### Vérifications
 
@@ -427,7 +427,7 @@ premières pages France, Allemagne, Royaume-Uni, Irlande, Italie et Espagne. Hui
 pistes examinées n'avaient pas de lien employeur publiquement exploitable et restent
 `needs_access` ; les 52 autres attendent leur résolution. Aucune de ces pistes n'est
 présentée comme un stage publié sur la seule foi du résultat LinkedIn. Voir
-[l'audit dédié](research/2026-09-30-linkedin-discovery-audit.json).
+[l'audit dédié](../research/2026-09-30-linkedin-discovery-audit.json).
 
 Le curseur et la troncature sont persistés. À 150 pistes réellement atteintes,
 une recherche générale crée de façon idempotente treize recherches par domaine,
@@ -497,7 +497,7 @@ et une évaluation annotée de pertinence restent des travaux distincts.
 
 ## 17. Extension de couverture RMK
 
-La [spec de couverture Europe V2](EUROPE_COVERAGE_V2_SPEC.md) est implémentée pour
+La [spec de couverture Europe V2](couverture/EUROPE_COVERAGE_V2_SPEC.md) est implémentée pour
 les trois portails inspectés SAP, Schaeffler et ZF : huitième famille de connecteurs,
 reconnaissance dans la découverte, imports pilotes et actualisation planifiée.
 Résultat observé : **920 offres publiées dans 21 pays**, dont **79 nouvelles**.
@@ -507,16 +507,16 @@ Ce lot ne livre pas Taleo, iCIMS ni l'ensemble des flux nationaux.
 
 ## 18. Extension livrée : iCIMS et Taleo publics
 
-[Spec V3](EUROPE_COVERAGE_V3_SPEC.md) implémentée : iCIMS sur quatre portails
+[Spec V3](couverture/EUROPE_COVERAGE_V3_SPEC.md) implémentée : iCIMS sur quatre portails
 inspectés, Taleo sur le portail AIEA ; découverte, import, diagnostics et
 planification intégrés. Publication strictement stage + Europe. Recette locale :
 8 nouvelles offres, 928 publiées dans 21 pays ; 282 tests backend passent.
 Couverture partielle par mot-clé et tenant, aucune prétention d'exhaustivité.
-Voir [l'audit](research/2026-09-30-icims-taleo-coverage-audit.json).
+Voir [l'audit](../research/2026-09-30-icims-taleo-coverage-audit.json).
 
 ## 19. Import direct JobSpy et registre ATS
 
-[Spec V4](EUROPE_COVERAGE_V4_SPEC.md) : import direct d'annonces publiques sans
+[Spec V4](couverture/EUROPE_COVERAGE_V4_SPEC.md) : import direct d'annonces publiques sans
 prérequis ATS, requêtes persistées et worker distinct, registre employeur épinglé
 et activations bornées. Pilote LinkedIn : +53 stages publiés, dernier compteur
 vérifié 981. Indeed non validé ; Glassdoor non testé. 295 tests backend passent

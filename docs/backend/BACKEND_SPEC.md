@@ -6,7 +6,7 @@ Date : 30 septembre 2026. Spécification d'implémentation pour le dépôt Inter
 
 Rendre le parcours candidat utilisable par un frontend : compte, profil, documents privés, découverte d'offres, dossier versionné, validation individuelle, exécution et suivi. Cette spécification décrit les choix initiaux ; l'implémentation actuelle se trouve sous `metier/app`, avec ses routes, services et migrations. Le contrat en vigueur est détaillé dans [API.md](API.md).
 
-La vision du 28 septembre (`VISION.md`) prévaut sur le cadrage du 23 septembre : plusieurs types de contrats, aucune restriction géographique implicite. Le schéma et ses FK composites sont conservés. Les réglages locaux PostgreSQL sur le port 5433 sont conservés.
+La vision du 28 septembre (`../produit/VISION.md`) prévaut sur le cadrage du 23 septembre : plusieurs types de contrats, aucune restriction géographique implicite. Le schéma et ses FK composites sont conservés. Les réglages locaux PostgreSQL sur le port 5433 sont conservés.
 
 ## Recommandations vérifiées et choix
 

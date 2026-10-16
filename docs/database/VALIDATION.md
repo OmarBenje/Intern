@@ -1,6 +1,6 @@
 # Vérification du modèle physique de référence
 
-Ce rapport conserve les résultats du blueprint SQL isolé. Pour l’implémentation Django livrée ensuite et ses **32 tests**, voir [DATABASE_IMPLEMENTATION.md](../DATABASE_IMPLEMENTATION.md).
+Ce rapport conserve les résultats du blueprint SQL isolé. Pour l’implémentation Django livrée ensuite et ses **32 tests**, voir [DATABASE_IMPLEMENTATION.md](DATABASE_IMPLEMENTATION.md).
 
 Date : **28 septembre 2026**. Exécuté avec PostgreSQL **16.14**, Python **3.12**, psycopg **3.3.6**. Le projet utilise Django **6.1.1** ; le vérificateur SQL ne dépend pas de l’ORM pour créer les tables.
 
@@ -49,4 +49,4 @@ Le script crée un schéma neuf et échoue si `intern_blueprint` existe déjà ;
 
 Ce contrôle prouve l’exécutabilité du schéma et les invariants SQL énumérés, **pas l’implémentation du produit**. Il ne teste pas les permissions HTTP, l’immutabilité assurée par les futurs services, la validité temporelle des accords, la concurrence de navigateurs réels, R2, les connecteurs ATS ni les performances à volume de production.
 
-Les doublons de runs sont vérifiés au niveau de la contrainte par insertions successives ; ce n’est pas un test de charge concurrente. Les limites et tests d’intégration encore requis sont explicités dans [DATABASE_SCHEMA.md](../DATABASE_SCHEMA.md). Lors de cette vérification initiale, les modèles et migrations applicatives étaient encore inchangés ; l’implémentation ultérieure est documentée dans le rapport lié en tête de page.
+Les doublons de runs sont vérifiés au niveau de la contrainte par insertions successives ; ce n’est pas un test de charge concurrente. Les limites et tests d’intégration encore requis sont explicités dans [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md). Lors de cette vérification initiale, les modèles et migrations applicatives étaient encore inchangés ; l’implémentation ultérieure est documentée dans le rapport lié en tête de page.

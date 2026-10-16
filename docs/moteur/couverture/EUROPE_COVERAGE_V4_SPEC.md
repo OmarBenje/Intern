@@ -70,9 +70,9 @@ sur une erreur d'entrée/sortie BuildKit/extraction numpy, puis le moteur Docker
 s'est arrêté. La disponibilité locale ne doit pas être déduite des tests.
 Sauvegarde avant imports : `~/.codex/backups/intern-coverage-v4-20260930/before-jobspy.dump`.
 
-[Audit du pilote](research/2026-09-30-jobspy-pilot.json),
-[registre général](research/2026-09-30-ats-registry-candidates.json),
-[pilotes employeurs et limites](research/2026-09-30-ats-registry-pilot.json).
+[Audit du pilote](../../research/2026-09-30-jobspy-pilot.json),
+[registre général](../../research/2026-09-30-ats-registry-candidates.json),
+[pilotes employeurs et limites](../../research/2026-09-30-ats-registry-pilot.json).
 
 État final d'exploitation de ce tour : le redémarrage ordinaire puis la fermeture
 et relance de Docker Desktop n'ont pas rétabli le moteur. PostgreSQL 5433 ne répond

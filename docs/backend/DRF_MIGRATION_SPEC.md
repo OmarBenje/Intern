@@ -34,7 +34,7 @@ Sources officielles consultées le 30 septembre 2026 :
 
 ## Contrat à préserver
 
-- URLs `/api/v1/`, méthodes, statuts métier et clés JSON de `docs/API.md`.
+- URLs `/api/v1/`, méthodes, statuts métier et clés JSON de `docs/backend/API.md`.
 - Erreurs `{error: {code, message, details}}`, 401 sans session, 403 pour CSRF.
 - Sessions Django, rotation à la connexion et après changement de mot de passe.
 - JSON strict : objet seulement, champs inconnus/interdits refusés, NaN refusé,

@@ -114,7 +114,7 @@ Détail : [validation et limites](frontend/VALIDATION.md) · [lancement](fronten
 rempli (action, attendu, obtenu, statut). Tester les parcours nominaux, les
 erreurs et les accès par modification d'identifiant sur une base réinitialisée.
 
-**À présenter : [dépôt du projet](./) · [installation locale](README.md#installer-et-démarrer-en-local)
+**À présenter : [dépôt du projet](./) · [installation locale](README.md#démarrage-local)
 · [cahier de recette PDF](tests/cahier_de_tests.pdf).**
 
 **Réponse.** **15 parcours navigateur/API réels** sur PostgreSQL isolé et

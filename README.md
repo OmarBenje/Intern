@@ -31,8 +31,8 @@ validation individuelle avant envoi, mais le connecteur partenaire Greenhouse
 reste désactivé par défaut et exige une clé autorisée. L’interface ne propose pas
 encore ce parcours automatisé complet. La rédaction IA, l’extraction automatique
 du CV, les scores IA et la synchronisation des intégrations ATS recruteur restent
-à implémenter. Voir le [guide technique](docs/GUIDE_TECHNIQUE.md) et les
-[limites de l’espace recruteur](docs/RECRUITER_WORKSPACE.md).
+à implémenter. Voir le [guide technique](docs/exploitation/GUIDE_TECHNIQUE.md) et les
+[limites de l’espace recruteur](docs/produit/RECRUITER_WORKSPACE.md).
 
 ## Démarrage local
 
@@ -120,7 +120,7 @@ En cas de difficulté :
 - **Erreur CSRF** : vérifier l’origine autorisée au lancement de Django et
   utiliser `127.0.0.1:5173` dans le navigateur.
 - **Catalogue vide** : sur une base neuve, charger le jeu fictif ci-dessus ; pour
-  les sources externes, consulter le [guide du catalogue](docs/INTERNSHIP_ENGINE_RUNBOOK.md).
+  les sources externes, consulter le [guide du catalogue](docs/exploitation/INTERNSHIP_ENGINE_RUNBOOK.md).
 
 ## Architecture
 
@@ -137,8 +137,8 @@ dans un bucket R2 privé selon la configuration.
 
 La collecte du catalogue et l’envoi des candidatures utilisent des processus
 distincts. Ils ne sont pas nécessaires pour parcourir le jeu fictif. Leur
-configuration est détaillée dans le [guide technique](docs/GUIDE_TECHNIQUE.md)
-et le [guide d’exploitation du catalogue](docs/INTERNSHIP_ENGINE_RUNBOOK.md).
+configuration est détaillée dans le [guide technique](docs/exploitation/GUIDE_TECHNIQUE.md)
+et le [guide d’exploitation du catalogue](docs/exploitation/INTERNSHIP_ENGINE_RUNBOOK.md).
 
 ## Vérification
 
@@ -167,24 +167,27 @@ Le dépôt contient plusieurs configurations, chacune avec un usage précis :
 
 | Configuration | Usage | Instructions |
 | --- | --- | --- |
-| `compose.yaml` | Développement : PostgreSQL, services applicatifs optionnels via le profil `app` | [Guide technique](docs/GUIDE_TECHNIQUE.md#docker-applicatif) |
+| `compose.yaml` | Développement : PostgreSQL, services applicatifs optionnels via le profil `app` | [Guide technique](docs/exploitation/GUIDE_TECHNIQUE.md#docker-applicatif) |
 | `docker/compose.yaml` | Travail de conteneurisation : base, métier et proxy Nginx servant le client | [Procédure Docker](docker/PROCEDURE.md) |
 | `deploiement/` | Déploiement des trois couches sur machines virtuelles | [Guide VM](deploiement/DEPLOIEMENT.md) |
-| `deploy/compose.yaml` | Configuration de déploiement de l’application | [Précautions de production](docs/GUIDE_TECHNIQUE.md#production) |
+| `deploy/compose.yaml` | Configuration de déploiement de l’application | [Précautions de production](docs/exploitation/GUIDE_TECHNIQUE.md#production) |
 
 Le [suivi des livrables](LIVRABLES.md) réunit les étapes du travail, les preuves
 disponibles et leurs limites. Les mesures se trouvent dans [`mesure/`](mesure/PROCEDURE.md).
 
 ## Documentation et contribution
 
+L’[index de la documentation](docs/README.md) regroupe les cahiers des charges,
+les livrables et les documents techniques par thème.
+
 | Besoin | Document |
 | --- | --- |
 | Comprendre les parcours attendus | [Analyse fonctionnelle](analyse/cas_d_usage.md) |
-| Consommer l’API | [Routes, requêtes et erreurs](docs/API.md) |
-| Comprendre le backend et les traitements | [Guide technique](docs/GUIDE_TECHNIQUE.md) |
-| Comprendre le modèle de données | [Schéma de la base](docs/DATABASE_SCHEMA.md) |
-| Exploiter la collecte de stages | [Guide du catalogue](docs/INTERNSHIP_ENGINE_RUNBOOK.md) |
-| Travailler sur l’espace recruteur | [Parcours et règles d’accès](docs/RECRUITER_WORKSPACE.md) |
+| Consommer l’API | [Routes, requêtes et erreurs](docs/backend/API.md) |
+| Comprendre le backend et les traitements | [Guide technique](docs/exploitation/GUIDE_TECHNIQUE.md) |
+| Comprendre le modèle de données | [Schéma de la base](docs/database/DATABASE_SCHEMA.md) |
+| Exploiter la collecte de stages | [Guide du catalogue](docs/exploitation/INTERNSHIP_ENGINE_RUNBOOK.md) |
+| Travailler sur l’espace recruteur | [Parcours et règles d’accès](docs/produit/RECRUITER_WORKSPACE.md) |
 | Reproduire les contrôles d’intégration | [Recette et cahier de tests](tests/README.md) |
 
 Pour proposer une modification, consulter la documentation de la couche concernée,

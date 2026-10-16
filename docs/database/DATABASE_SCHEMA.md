@@ -4,9 +4,9 @@
 
 Voir [DATABASE_IMPLEMENTATION.md](DATABASE_IMPLEMENTATION.md) pour les 34 modèles, les migrations, les adaptations de noms et les 32 tests. Les sections ci-dessous documentent également les services métier à développer autour du schéma.
 
-Cette architecture s’appuie sur la [vision](VISION.md), l’examen des modèles et des huit migrations existantes et la [recherche concurrentielle](COMPETITOR_DATABASE_RESEARCH.md) portant sur Simplify, Tsenta, Teal et Huntr. Elle remplace la première ébauche de ce document. Elle ne prétend pas reproduire leurs schémas privés.
+Cette architecture s’appuie sur la [vision](../produit/VISION.md), l’examen des modèles et des huit migrations existantes et la [recherche concurrentielle](../research/COMPETITOR_DATABASE_RESEARCH.md) portant sur Simplify, Tsenta, Teal et Huntr. Elle remplace la première ébauche de ce document. Elle ne prétend pas reproduire leurs schémas privés.
 
-Le [SQL de référence](database/schema.sql) définit les colonnes, types, nullabilité, clés, contraintes et index. Il crée un schéma isolé `intern_blueprint` et référence le compte Django existant. **Ce fichier n’est pas une migration et n’a pas été déployé dans les tables de l’application.** Les validations entre plusieurs opérations sont précisées ici ; elles ne sont pas toutes exécutées par le SQL seul.
+Le [SQL de référence](schema.sql) définit les colonnes, types, nullabilité, clés, contraintes et index. Il crée un schéma isolé `intern_blueprint` et référence le compte Django existant. **Ce fichier n’est pas une migration et n’a pas été déployé dans les tables de l’application.** Les validations entre plusieurs opérations sont précisées ici ; elles ne sont pas toutes exécutées par le SQL seul.
 
 ## 1. Décision d’ensemble
 
@@ -39,11 +39,11 @@ Le produit garde quatre ensembles métier : **profil**, **catalogue d’offres**
 | Normaliser les valeurs filtrables | Compétences, rôles, lieux, contrats, statuts et rémunération sont structurés. Réserver JSON aux formulaires variables et aux snapshots. |
 | Pas de moteur vectoriel au lancement | Matching explicable sur préférences, compétences et rôle ; ajouter une recherche sémantique après mesure de sa valeur. |
 
-L’[ADR-001](decisions/001-database-architecture.md) consigne les raisons et compromis.
+L’[ADR-001](../decisions/001-database-architecture.md) consigne les raisons et compromis.
 
 ## 2. Ce que les sources changent concrètement
 
-Le [rapport concurrentiel](COMPETITOR_DATABASE_RESEARCH.md) présente 19 sources officielles et distingue faits et inférences. Trois enseignements guident cette proposition : un profil structuré ne se réduit pas au fichier CV ; un dossier privé doit conserver ce qui a réellement été envoyé ; une validation porte sur un contenu précis. La recherche confirme ces besoins fonctionnels, sans révéler les tables internes concurrentes.
+Le [rapport concurrentiel](../research/COMPETITOR_DATABASE_RESEARCH.md) présente 19 sources officielles et distingue faits et inférences. Trois enseignements guident cette proposition : un profil structuré ne se réduit pas au fichier CV ; un dossier privé doit conserver ce qui a réellement été envoyé ; une validation porte sur un contenu précis. La recherche confirme ces besoins fonctionnels, sans révéler les tables internes concurrentes.
 
 Les ATS apportent des **contrats de données publics**, utiles pour construire des imports fiables :
 
@@ -342,7 +342,7 @@ Ces extensions sont identifiées pour éviter les impasses ; elles ne sont pas d
 
 ## 12. Vérification et critères de réalisation
 
-Le [rapport de validation](database/VALIDATION.md) décrit l’exécution réelle du DDL et les scénarios contrôlés. Le [vérificateur](database/verify_schema.py) utilise une transaction et annule toutes ses écritures.
+Le [rapport de validation](VALIDATION.md) décrit l’exécution réelle du DDL et les scénarios contrôlés. Le [vérificateur](verify_schema.py) utilise une transaction et annule toutes ses écritures.
 
 Avant de livrer les futures migrations/services, vérifier aussi :
 
@@ -359,7 +359,7 @@ Avant de livrer les futures migrations/services, vérifier aussi :
 
 ## Extension du moteur européen (migrations 0017–0019)
 
-Les modèles additifs sont définis dans [`jobboard/models/engine.py`](../jobboard/models/engine.py). Les migrations `0017_internship_engine`, `0018_enrichment_event` et `0019_offer_merge_decision` ajoutent le suivi de collecte et les fonctions candidat sans remplacer les identifiants historiques d'offres/dossiers.
+Les modèles additifs sont définis dans [`jobboard/models/engine.py`](../../metier/app/jobboard/models/engine.py). Les migrations `0017_internship_engine`, `0018_enrichment_event` et `0019_offer_merge_decision` ajoutent le suivi de collecte et les fonctions candidat sans remplacer les identifiants historiques d'offres/dossiers.
 
 - `BoardSchedule` conserve cadence, prochaine exécution, échecs, quarantaine et lease avec jeton de fencing ; `SourceObservation` conserve les absences successives.
 - `SourceRevision` conserve les révisions sources identifiées par hash ; `OfferEnrichment` est une projection un-à-un contenant classification, pays, domaine, version de contenu, `event_at` et `facts` JSON. L'implémentation utilise un objet JSON de faits sourcés, **pas une table `OfferFact` par champ**. Les propriétés filtrables et indices de classification restent séparés. `event_at` sert à distinguer un changement significatif d'une simple revérification.
@@ -367,4 +367,4 @@ Les modèles additifs sont définis dans [`jobboard/models/engine.py`](../jobboa
 - `SavedSearch`, `OfferFeedback`, `CompanyPreference`, `OfferReport`, `AlertEvent` et `ExternalOpportunity` appartiennent chacun à un utilisateur par FK avec suppression en cascade. Les mutations API filtrent par propriétaire et prennent d'abord le verrou du compte ; les champs système ne sont pas assignables par la saisie.
 - `SavedSearch.criteria` est un JSON validé par schéma explicite. Les événements d'alerte possèdent une clé unique candidat/événement, avec canal actuellement limité à `in_app`. Feedback et préférences d'entreprise sont uniques par candidat et cible.
 
-Le catalogue partagé ne contient ni recherches privées ni contenu des opportunités ajoutées par URL. Les nouveaux objets privés sont inclus dans l'export et la purge existants. Les détails exacts du contrat HTTP sont décrits dans [API.md](API.md#moteur-de-stages-européen).
+Le catalogue partagé ne contient ni recherches privées ni contenu des opportunités ajoutées par URL. Les nouveaux objets privés sont inclus dans l'export et la purge existants. Les détails exacts du contrat HTTP sont décrits dans [API.md](../backend/API.md#moteur-de-stages-européen).

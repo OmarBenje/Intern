@@ -2,8 +2,8 @@
 
 - Date : 28 septembre 2026
 - Statut : accepté pour le schéma, implémenté dans les migrations `0009` à `0014` ; services métier à développer
-- Décision détaillée : [DATABASE_SCHEMA.md](../DATABASE_SCHEMA.md)
-- Preuves métier : [recherche concurrentielle](../COMPETITOR_DATABASE_RESEARCH.md)
+- Décision détaillée : [DATABASE_SCHEMA.md](../database/DATABASE_SCHEMA.md)
+- Preuves métier : [recherche concurrentielle](../research/COMPETITOR_DATABASE_RESEARCH.md)
 
 ## Contexte
 

@@ -4,9 +4,9 @@ La page `/profil` regroupe désormais les informations confirmées du candidat e
 
 ## Recommandations appliquées
 
-- `docs/VISION.md` : centraliser CV, expériences, compétences et préférences ; conserver un seul CV courant.
-- `docs/COMPETITOR_DATABASE_RESEARCH.md`, S1/S2 : séparer document et faits confirmés, sans écraser les corrections manuelles lors d’un remplacement du CV.
-- `docs/FRONTEND_SPEC.md`, profil/préférences/documents : utiliser les API existantes, distinguer les valeurs inconnues des réponses négatives, préserver les détails des erreurs, rechercher et paginer les catalogues.
+- `docs/produit/VISION.md` : centraliser CV, expériences, compétences et préférences ; conserver un seul CV courant.
+- `docs/research/COMPETITOR_DATABASE_RESEARCH.md`, S1/S2 : séparer document et faits confirmés, sans écraser les corrections manuelles lors d’un remplacement du CV.
+- `docs/frontend/FRONTEND_SPEC.md`, profil/préférences/documents : utiliser les API existantes, distinguer les valeurs inconnues des réponses négatives, préserver les détails des erreurs, rechercher et paginer les catalogues.
 - Skill `better-ui` : réutiliser les couleurs, espacements, rayons et contrôles de l’interface ; navigation au clavier, états d’attente et retours explicites.
 
 ## Fonctionnement

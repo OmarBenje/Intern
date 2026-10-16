@@ -1,6 +1,6 @@
 # API candidat Intern
 
-Les routes publiques `companies/<id>/` et `companies/<id>/offers/`, ainsi que le filtre privé `recommendations/?company=<id>`, sont documentés dans [Pages entreprise](COMPANY_PAGES.md).
+Les routes publiques `companies/<id>/` et `companies/<id>/offers/`, ainsi que le filtre privé `recommendations/?company=<id>`, sont documentés dans [Pages entreprise](../produit/COMPANY_PAGES.md).
 
 Implémentation Django REST framework 3.18. Les routes conservent le contrat v1 ; [décisions et sources](DRF_MIGRATION_SPEC.md). Les corps de commande passent par des serializers stricts et les lectures par des serializers aux champs explicites.
 
@@ -191,7 +191,7 @@ donnent pas de bonus. Ce score ne prouve pas l'éligibilité ; le champ `match`
 conserve son sens. `sort=newest` permet de choisir l'ordre chronologique.
 Les préférences d'un autre utilisateur ne participent jamais à ce score.
 
-Spec, mesures et commande reproductible : [SEARCH_ENGINE_SPEC.md](SEARCH_ENGINE_SPEC.md).
+Spec, mesures et commande reproductible : [SEARCH_ENGINE_SPEC.md](../moteur/SEARCH_ENGINE_SPEC.md).
 
 ### Couverture observée (lot 18)
 
@@ -199,7 +199,7 @@ Spec, mesures et commande reproductible : [SEARCH_ENGINE_SPEC.md](SEARCH_ENGINE_
 `deduplication` et `counting_note` aux champs existants. Chaque provider retourne
 `offers` (offres distinctes ayant une source fraîche), `queries` (comptages par
 état), `boards` (enabled/paused/error/overdue) et `errors` (code/count agrégés).
-Les états et périmètres sont définis dans `EUROPE_COVERAGE_V11_SPEC.md`. Aucun
+Les états et périmètres sont définis dans `../moteur/couverture/EUROPE_COVERAGE_V11_SPEC.md`. Aucun
 identifiant privé ou curseur détaillé n’est exposé par cette réponse publique.
 Les totaux des pays/providers ne sont pas additifs ; les doublons non résolus
 restent possibles. Les détails d’exploitation sont dans la commande locale
@@ -208,4 +208,4 @@ restent possibles. Les détails d’exploitation sont dans la commande locale
 
 ## Espace recruteur
 
-L’inscription accepte désormais le champ optionnel `role` (`candidate` par défaut, ou `recruiter`). Les réponses d’identité exposent ce rôle. Voir le [contrat recruteur](RECRUITER_WORKSPACE.md) pour les routes `/api/v1/recruiter/`, les contrôles d’accès, le cycle de vérification et les limites des intégrations externes.
+L’inscription accepte désormais le champ optionnel `role` (`candidate` par défaut, ou `recruiter`). Les réponses d’identité exposent ce rôle. Voir le [contrat recruteur](../produit/RECRUITER_WORKSPACE.md) pour les routes `/api/v1/recruiter/`, les contrôles d’accès, le cycle de vérification et les limites des intégrations externes.

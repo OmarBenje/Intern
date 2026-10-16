@@ -1,7 +1,7 @@
 # Intern — Couche métier frontend : plan et première livraison
 
-Date : 30 septembre 2026. Contrat : [API v1](API.md), [vision](VISION.md),
-[état réel du backend](BACKEND_IMPLEMENTATION.md).
+Date : 30 septembre 2026. Contrat : [API v1](../backend/API.md), [vision](../produit/VISION.md),
+[état réel du backend](../backend/BACKEND_IMPLEMENTATION.md).
 
 ## État au 30 septembre 2026
 
@@ -10,7 +10,7 @@ session et la déconnexion, ainsi que l’onboarding connecté obligatoire en tr
 CV privé, adresse et autorisations de travail. Le profil regroupe désormais les informations personnelles, compétences, expériences,
 formations, projets, liens professionnels, préférences de recherche, adresse et
 autorisations de travail, ainsi que le téléchargement et le remplacement du CV.
-Les formulaires utilisent les API existantes ; voir [détails du profil](design/profile.md). Les sélecteurs de pays sont personnalisés et utilisables au clavier.
+Les formulaires utilisent les API existantes ; voir [détails du profil](../design/profile.md). Les sélecteurs de pays sont personnalisés et utilisables au clavier.
 Le thème orange/gris, les icônes Hugeicons et les animations courtes partagent les
 tokens du frontend. La réduction des mouvements est respectée. Sur mobile, le panneau
 décoratif de connexion est masqué. Pas de boutons OAuth sans intégration.
@@ -44,7 +44,7 @@ portant sur une révision précise. Il ne génère ni expérience professionnell
   lorsque les écrans seront construits.
 - [React Router — navigation](https://reactrouter.com/start/declarative/navigating) :
   les futurs écrans pourront utiliser Link/NavLink ; aucune modification du routeur ici.
-- [Recherche concurrentielle](COMPETITOR_DATABASE_RESEARCH.md) et vision actuelle :
+- [Recherche concurrentielle](../research/COMPETITOR_DATABASE_RESEARCH.md) et vision actuelle :
   distinguer offre, profil, dossier versionné, autorisation d'envoi et suivi. Les types
   couvrent tous les contrats et les données inconnues, sans restriction géographique.
 

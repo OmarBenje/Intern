@@ -27,4 +27,4 @@ La commande par défaut travaille hors réseau sur les annonces stockées et leu
 
 L’import d’un JSON relu fusionne les entrées par clé, dans une transaction, et préserve les autres rubriques. Il vérifie l’entreprise par ID et, si fourni, son nom. Le fichier relu inclus concerne **Stripe, ID local 2** ; vérifier ce couple avant de l’utiliser sur une autre base. Une deuxième exécution remplace les mêmes clés sans dupliquer les entrées.
 
-Les présentations ne sont pas complètes pour toute la base. Les autres champs ne sont pas devinés depuis une offre. Le [benchmark](research/company-pages-2026-10-01.md) détaille les observations et la suite proposée.
+Les présentations ne sont pas complètes pour toute la base. Les autres champs ne sont pas devinés depuis une offre. Le [benchmark](../research/company-pages-2026-10-01.md) détaille les observations et la suite proposée.

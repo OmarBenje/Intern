@@ -1,6 +1,6 @@
 # Implémentation du schéma Django
 
-Évolution du 30 septembre : API et services métier livrés ensuite ; voir [BACKEND_IMPLEMENTATION.md](BACKEND_IMPLEMENTATION.md) pour les vérifications actuelles et limites externes. Le rapport ci-dessous conserve la livraison du schéma du 28 septembre.
+Évolution du 30 septembre : API et services métier livrés ensuite ; voir [BACKEND_IMPLEMENTATION.md](../backend/BACKEND_IMPLEMENTATION.md) pour les vérifications actuelles et limites externes. Le rapport ci-dessous conserve la livraison du schéma du 28 septembre.
 
 Date : 28 septembre 2026. **Les 34 modèles du schéma V1 sont implémentés et les migrations `0009` à `0014` sont appliquées à la base PostgreSQL locale.**
 
@@ -10,11 +10,11 @@ Les imports existants restent valides : `from jobboard.models import Offer, Cand
 
 | Fichier | Modèles |
 |---|---|
-| [catalogue.py](../jobboard/models/catalogue.py) | Company, Role, Skill, Location, Offer, OfferLocation, OfferSkill, SourceBoard, ImportRun, OfferSource, CompensationBand, SavedOffer |
-| [profiles.py](../jobboard/models/profiles.py) | CandidateProfile, Experience, Education, Project, CandidateSkill, WorkAuthorization, SearchPreference, PreferenceRole, PreferenceLocation, PreferenceContract, PreferenceWorkMode |
-| [documents.py](../jobboard/models/documents.py) | Document |
-| [applications.py](../jobboard/models/applications.py) | Application, ApplicationRevision, RevisionDocument, SubmissionAuthorization, AgentRun, ApplicationEvent, Interview, ApplicationTask |
-| [operations.py](../jobboard/models/operations.py) | OutboxMessage, DeletionRequest |
+| [catalogue.py](../../metier/app/jobboard/models/catalogue.py) | Company, Role, Skill, Location, Offer, OfferLocation, OfferSkill, SourceBoard, ImportRun, OfferSource, CompensationBand, SavedOffer |
+| [profiles.py](../../metier/app/jobboard/models/profiles.py) | CandidateProfile, Experience, Education, Project, CandidateSkill, WorkAuthorization, SearchPreference, PreferenceRole, PreferenceLocation, PreferenceContract, PreferenceWorkMode |
+| [documents.py](../../metier/app/jobboard/models/documents.py) | Document |
+| [applications.py](../../metier/app/jobboard/models/applications.py) | Application, ApplicationRevision, RevisionDocument, SubmissionAuthorization, AgentRun, ApplicationEvent, Interview, ApplicationTask |
+| [operations.py](../../metier/app/jobboard/models/operations.py) | OutboxMessage, DeletionRequest |
 
 Les tables sont celles gérées par Django, préfixées `jobboard_`, pas celles du schéma isolé `intern_blueprint`. Le SQL du dossier `database` reste une référence pédagogique ; **ne pas l’appliquer à la place des migrations**.
 

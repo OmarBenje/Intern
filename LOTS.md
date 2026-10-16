@@ -1,6 +1,6 @@
 # Moteur de stages européens — lots d'implémentation
 
-Périmètre autorisé le 30 septembre 2026 : implémenter [la spec](docs/INTERNSHIP_ENGINE_SPEC.md) et ajouter son bilan de livraison à la fin du document. Le découpage ci-dessous reprend son périmètre ; les fichiers applicatifs préexistants sans rapport sont conservés.
+Périmètre autorisé le 30 septembre 2026 : implémenter [la spec](docs/moteur/INTERNSHIP_ENGINE_SPEC.md) et ajouter son bilan de livraison à la fin du document. Le découpage ci-dessous reprend son périmètre ; les fichiers applicatifs préexistants sans rapport sont conservés.
 
 ## Lot 1 — Schéma et collecte mutualisée
 
@@ -56,7 +56,7 @@ Extension explicitement autorisée par « implémente » après présentation de
 
 ## Lot 9 — Couverture Europe V2 : portails RMK
 
-Spec : `docs/EUROPE_COVERAGE_V2_SPEC.md`. Connecteur public SuccessFactors RMK pour
+Spec : `docs/moteur/couverture/EUROPE_COVERAGE_V2_SPEC.md`. Connecteur public SuccessFactors RMK pour
 SAP, Schaeffler et ZF, reconnaissance des sources, import partiel sûr et worker.
 Livré localement : +79 stages, 920 offres dans 21 pays ; 272 tests backend passent.
 Les connecteurs et flux nationaux restants sont explicités dans la spec.
@@ -65,7 +65,7 @@ deps: 5,6,8
 
 ## Lot 10 — Couverture Europe V3 : iCIMS et Taleo
 
-Spec : `docs/EUROPE_COVERAGE_V3_SPEC.md`. Deux connecteurs publics sur cinq portails
+Spec : `docs/moteur/couverture/EUROPE_COVERAGE_V3_SPEC.md`. Deux connecteurs publics sur cinq portails
 inspectés, intégrés à la découverte et au worker. Livraison locale : +8 stages,
 928 offres dans 21 pays ; 282 tests backend passent. Snapshots partiels sûrs,
 contrôles de pays, contrat, identité et expiration ; aucune migration nécessaire.
@@ -74,7 +74,7 @@ deps: 5,6,9
 
 ## Lot 11 — JobSpy et registre de portails
 
-Spec : `docs/EUROPE_COVERAGE_V4_SPEC.md`. Imports publics directs, worker de
+Spec : `docs/moteur/couverture/EUROPE_COVERAGE_V4_SPEC.md`. Imports publics directs, worker de
 requêtes, curseurs, snapshots partiels et inventaires épinglés. Pilote LinkedIn :
 53 stages supplémentaires ; 1 000 candidats employeurs enregistrés. 295 tests
 backend passent sur PostgreSQL isolé. Validation Docker interrompue par une erreur
@@ -84,7 +84,7 @@ deps: 5,6,10
 
 ## Lot 12 — Teamtailor, Workable et récupération des stages bilingues
 
-Spécification : `docs/EUROPE_COVERAGE_V5_SPEC.md`.
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V5_SPEC.md`.
 Deux connecteurs publics, registre étendu, pilotes et snapshots partiels.
 Reconnaissance titre anglais / description française ; correction des attributs
 HTML sans valeur qui interrompaient la découverte LinkedIn. Suite : 304 tests.
@@ -93,7 +93,7 @@ EURES, WTTJ, Eightfold et import direct des sources nationales restent à traite
 
 ## Lot 13 — Import direct EURES
 
-Spécification : `docs/EUROPE_COVERAGE_V6_SPEC.md`.
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V6_SPEC.md`.
 Connecteur recherche + détails, qualification textuelle obligatoire en plus du
 code contrat EURES, reprises et leases persistés, worker et service Compose dédiés.
 315 tests backend. Pilote contrôlé : 13 stages publiables sur 41 annonces.
@@ -102,7 +102,7 @@ WTTJ, Eightfold et import direct des sources nationales restent à traiter.
 
 ## Lot 14 — Welcome to the Jungle
 
-Spécification : `docs/EUROPE_COVERAGE_V7_SPEC.md`.
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V7_SPEC.md`.
 Index public, qualification stricte, résumés source explicitement étiquetés,
 partition temporelle contre le plafond de pagination, worker et Compose dédiés.
 320 tests backend passent. Pilote : 111 stages publiables sur 208 annonces.
@@ -111,7 +111,7 @@ nationales restent à traiter.
 
 ## Lot 15 — Eightfold PCSX
 
-Spécification : `docs/EUROPE_COVERAGE_V8_SPEC.md`.
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V8_SPEC.md`.
 Portails inspectés, recherche multilingue, fiches complètes, filtrage européen,
 import partiel et ordonnanceur existant. 326 tests backend passent.
 Pilotes : NVIDIA 3 stages, Dolby 3. Microsoft suspendu après limitation de débit.
@@ -120,7 +120,7 @@ Prochain chantier : import direct des sources nationales.
 
 ## Lot 16 — JobTech / Platsbanken, Suède
 
-Spécification : `docs/EUROPE_COVERAGE_V9_SPEC.md`.
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V9_SPEC.md`.
 Import direct recherche + détails complets, quatre termes suédois/anglais,
 taxonomie pays vérifiée, corroboration suédoise, expiration automatique et reprise
 persistée. Pilote : 76 résultats examinés, 24 offres JobTech distinctes publiables
@@ -130,7 +130,7 @@ Bundesagentur, France Travail et NAV restent à traiter.
 
 ## Lot 17 — Bundesagentur / Allemagne
 
-Spécification : `docs/EUROPE_COVERAGE_V10_SPEC.md`.
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V10_SPEC.md`.
 Recherche publique v6 et fiches v4, qualification textuelle stricte malgré la
 catégorie partagée Praktikum/Trainee, lieux vérifiés, dates de publication et
 reprise durable. 346 tests backend passent. Pilote : 49 fiches publiables sur
@@ -141,7 +141,7 @@ France Travail et NAV restent à traiter.
 
 ## Lot 18 — Couverture observée et déduplication
 
-Spécification : `docs/EUROPE_COVERAGE_V11_SPEC.md`. Page `/engine` avec chiffres
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V11_SPEC.md`. Page `/engine` avec chiffres
 publiables par pays/source, pagination, erreurs, suspensions et déduplication.
 Audit JSON reproductible via `audit_coverage`. Rapprochement conservateur par
 liens normalisés + contenu et lieux identiques, fusion réversible existante.
@@ -153,7 +153,7 @@ limitations de débit restent visibles, sans promesse d’exhaustivité.
 
 ## Lot 19 — Reprise des collectes existantes
 
-Spécification : `docs/EUROPE_COVERAGE_V12_SPEC.md`.
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V12_SPEC.md`.
 WTTJ : slug avec point accepté et reprise réelle 50 résultats/39 imports, page 10.
 SmartRecruiters : changement de total et répétition d’ID donnent un snapshot
 partiel ; essai réel encore limité par un timeout réseau. Indeed : erreurs HTTP
@@ -163,7 +163,7 @@ LinkedIn : cooldown partagé d’au moins une heure, sans contournement.
 
 ## Lot 20 — NAV / Arbeidsplassen, Norvège
 
-Spécification : `docs/EUROPE_COVERAGE_V13_SPEC.md`. Flux officiel incrémental,
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V13_SPEC.md`. Flux officiel incrémental,
 jeton public expérimental ou `NAV_FEED_TOKEN`, curseur de page + offset, retrait
 des annonces inactives et expiration norvégienne. Worker NAV local lancé et
 service Compose configuré (image non reconstruite). Départ de rattrapage sur
@@ -174,7 +174,7 @@ vérifiée depuis un identifiant de page obtenu en direct. Pas d’exhaustivité
 
 ## Lot 21 — Activation ciblée des entreprises ATS
 
-Spécification : `docs/EUROPE_COVERAGE_V14_SPEC.md`. Commande bornée
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V14_SPEC.md`. Commande bornée
 `activate_ats_candidates` : prévisualisation, imports explicites, rapport par
 source et pause sans rendement cible. 13 pilotes, 3 sources maintenues : Deloitte
 Netherlands, Cabify et Picnic. 48 nouvelles fiches visibles sur ces sources après
@@ -186,7 +186,7 @@ de stages uniques entre plateformes.
 
 ## Lot 22 — Audit du rappel et récupération Celonis
 
-Spécification : `docs/EUROPE_COVERAGE_V15_SPEC.md`. Dix sources revérifiées en
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V15_SPEC.md`. Dix sources revérifiées en
 réseau. Activation fondée sur les pays qualifiés, y compris un pays explicite
 dans le libellé du lieu. Le classificateur reconnaît les titres Intern corroborés par
 `As a … Intern` dans la description. Celonis réactivé : dix fiches visibles,
@@ -198,7 +198,7 @@ WorkflowConcurrencyTests sur `Company.logo_source_url` obligatoire.
 
 ## Lot 23 — File persistante de vérification ATS
 
-Spécification : `docs/EUROPE_COVERAGE_V16_SPEC.md`. File AtsProbe avec admission
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V16_SPEC.md`. File AtsProbe avec admission
 bornée, bail de reprise, retry des sources vides à sept jours et backoff erreurs.
 Activation sur toute l'Europe ; bilan visible dans /engine. Pilote de 100 :
 95 sans stage confirmé, 5 erreurs, aucune nouvelle offre. Neuf anciennes sources
@@ -209,7 +209,7 @@ candidats, le pilote séquentiel actuel n'ayant apporté aucun stage supplément
 
 ## Lot 24 — Sources guidées par les stages existants
 
-Spécification : `docs/EUROPE_COVERAGE_V17_SPEC.md`. Liens ATS des offres fraîches,
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V17_SPEC.md`. Liens ATS des offres fraîches,
 puis correspondance exacte des noms avec le registre épinglé, provenance
 conservée et exclusion des sources connues. 50 pistes testées : 20 actives,
 27 sans résultat confirmé, 2 erreurs, 1 conflit d'identité mis à l'écart.
@@ -220,7 +220,7 @@ ciblé disponibles dans le runbook ; aucune promesse d'exhaustivité.
 
 ## Lot 25 — Déduplication ciblée des 262 fiches
 
-Spécification : `docs/EUROPE_COVERAGE_V18_SPEC.md`. Fusion réversible autorisée
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V18_SPEC.md`. Fusion réversible autorisée
 par lien spécifique commun, employeur/titre/lieux compatibles, sources fraîches
 et empreintes revalidées. Les descriptions peuvent différer ; contenu et lien
 employeur privilégiés, actualisations conservées après fusion. Audit réel :
@@ -230,7 +230,7 @@ au lot 24 comme des stages uniques prouvés.
 
 ## Lot 26 — Résolution publique des liens et références
 
-Spécification : `docs/EUROPE_COVERAGE_V19_SPEC.md`. Résolution bornée des groupes
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V19_SPEC.md`. Résolution bornée des groupes
 ambigus, attribution JSON-LD stricte, preuves persistantes avec expiration et
 invalidation lors des changements de source. 61 sources examinées : 31 identités
 ATS déjà connues, 20 bloquées, 10 sans preuve attribuable. Aucun nouveau lien
@@ -239,7 +239,7 @@ ambigus. 42 tests ciblés passent. Rapports conservés, aucune unicité revendiq
 
 ## Lot 27 — Admission ATS priorisée par couverture européenne
 
-Spécification : `docs/EUROPE_COVERAGE_V20_SPEC.md`. Classement commun à tous les
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V20_SPEC.md`. Classement commun à tous les
 connecteurs par couverture du pays témoin, un nouveau portail par employeur et
 budget porté à 100. Pilote complet : 50 actifs, 34 en attente, 16 erreurs.
 520 nouvelles fiches publiables dans 17 pays après 18 exclusions motivées ;
@@ -250,7 +250,7 @@ Workday indisponibles, sans assouplissement des critères stage/Europe.
 
 ## Lot 28 — Contrats ATS corroborés et revue des incertitudes
 
-Spécification : `docs/EUROPE_COVERAGE_V21_SPEC.md`. rules-17 exige une confirmation
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V21_SPEC.md`. rules-17 exige une confirmation
 textuelle du contrat ATS, distingue contrats contradictoires et perspectives
 d'embauche, reconnaît alternants, ambassadeurs étudiants et événements.
 Motifs et extraits conservés ; vue d'administration de revue en lecture seule.
@@ -262,7 +262,7 @@ backend sain. Rapports intermédiaire et final conservés, sans suppression de f
 
 ## Lot 29 — Workday : facettes personnalisées et secours borné
 
-Spécification : `docs/EUROPE_COVERAGE_V22_SPEC.md`. Paramètres pays reconnus par
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V22_SPEC.md`. Paramètres pays reconnus par
 libellé explicite, secours global limité à 2000 annonces et toujours partiel.
 Vérification stage/Europe sur les détails inchangée ; 429 interrompt la collecte
 en préservant Retry-After, y compris après pagination. Onze pistes traitées :
@@ -272,7 +272,7 @@ interplateformes possibles. 38 tests ciblés passent, rapports conservés.
 
 ## Lot 30 — Nouveaux employeurs par recherche publique indépendante
 
-Spécification : `docs/EUROPE_COVERAGE_V23_SPEC.md`. Manifeste de pistes revues,
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V23_SPEC.md`. Manifeste de pistes revues,
 prévisualisation puis admission bornée à 100, provenance datée et contrôles
 identité/portail/pays ; réutilisation des probes sans réinitialiser leur backoff.
 Pilote sur FI/GR/CZ/BG/RO : 8 portails testés, 5 actifs, 3 en attente.
@@ -283,7 +283,7 @@ sans promesse d'exhaustivité ni d'unicité des fiches.
 
 ## Lot 31 — Récupération ciblée des trois portails en attente
 
-Spécification : `docs/EUROPE_COVERAGE_V24_SPEC.md`. Diagnostic public : Plum ne
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V24_SPEC.md`. Diagnostic public : Plum ne
 liste plus le stage indexé, Gen liste deux stages en Malaisie, Civitta masque les
 pays du poste derrière un lieu générique. Fallback Lever limité à une déclaration
 explicite de pays du poste, preuve conservée, pays structuré prioritaire et remote
@@ -293,7 +293,7 @@ rapports et fixture conservés ; aucune fusion, workers rechargés, readiness 20
 
 ## Lot 32 — Audit par source et rappel de stages confirmés
 
-Spécification : `docs/EUROPE_COVERAGE_V25_SPEC.md`. Commande d'audit en lecture
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V25_SPEC.md`. Commande d'audit en lecture
 seule : compteurs par source, fraîcheur, exclusions, incertitudes, diagnostics
 d'import et limites de comptage. 1615 boards activés en configuration audités.
 Trois corrections : pays principal Lever, métadonnée de villes Greenhouse,
@@ -303,7 +303,7 @@ possiblement dupliqués, aucune fusion certaine. 68 tests ciblés et build passe
 
 ## Lot 33 — Stages signalés Sentry / Microsoft
 
-Spécification : `docs/EUROPE_COVERAGE_V26_SPEC.md`. Admission Sentry et correction
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V26_SPEC.md`. Admission Sentry et correction
 Ashby : workplaceType prioritaire sur isRemote. Quatre fiches rendues visibles :
 Sentry AT, Back Market FR, Enpal DE, Kognity SE. Collecteur Eightfold espacé de
 2 secondes ; Microsoft réactivé après son backoff, une fiche Belgique importée.
@@ -313,7 +313,7 @@ exhaustive. 24 tests ciblés distincts passent ; lint/diff/readiness vérifiés.
 
 ## Lot 34 — Reprise persistante des collectes Eightfold
 
-Spécification : `docs/EUROPE_COVERAGE_V27_SPEC.md`. Migration 0030 : progression
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V27_SPEC.md`. Migration 0030 : progression
 par portail, recherches/pages et détails restants, validée et expirant à 24 h.
 Offres et progression atomiques sous bail, Retry-After conservé sur résultat
 partiel ; aucune fermeture par absence. Audit expose progression et échéance.
@@ -327,7 +327,7 @@ persistante reste limitée à Eightfold ; pas de promesse d'exhaustivité.
 
 ## Lot 35 — Collecte supervisée et files correctement mesurées
 
-Spécification : `docs/EUROPE_COVERAGE_V28_SPEC.md`. Correction du diagnostic :
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V28_SPEC.md`. Correction du diagnostic :
 les échéances des sources synthétiques ne sont pas des travaux ATS dus. Nouvelle
 commande collection_status, séparation imports/maintenance, superviseur local
 à neuf rôles avec verrou et redémarrage progressif, services Compose séparés et
@@ -343,7 +343,7 @@ soutenu sur 24 h non démontré. Superviseur à relancer après redémarrage du 
 
 ## Lot 36 — Découverte automatique de nouveaux employeurs
 
-Spécification : `docs/EUROPE_COVERAGE_V29_SPEC.md`. Admission automatique depuis
+Spécification : `docs/moteur/couverture/EUROPE_COVERAGE_V29_SPEC.md`. Admission automatique depuis
 les liens structurés des flux publics et le registre ats-scrapers épinglé déjà
 importé. Concordance stricte nom/portail, provenance durable, conflits et sources
 connues exclus, pauses/backoffs conservés. Quota partagé de 50 admissions/jour UTC,
@@ -358,7 +358,7 @@ alias, liens indirects et nouveaux employeurs absents des entrées actuelles
 restent hors de ce mécanisme ; aucune promesse de recherche web exhaustive.
 
 ## Lot 37 — Déduplication par contenu
-- Spec : [EUROPE_COVERAGE_V30_SPEC.md](docs/EUROPE_COVERAGE_V30_SPEC.md).
+- Spec : [EUROPE_COVERAGE_V30_SPEC.md](docs/moteur/couverture/EUROPE_COVERAGE_V30_SPEC.md).
 - Passe maintenance : copies exactes ou quasi identiques, entreprise/titre/lieux
   compatibles, garde-fous sur références, chiffres et historiques privés.
 - Cas Joko vérifié : offres 37, 16163 et 16303 rattachées à 1, quatre sources

@@ -127,7 +127,7 @@ simulées ; aucun compte, achat ou appel Logo.dev authentifié n'a été effectu
 
 ## Bilan local vérifié
 
-Le [snapshot de couverture](research/company-logos-2026-10-01.json) du 1er octobre
+Le snapshot de couverture (`company-logos-2026-10-01.json`, export historique supprimé ; voir la [note sur les exports](../research/README.md)) du 1er octobre
 2026 contient 1 500 entreprises (les collecteurs ont continué à importer pendant
 l'intervention), 901 logos en cache, dont 862 avec provenance, et 599 entreprises
 sans image. Aucun digest LinkedIn rejeté ne reste référencé. Les 39 autres logos

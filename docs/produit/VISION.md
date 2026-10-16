@@ -67,7 +67,7 @@ Pour rendre le développement réaliste, le périmètre initial peut être limit
 
 L'import d'une offre par lien peut être une fonction complémentaire, mais il ne remplace pas la découverte des offres sur Intern.
 
-Les fichiers seront hébergés sur Cloudflare. PostgreSQL conservera leurs références et métadonnées. La proposition de schéma est détaillée dans [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md).
+Les fichiers seront hébergés sur Cloudflare. PostgreSQL conservera leurs références et métadonnées. La proposition de schéma est détaillée dans [DATABASE_SCHEMA.md](../database/DATABASE_SCHEMA.md).
 
 ## Évolution envisagée
 

@@ -1,6 +1,6 @@
 # Domaines et sous-domaines — livraison locale
 
-Date : 1 octobre 2026. Nomenclature `job-taxonomy-1`, classificateur `job-taxonomy-1-rules3`. Recherche initiale : [comparatif, nomenclature et UX](research/job-taxonomy-ux-2026-10-01.md), [référentiels officiels](research/job-taxonomy-sources-2026-10-01.md).
+Date : 1 octobre 2026. Nomenclature `job-taxonomy-1`, classificateur `job-taxonomy-1-rules3`. Recherche initiale : [comparatif, nomenclature et UX](../research/job-taxonomy-ux-2026-10-01.md), [référentiels officiels](../research/job-taxonomy-sources-2026-10-01.md).
 
 ## Comportement livré
 
@@ -47,6 +47,6 @@ Retour arrière : revenir au code antérieur puis migrer vers `0027`. Les nouvel
 - Navigateur : 34 tests de recherche, filtres, détail, pagination et profil passent ; un test supplémentaire vérifie ensuite la sauvegarde des spécialités et exclusions sans perte des contrats. Les quatre tests dédiés à la taxonomie passent.
 - Build frontend, contrôles des tokens, lint frontend sans erreur, Ruff des nouveaux modules, contrôles Django et absence de migration manquante. Les avertissements Fast Refresh du fichier historique `EngineControls.tsx` subsistent.
 - Vérification visuelle du sélecteur à 320 px ; navigation clavier, Échap, annulation, restauration du focus, réponses obsolètes et panne de vocabulaire vérifiées. Les tests navigateur utilisent des fixtures publiques simulées ; les lectures HTTP réelles du catalogue local sont vérifiées séparément.
-- API locale et frontend relancés sur 8000 et 5173 ; catalogue et facettes répondent 200, avec `Cache-Control: no-store` côté API. [Bilan et mesures locales](research/job-taxonomy-validation-2026-10-01.json).
+- API locale et frontend relancés sur 8000 et 5173 ; catalogue et facettes répondent 200, avec `Cache-Control: no-store` côté API. Bilan et mesures locales (`job-taxonomy-validation-2026-10-01.json`, export historique supprimé ; voir la [note sur les exports](../research/README.md)).
 
 Les collecteurs modifient le corpus pendant les mesures. La couverture du classement n’établit ni sa précision ni son rappel. Les règles restent conservatrices et les cas non identifiés restent à classer ; le protocole d’annotation indépendant proposé dans la recherche demeure nécessaire avant d’annoncer un taux de précision ou un gain UX chiffré.

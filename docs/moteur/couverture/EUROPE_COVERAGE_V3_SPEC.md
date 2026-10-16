@@ -44,7 +44,7 @@ Les cinq boards sont activés et planifiés. Le worker local a été relancé av
 nouveaux modules ; il doit rester démarré pour exécuter les passages suivants.
 282 tests backend passent, Ruff et contrôle des migrations passent. Aucune migration
 nouvelle. Sauvegarde locale avant import : `~/.codex/backups/intern-coverage-v3-20260930/before-icims-taleo.dump`.
-Preuve : [audit](research/2026-09-30-icims-taleo-coverage-audit.json).
+Preuve : [audit](../../research/2026-09-30-icims-taleo-coverage-audit.json).
 
 La recherche iCIMS est actuellement limitée au mot-clé `intern`. Les autres
 langues, les autres tenants Taleo/iCIMS et les portails nationaux restent à étendre
