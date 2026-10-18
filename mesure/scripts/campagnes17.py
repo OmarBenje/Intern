@@ -41,8 +41,10 @@ class Campaigns:
         if not self.output.is_relative_to(ROOT):
             raise RuntimeError("Results must be inside mesure/")
         self.output.mkdir(parents=True, exist_ok=True)
-        self.protocol = json.loads(PERFORMANCE_PROTOCOL.read_text())
-        if max(self.protocol["paliers_utilisateurs"]) > 20:
+        self.protocol_path = getattr(args, "capacity_protocol", None) or PERFORMANCE_PROTOCOL
+        self.protocol = json.loads(self.protocol_path.read_text())
+        self.accounts = self.output / "comptes.csv" if getattr(args, "capacity_protocol", None) else ROOT / "comptes.csv"
+        if not getattr(args, "capacity_protocol", None) and max(self.protocol["paliers_utilisateurs"]) > 20:
             raise RuntimeError("This calibrated campaign supports at most twenty users")
         self.env = {**os.environ, "DOCKER_HOST": args.docker_host, "DOCKER_CONFIG": str(args.docker_config)}
         self.owner_path = self.runtime / "measurement-project.json"
@@ -68,11 +70,11 @@ class Campaigns:
         self.collectors = []
         self.manifest_path = self.output / "manifest.json"
         self.manifest = json.loads(self.manifest_path.read_text()) if self.manifest_path.exists() else {
-            "status": "preparing", "protocol_sha256": digest(PERFORMANCE_PROTOCOL),
+            "status": "preparing", "protocol_sha256": digest(self.protocol_path),
             "source_plan_sha256": digest(ROOT / "plan.jmx"), "order": ["vm", "docker", "docker", "vm"],
             "runs": [], "started_epoch_s": time.time(),
         }
-        if self.manifest["protocol_sha256"] != digest(PERFORMANCE_PROTOCOL):
+        if self.manifest["protocol_sha256"] != digest(self.protocol_path):
             raise RuntimeError("Protocol changed since campaign preparation")
 
     def event(self, action, **fields):
@@ -259,10 +261,19 @@ class Campaigns:
         self.measurement_touched = True
         if not snapshot.exists():
             self.dc("up", "-d", "--no-build", "--wait", "--wait-timeout", "180", timeout=240)
-            seed = self.dc("exec", "-T", "metier", ".venv/bin/python", "app/manage.py", "shell",
+            seed = self.dc("exec", "-T", "-e",
+                           f"MESURE_ACCOUNTS={max(self.protocol['paliers_utilisateurs'])}",
+                           "metier", ".venv/bin/python", "app/manage.py", "shell",
                            "--verbosity", "0", "--command", 'exec(__import__("sys").stdin.read())',
-                           data=(ROOT / "scripts/preparer_comptes.py").read_bytes()).stdout
-            if seed != (ROOT / "comptes.csv").read_bytes():
+                           data=(ROOT / "scripts/preparer_comptes.py").read_bytes(),
+                           timeout=max(90, max(self.protocol["paliers_utilisateurs"]) * 2)).stdout
+            if getattr(self.args, "capacity_protocol", None):
+                rows = list(csv.DictReader(seed.decode().splitlines()))
+                count = max(self.protocol["paliers_utilisateurs"])
+                if len(rows) != count or [r["username"] for r in rows] != [f"mesure{n:02d}" for n in range(1, count + 1)]:
+                    raise RuntimeError("Capacity fixture accounts differ")
+                self.accounts.write_bytes(seed)
+            elif seed != self.accounts.read_bytes():
                 raise RuntimeError("Fixture accounts differ")
             sql = self.dc("exec", "-T", "donnees", "pg_dump", "-U", self.pg_user,
                           "-d", DATABASE, "--no-owner", "--no-privileges").stdout
@@ -281,7 +292,7 @@ class Campaigns:
                 (staging / "base.sql").chmod(0o600)
                 (staging / "base.sql").replace(snapshot)
         self.manifest["snapshot_sha256"] = digest(snapshot)
-        self.manifest["accounts_sha256"] = digest(ROOT / "comptes.csv")
+        self.manifest["accounts_sha256"] = digest(self.accounts)
         self.manifest["sources_sha256"] = digest(self.runtime / "sources.tar")
         images = json.loads(self.docker("inspect", *(f"{self.project}-{service}-1" for service in SERVICES)).stdout)
         self.manifest["images"] = {item["Config"]["Labels"]["com.docker.compose.service"]: item["Image"] for item in images}
@@ -426,42 +437,58 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
             folder = self.output / name
             if (folder / "serveurs.json").exists():
                 continue
-            folder.parent.mkdir(parents=True, exist_ok=True)
-            if folder.exists():
-                raise RuntimeError("Partial palier exists; preserve and review before resuming")
-            # The measurement runner creates the output directory itself.
-            self.event("palier_start", series=series, deployment=deployment, users=users)
-            command = [sys.executable, str(ROOT / "scripts/etalonnage.py"), "application", "--jmeter", self.args.jmeter,
-                       "--users", str(users), "--output", str(folder)]
-            console = (self.runtime / "runner.log").open("w")
-            process = subprocess.Popen(command, stdout=console, stderr=console, env=self.env, start_new_session=True)
-            deadline = time.monotonic() + 20
-            while not folder.exists():
-                if process.poll() is not None or time.monotonic() > deadline:
-                    raise RuntimeError("Measurement runner failed to start")
-                time.sleep(.1)
-            self.collect(deployment, folder)
-            while process.poll() is None:
-                if (self.runtime / "stop-requested").exists():
-                    os.killpg(process.pid, signal.SIGTERM)
-                    process.wait(timeout=20)
-                    self.stop_collectors()
-                    console.close()
-                    self.check_stop()
-                time.sleep(2)
-            code = process.returncode
-            console.close()
-            self.stop_collectors()
-            if code:
-                raise RuntimeError("Measurement runner failed; inspect private runner.log")
-            self.server_summary(folder)
-            client = json.loads((folder / "synthese.json").read_text())
-            self.manifest["runs"].append({"series": series, "deployment": deployment, "users": users,
-                                          "path": name, "errors": client["all_errors"]})
-            self.event("palier_complete", series=series, deployment=deployment, users=users,
-                       requests=client["requests"], errors=client["all_errors"])
+            self.run_plateau(deployment, series, users)
             if index + 1 < len(self.protocol["paliers_utilisateurs"]):
                 self.cooldown(deployment, series, users)
+
+    def run_plateau(self, deployment, series, users):
+        name = f"serie-{series}/{deployment}/{users}"
+        folder = self.output / name
+        folder.parent.mkdir(parents=True, exist_ok=True)
+        if folder.exists():
+            raise RuntimeError("Partial palier exists; preserve and review before resuming")
+        # The measurement runner creates the output directory itself.
+        self.event("palier_start", series=series, deployment=deployment, users=users)
+        command = [sys.executable, str(ROOT / "scripts/etalonnage.py"), "application", "--jmeter", self.args.jmeter,
+                   "--users", str(users), "--output", str(folder),
+                   "--accounts", str(self.accounts), "--protocol", str(self.protocol_path)]
+        if getattr(self.args, "capacity_protocol", None):
+            command += ["--capacity-guard"]
+        with (self.runtime / "runner.log").open("w") as console:
+            process = subprocess.Popen(command, stdout=console, stderr=console, env=self.env, start_new_session=True)
+            try:
+                deadline = time.monotonic() + 20
+                while not folder.exists():
+                    if process.poll() is not None or time.monotonic() > deadline:
+                        raise RuntimeError("Measurement runner failed to start")
+                    time.sleep(.1)
+                self.collect(deployment, folder)
+                while process.poll() is None:
+                    self.check_stop()
+                    if getattr(self.args, "capacity_protocol", None):
+                        self.check_capacity_health(folder)
+                    time.sleep(2)
+                if process.returncode:
+                    raise RuntimeError("Measurement runner failed; inspect private runner.log")
+            finally:
+                self.terminate_runner(process)
+                self.stop_collectors()
+        self.server_summary(folder)
+        client = json.loads((folder / "synthese.json").read_text())
+        self.manifest["runs"].append({"series": series, "deployment": deployment, "users": users,
+                                      "path": name, "errors": client["all_errors"]})
+        self.event("palier_complete", series=series, deployment=deployment, users=users,
+                   requests=client["requests"], errors=client["all_errors"])
+
+    @staticmethod
+    def terminate_runner(process):
+        if process.poll() is None:
+            os.killpg(process.pid, signal.SIGTERM)
+            try:
+                process.wait(timeout=20)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.wait()
 
     def cooldown(self, deployment, series, users):
         policy = self.protocol["repos_dynamique"]
@@ -610,8 +637,13 @@ def main():
     parser.add_argument("--output", type=Path, default=ROOT / "resultats/etape17")
     parser.add_argument("--reference-project", default="intern-etape14")
     parser.add_argument("--preflight", action="store_true")
+    parser.add_argument("--capacity-protocol", type=Path)
     args = parser.parse_args()
-    controller = Campaigns(args)
+    if args.capacity_protocol:
+        from capacite import CapacityCampaign
+        controller = CapacityCampaign(args)
+    else:
+        controller = Campaigns(args)
     if args.preflight:
         controller.preflight()
     else:

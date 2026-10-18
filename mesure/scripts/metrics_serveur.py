@@ -75,6 +75,7 @@ def cgroup_snapshot(pid):
         io = [dict(field.split("=", 1) for field in line.split()[1:])
               for line in (group / "io.stat").read_text().splitlines()]
         return {"cpu_us": int(cpu["usage_usec"]), "memory_bytes": int((group / "memory.current").read_text()),
+                "oom_events": int(dict(line.split() for line in (group / "memory.events").read_text().splitlines())["oom_kill"]),
                 "read_bytes": sum(int(row.get("rbytes", 0)) for row in io),
                 "write_bytes": sum(int(row.get("wbytes", 0)) for row in io)}
     except (OSError, StopIteration, KeyError, ValueError):
@@ -103,6 +104,9 @@ def main():
                         "read_bytes_per_s": max(0, group_now["read_bytes"] - group_before["read_bytes"]) / (now - last),
                         "write_bytes_per_s": max(0, group_now["write_bytes"] - group_before["write_bytes"]) / (now - last),
                         "cpu_io_method": "cgroup_v2"})
+        memory = dict(line.split(":", 1) for line in Path("/proc/meminfo").read_text().splitlines())
+        row["host_memory_available_pct"] = int(memory["MemAvailable"].split()[0]) / int(memory["MemTotal"].split()[0]) * 100
+        row["memory_oom_events"] = max(0, group_now["oom_events"] - group_before["oom_events"]) if group_before and group_now else 0
         if args.sql_command:
             result = subprocess.run(json.loads(args.sql_command), check=True, capture_output=True, text=True, timeout=10)
             row.update(json.loads(result.stdout))

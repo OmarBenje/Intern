@@ -1,6 +1,7 @@
 """Run with Django shell on a dedicated measurement database; print JMeter CSV."""
 
 import csv
+import os
 import sys
 
 from django.contrib.auth import get_user_model
@@ -17,7 +18,7 @@ def prepare():
         raise RuntimeError("Import the fictitious SQL dataset first.")
     rows = []
     with transaction.atomic():
-        for number in range(1, 21):
+        for number in range(1, int(os.environ.get("MESURE_ACCOUNTS", "20")) + 1):
             username = f"mesure{number:02d}"
             password = "Mesure-Fictive-2026!"
             user, created = User.objects.get_or_create(

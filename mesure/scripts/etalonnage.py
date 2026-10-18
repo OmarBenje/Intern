@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import platform
 import statistics
+import signal
 import subprocess
 import time
 import xml.etree.ElementTree as ET
@@ -102,7 +103,7 @@ def percentile(values, fraction):
     return values[low] + (values[min(low + 1, len(values) - 1)] - values[low]) * (index - low)
 
 
-def analyse(csv_path, users, ramp, warmup, plateau):
+def analyse(csv_path, users, ramp, warmup, plateau, capacity=False):
     with csv_path.open() as stream:
         rows = list(csv.DictReader(stream))
     if not rows:
@@ -112,31 +113,34 @@ def analyse(csv_path, users, ramp, warmup, plateau):
     end = start + plateau * 1000
     window = [row for row in rows if int(row["timeStamp"]) >= start
               and int(row["timeStamp"]) + int(row["elapsed"]) <= end]
+    issues = []
     if not window:
-        raise RuntimeError("Empty stable window")
+        issues.append("Empty stable window")
     effective = sorted({int(row["allThreads"]) for row in window})
     if effective != [users]:
-        raise RuntimeError(f"Expected {users} active users throughout plateau, observed {effective}")
+        issues.append(f"Expected {users} active users throughout plateau, observed {effective}")
     threads = {row["threadName"] for row in window}
     if len(threads) != users:
-        raise RuntimeError("Missing users in the stable window")
+        issues.append("Missing users in the stable window")
     for thread in threads:
         samples = [row for row in window if row["threadName"] == thread]
         if min(int(row["timeStamp"]) for row in samples) > start + 5000:
-            raise RuntimeError("A user entered the plateau late")
+            issues.append("A user entered the plateau late")
         if max(int(row["timeStamp"]) + int(row["elapsed"]) for row in samples) < end - 5000:
-            raise RuntimeError("A user left the plateau early")
+            issues.append("A user left the plateau early")
+    if issues and not capacity:
+        raise RuntimeError(issues[0])
     latency = [int(row["elapsed"]) for row in window]
     errors = [row for row in window if row["success"] != "true"]
     result = {
         "window_start_ms": start, "window_end_ms": end, "plateau_s": plateau,
         "users": users, "effective_users": effective,
         "requests": len(window), "errors": len(errors),
-        "error_pct": len(errors) / len(window) * 100,
+        "error_pct": len(errors) / len(window) * 100 if window else 100,
         "throughput_rps": len(window) / plateau,
         "successful_throughput_rps": (len(window) - len(errors)) / plateau,
-        "p50_ms": percentile(latency, .5), "p90_ms": percentile(latency, .9),
-        "p95_ms": percentile(latency, .95), "p99_ms": percentile(latency, .99),
+        "p50_ms": percentile(latency, .5) if latency else None, "p90_ms": percentile(latency, .9) if latency else None,
+        "p95_ms": percentile(latency, .95) if latency else None, "p99_ms": percentile(latency, .99) if latency else None,
         "total_samples": len(rows),
         "all_errors": sum(row["success"] != "true" for row in rows),
         "request_types": {},
@@ -146,22 +150,66 @@ def analyse(csv_path, users, ramp, warmup, plateau):
         result["request_types"][label] = {
             "samples": len(samples), "errors": sum(row["success"] != "true" for row in samples),
         }
+    if capacity:
+        result["plateau_valid"] = not issues
+        result["plateau_issues"] = sorted(set(issues))
+        for label, record in result["request_types"].items():
+            samples = [row for row in window if row["label"] == label]
+            record["stable_samples"] = len(samples)
+            record["stable_errors"] = sum(row["success"] != "true" for row in samples)
+            record["stable_error_pct"] = record["stable_errors"] / len(samples) * 100 if samples else None
     return result
+
+
+def machine_snapshot():
+    memory = {key: int(value.split()[0]) * 1024 for key, value in
+              (line.split(":", 1) for line in Path("/proc/meminfo").read_text().splitlines())}
+    vm = dict(line.split() for line in Path("/proc/vmstat").read_text().splitlines())
+    network = [line.split(":", 1)[1].split() for line in Path("/proc/net/dev").read_text().splitlines()[2:]]
+    pressure = Path("/proc/pressure/memory")
+    fields = dict(item.split("=") for item in pressure.read_text().splitlines()[0].split()[1:]) if pressure.exists() else {}
+    return dict(host_memory_total_bytes=memory["MemTotal"],
+                host_memory_available_bytes=memory["MemAvailable"],
+                host_swap_used_bytes=memory["SwapTotal"] - memory["SwapFree"],
+                host_swap_pages=int(vm["pswpin"]) + int(vm["pswpout"]),
+                host_oom_kills=int(vm.get("oom_kill", 0)),
+                host_memory_pressure_pct=float(fields.get("avg10", 0)),
+                host_network_rx_bytes=sum(int(row[0]) for row in network),
+                host_network_tx_bytes=sum(int(row[8]) for row in network))
+
+
+def memory_blockers(snapshot, previous, policy):
+    minimum = max(policy["memoire_disponible_min_octets"],
+                  snapshot["host_memory_total_bytes"] * policy["memoire_disponible_min_pct"] / 100)
+    reasons = []
+    if snapshot["host_memory_available_bytes"] < minimum:
+        reasons.append("host_memory_low")
+    if snapshot["host_swap_pages"] > previous["host_swap_pages"]:
+        reasons.append("host_swapping")
+    if snapshot["host_oom_kills"] > previous["host_oom_kills"]:
+        reasons.append("host_oom")
+    if snapshot["host_memory_pressure_pct"] > policy["pression_memoire_max_pct"]:
+        reasons.append("host_memory_pressure")
+    return reasons
 
 
 PERFORMANCE_PROTOCOL = ROOT / "protocole-performance.json"
 
 
-def saved_protocol(expected_digest):
+def saved_protocol(expected_digest, campaign_root=None):
     # Historical evidence retains its original fixed-rest protocol.
-    for path in (PERFORMANCE_PROTOCOL, ROOT / "protocole.json"):
+    paths = [PERFORMANCE_PROTOCOL, ROOT / "protocole.json"]
+    if campaign_root is not None:
+        paths.insert(0, campaign_root / "protocole.json")
+    for path in paths:
+        if not path.is_file():
+            continue
         if digest(path) == expected_digest:
             return json.loads(path.read_text())
     raise RuntimeError("Unknown or changed campaign protocol")
 
 
 def main():
-    protocol = json.loads(PERFORMANCE_PROTOCOL.read_text())
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=["static", "application"])
     parser.add_argument("--jmeter", required=True)
@@ -172,7 +220,10 @@ def main():
     parser.add_argument("--port", type=int, default=8081)
     parser.add_argument("--accounts", type=Path, default=ROOT / "comptes.csv")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--protocol", type=Path, default=PERFORMANCE_PROTOCOL)
+    parser.add_argument("--capacity-guard", action="store_true")
     args = parser.parse_args()
+    protocol = json.loads(args.protocol.read_text())
     profile = protocol["statique"] if args.mode == "static" else protocol
     if args.ramp is None:
         args.ramp = profile["montee_s"]
@@ -210,42 +261,87 @@ def main():
         "sql_schema_sha256": digest(ROOT.parent / "donnees/schema.sql"),
         "sql_data_sha256": digest(ROOT.parent / "donnees/data.sql"),
         "seed_script_sha256": digest(ROOT / "scripts/preparer_comptes.py"),
-        "protocol_sha256": digest(PERFORMANCE_PROTOCOL),
+        "protocol_sha256": digest(args.protocol),
         "host": {"system": platform.system(), "release": platform.release(), "logical_cpus": os.cpu_count()},
         "cpu_units": "100 percent injector CPU = one logical CPU; host busy percent = all CPUs",
         "started_epoch_s": time.time(),
     }
     save(output / "configuration.json", metadata)
     with (output / "console.txt").open("w") as console, (output / "ressources.csv").open("w") as resources:
-        process = subprocess.Popen(command, cwd=ROOT, stdout=console, stderr=subprocess.STDOUT)
-        writer = csv.writer(resources)
-        writer.writerow(["epoch_s", "injector_cpu_pct", "injector_rss_bytes", "host_busy_pct", "load1"])
-        before = process_snapshot(process.pid)
-        host_before = host_snapshot()
-        last = time.monotonic()
-        while process.poll() is None:
-            time.sleep(2)
-            now = time.monotonic()
-            current = process_snapshot(process.pid)
-            host_now = host_snapshot()
-            ticks = sum(max(0, data[1] - before[pid][1]) for pid, data in current.items() if pid in before)
-            cpu = ticks / os.sysconf("SC_CLK_TCK") / (now - last) * 100
-            total = host_now[0] - host_before[0]
-            busy = (1 - (host_now[1] - host_before[1]) / total) * 100 if total else 0
-            writer.writerow([time.time(), cpu, sum(data[2] for data in current.values()), busy, os.getloadavg()[0]])
-            resources.flush()
-            before, host_before, last = current, host_now, now
+        machine_before = machine_snapshot()
+        blockers = memory_blockers(machine_before, machine_before, protocol["capacite"]) if args.capacity_guard else []
+        if blockers:
+            save(output / "arret-securite.json", dict(reasons=blockers, snapshot=machine_before))
+            raise RuntimeError("Host memory unsafe before load")
+        process = subprocess.Popen(command, cwd=ROOT, stdout=console, stderr=subprocess.STDOUT,
+                                   start_new_session=args.capacity_guard)
+
+        def stop_injector():
+            if process.poll() is None:
+                os.killpg(process.pid, signal.SIGTERM)
+                try:
+                    process.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    os.killpg(process.pid, signal.SIGKILL)
+                    process.wait()
+
+        def interrupted(signum, frame):
+            stop_injector()
+            metadata.update(finished_epoch_s=time.time(), exit_code=process.returncode, interrupted=True)
+            save(output / "configuration.json", metadata)
+            raise SystemExit(128 + signum)
+
+        if args.capacity_guard:
+            signal.signal(signal.SIGTERM, interrupted)
+            signal.signal(signal.SIGINT, interrupted)
+        try:
+            writer = csv.writer(resources)
+            extra_fields = list(machine_before)
+            writer.writerow(["epoch_s", "injector_cpu_pct", "injector_rss_bytes", "host_busy_pct", "load1", *extra_fields])
+            before = process_snapshot(process.pid)
+            host_before = host_snapshot()
+            last = time.monotonic()
+            while process.poll() is None:
+                time.sleep(2)
+                now = time.monotonic()
+                current = process_snapshot(process.pid)
+                host_now = host_snapshot()
+                ticks = sum(max(0, data[1] - before[pid][1]) for pid, data in current.items() if pid in before)
+                cpu = ticks / os.sysconf("SC_CLK_TCK") / (now - last) * 100
+                total = host_now[0] - host_before[0]
+                busy = (1 - (host_now[1] - host_before[1]) / total) * 100 if total else 0
+                machine = machine_snapshot()
+                writer.writerow([time.time(), cpu, sum(data[2] for data in current.values()), busy, os.getloadavg()[0],
+                                 *(machine[field] for field in extra_fields)])
+                resources.flush()
+                if args.capacity_guard:
+                    blockers = memory_blockers(machine, machine_before, protocol["capacite"])
+                    if blockers:
+                        save(output / "arret-securite.json", dict(reasons=blockers, snapshot=machine))
+                        os.killpg(process.pid, signal.SIGTERM)
+                        try:
+                            process.wait(timeout=20)
+                        except subprocess.TimeoutExpired:
+                            os.killpg(process.pid, signal.SIGKILL)
+                            process.wait()
+                        raise RuntimeError("Unsafe host resources: " + ", ".join(blockers))
+                before, host_before, last, machine_before = current, host_now, now, machine
+        finally:
+            if args.capacity_guard:
+                stop_injector()
     metadata["finished_epoch_s"] = time.time()
     metadata["exit_code"] = process.returncode
     save(output / "configuration.json", metadata)
     if process.returncode:
         raise RuntimeError("JMeter failed; inspect console.txt")
-    result = analyse(csv_path, args.users, args.ramp, args.warmup, args.plateau)
+    result = analyse(csv_path, args.users, args.ramp, args.warmup, args.plateau, capacity=args.capacity_guard)
     with (output / "ressources.csv").open() as stream:
         samples = [row for row in csv.DictReader(stream)
                    if result["window_start_ms"] / 1000 <= float(row["epoch_s"]) <= result["window_end_ms"] / 1000]
     for field in ("injector_cpu_pct", "injector_rss_bytes", "host_busy_pct"):
         values = [float(row[field]) for row in samples]
+        if not values:
+            raise RuntimeError("Missing stable injector samples")
         result[field + "_mean"] = statistics.mean(values)
         result[field + "_max"] = max(values)
     save(output / "synthese.json", result)

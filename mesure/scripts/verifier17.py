@@ -41,13 +41,19 @@ def main(argv=None, write_outputs=True):
     root = args.output.resolve()
     require(root.is_relative_to(ROOT), "Results must stay inside mesure/")
     manifest = json.loads((root / "manifest.json").read_text())
-    protocol = saved_protocol(manifest["protocol_sha256"])
+    protocol = saved_protocol(manifest["protocol_sha256"], root)
+    capacity = manifest.get("kind") == "capacity"
     require(manifest["status"] == "complete", "Campaigns are incomplete")
     require(manifest["source_plan_sha256"] == digest(ROOT / "plan.jmx"), "Source plan changed")
-    require(manifest["accounts_sha256"] == digest(ROOT / "comptes.csv"), "Accounts changed")
+    require(manifest["accounts_sha256"] == digest(root / "comptes.csv" if capacity else ROOT / "comptes.csv"), "Accounts changed")
     expected = [(series, deployment, users) for series, deployments in
                 ((1, ("vm", "docker")), (2, ("docker", "vm")))
                 for deployment in deployments for users in protocol["paliers_utilisateurs"]]
+    if capacity:
+        from analyser_capacite import validate_design
+        validate_design(root, manifest, protocol)
+        expected = [(block["series"], block["deployment"], n)
+                    for block in manifest["blocks"] for n in block["targets"]]
     observed = [(r["series"], r["deployment"], r["users"]) for r in manifest["runs"]]
     require(observed == expected, "Missing, duplicate or out-of-order plateaus")
     events = [json.loads(line) for line in (root / "journal.jsonl").read_text().splitlines()]
@@ -55,7 +61,8 @@ def main(argv=None, write_outputs=True):
     starts = [(e["series"], e["deployment"], e["users"]) for e in events if e["action"] == "palier_start"]
     require(starts == expected, "Unexpected raw execution order")
     resets = [e for e in events if e["action"] == "database_restored"]
-    require([e["deployment"] for e in resets] == ["vm", "docker", "docker", "vm"], "Unexpected resets")
+    expected_resets = [block["deployment"] for block in manifest["blocks"]] if capacity else ["vm", "docker", "docker", "vm"]
+    require([e["deployment"] for e in resets] == expected_resets, "Unexpected resets")
     require(all(e["snapshot_sha256"] == manifest["snapshot_sha256"] for e in resets), "SQL snapshots differ")
     for i, event in enumerate(events):
         if event["action"] == "cooldown":
@@ -69,10 +76,14 @@ def main(argv=None, write_outputs=True):
     hashes = {name: digest(root / name) for name in ("manifest.json", "journal.jsonl")}
     if "repos_dynamique" in protocol:
         checks = [e for e in events if e["action"] == "login_rate_limit_checked"]
-        require([e["deployment"] for e in checks] == ["vm", "docker", "docker", "vm"]
+        require([e["deployment"] for e in checks] == expected_resets
                 and all(e["enabled"] is False for e in checks), "Measurement login settings differ")
         expected_rests = [(s, d, u) for s, d, u in expected
                           if u != protocol["paliers_utilisateurs"][-1]]
+        if capacity:
+            expected_rests = [(e["series"], e["deployment"], e["users"]) if e["action"] == "palier_complete"
+                              else (f"etalonnage-{e['deployment']}", e["deployment"], e["users"])
+                              for e in events if e["action"] in ("palier_complete", "calibration_complete")]
         for action in ("cooldown_start", "cooldown_complete"):
             require([(e["series"], e["deployment"], e["users"]) for e in events
                      if e["action"] == action] == expected_rests, "Missing or out-of-order rest evidence")
@@ -91,9 +102,10 @@ def main(argv=None, write_outputs=True):
             require(event["epoch_s"] <= idle_epoch <= finish["epoch_s"]
                     and finish["epoch_s"] - idle_epoch <= policy["fraicheur_s"],
                     "Idle decision missing or stale")
-            next_start = events[i + 2]
-            require(next_start["action"] == "palier_start" and next_start["epoch_s"] >= finish["epoch_s"],
-                    "Next plateau began before rest finished")
+            if not capacity:
+                next_start = events[i + 2]
+                require(next_start["action"] == "palier_start" and next_start["epoch_s"] >= finish["epoch_s"],
+                        "Next plateau began before rest finished")
             folder = (root / finish["path"]).resolve()
             require(folder.is_relative_to(root), "Rest evidence outside results")
             samples = {}
@@ -104,6 +116,11 @@ def main(argv=None, write_outputs=True):
                 samples[service] = [row for line in path.read_text().splitlines()
                                     if (row := json.loads(line))["epoch_s"] <= idle_epoch]
             require(idle_window(samples, idle_epoch, policy), "Services were not idle at restart")
+    if capacity:
+        from analyser_capacite import verify_calibration
+        hashes.update(verify_calibration(root, manifest, protocol))
+        for name in ("comptes.csv", "protocole.json"):
+            hashes[name] = digest(root / name)
     clients, servers, common, plans = [], [], {}, {}
     for run in manifest["runs"]:
         folder = root / run["path"]
@@ -130,10 +147,15 @@ def main(argv=None, write_outputs=True):
         users = run["users"]
         plans.setdefault(users, config["run_plan_sha256"])
         require(plans[users] == config["run_plan_sha256"], "Plans differ for the same plateau")
-        recalculated = analyse(folder / "brut.csv", users, config["ramp_s"], config["warmup_s"], config["plateau_s"])
+        recalculated = analyse(folder / "brut.csv", users, config["ramp_s"], config["warmup_s"], config["plateau_s"], capacity=capacity)
         saved = json.loads((folder / "synthese.json").read_text())
         require(all(saved[k] == v for k, v in recalculated.items()), f"Client summary differs: {run['path']}")
         require(run["errors"] == saved["all_errors"], "Manifest error count differs")
+        if capacity:
+            from capacite import injector_blockers
+            require(not injector_blockers(folder, protocol["capacite"]), "Injector/host limiting")
+            require(not (folder / "arret-securite.json").exists(), "Safety interruption present")
+            hashes[f"{run['path']}/injecteur.json"] = digest(folder / "injecteur.json")
         clients.append(dict(series=run["series"], deployment=run["deployment"], users=users,
                             **{k: saved[k] for k in ("total_samples", "requests", "all_errors",
                                "successful_throughput_rps", "p50_ms", "p95_ms", "p99_ms")}))

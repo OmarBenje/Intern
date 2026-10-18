@@ -1,5 +1,13 @@
 etape_17() {
   local action=${1:-verifier}
+  if [[ $action == capacite ]]; then
+    local stamp
+    stamp=$(date +%Y%m%d-%H%M%S)-$$
+    export MESURE_RUNTIME="${CAPACITE_RUNTIME:-$PWD/../.execution-campagnes/capacite-$stamp}"
+    export MESURE_OUTPUT="${CAPACITE_OUTPUT:-$PWD/mesure/resultats/capacite-$stamp}"
+    export MESURE_CAPACITY_PROTOCOL="${CAPACITE_PROTOCOL:-$PWD/mesure/protocole-capacite.json}"
+    action=lancer
+  fi
   case "$action" in
     verifier)
       python3 mesure/scripts/verifier17.py

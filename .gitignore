@@ -14,3 +14,4 @@ htmlcov/
 /docs/research/generated/
 *.log
 .execution/
+.idea

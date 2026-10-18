@@ -39,7 +39,9 @@ def main():
         if manifest.exists():
             data = json.loads(manifest.read_text())
             result = {"status": data["status"], "paliers_enregistres": len(data["runs"]),
-                      "paliers_attendus": 16, "progress": data.get("progress")}
+                      "paliers_attendus": ("adaptatifs" if data.get("kind") == "capacity" else
+                          4 * len(json.loads((ROOT / "protocole-performance.json").read_text())["paliers_utilisateurs"])),
+                      "progress": data.get("progress")}
             for key in ("error", "restoration_errors", "measurement_project"):
                 if key in data and (key == "measurement_project" or data["status"] in ("failed", "stopped")):
                     result[key] = data[key]

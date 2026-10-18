@@ -93,6 +93,10 @@ def configuration(env):
              'jmeter': 'JMETER_BIN', 'runtime': 'MESURE_RUNTIME', 'output': 'MESURE_OUTPUT'}
     config = {key: str(Path(env[var]).resolve()) for key, var in paths.items()}
     config.update(docker_host=env['DOCKER_HOST'], reference_project=env['MESURE_REFERENCE_PROJECT'])
+    if env.get('MESURE_CAPACITY_PROTOCOL'):
+        config['capacity_protocol'] = str(Path(env['MESURE_CAPACITY_PROTOCOL']).resolve())
+        if not Path(config['capacity_protocol']).is_file():
+            raise SystemExit('Protocole de capacité absent.')
     if Path(config['runtime']).is_relative_to(ROOT):
         raise SystemExit('Le dossier privé MESURE_RUNTIME doit être hors Intern.')
     output = Path(config['output'])

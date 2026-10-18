@@ -700,6 +700,29 @@ La commande sans action vérifie toujours `mesure/resultats/etape17` ; elle ne
 valide pas automatiquement une nouvelle sortie. Rattacher et vérifier les
 nouvelles preuves avant de les présenter. Détails : [mesure/ETAPE17.md](mesure/ETAPE17.md).
 
+### Rechercher la capacité maximale des deux déploiements
+
+La campagne de capacité est distincte des preuves existantes. Depuis Intern :
+
+```bash
+bash outils/executer_etape.sh 17 capacite
+bash outils/executer_etape.sh 17 statut
+# Après la fin de la campagne et la restauration des services :
+bash outils/executer_etape.sh 18 capacite
+```
+
+Le [protocole de capacité](mesure/protocole-capacite.json) explore jusqu’à
+320 candidats distincts, avec leurs candidatures, un étalonnage à chaque charge,
+un arrêt au premier palier refusé et un affinement des bornes. Les deux séries
+inversent l’ordre VM/Docker. Les seuils choisis sont p95 ≤ 1 s et erreurs ≤ 1 % ;
+les relevés injecteur/hôte et serveur accompagnent chaque palier.
+Le rapport PDF, les courbes et les conclusions sont produits dans `analyse/`
+sous le nouveau dossier de résultats. Sans dépassement, le rapport annonce
+seulement une borne inférieure et demande une exploration plus haute.
+**Implémentation disponible ; mesures de capacité à exécuter.**
+Détails, paramètres, limites et preuves : [mesure/CAPACITE.md](mesure/CAPACITE.md).
+La commande historique `17 lancer` conserve sa limite étalonnée de 20 utilisateurs.
+
 ## Étape 18 — Analyse des mesures
 
 Prérequis : Python et pip/venv. Depuis Intern :
