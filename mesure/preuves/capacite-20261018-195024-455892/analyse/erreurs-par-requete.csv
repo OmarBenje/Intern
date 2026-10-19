@@ -1,0 +1,145 @@
+series,deployment,users,request,samples,errors,stable_samples,stable_errors,stable_error_pct
+1,vm,1,00 — CSRF,1,0,0,0,
+1,vm,1,01 — Connexion,1,0,0,0,
+1,vm,1,02 — Mes candidatures,163,0,117,0,0.0
+1,vm,5,00 — CSRF,5,0,0,0,
+1,vm,5,01 — Connexion,5,0,0,0,
+1,vm,5,02 — Mes candidatures,764,0,585,0,0.0
+1,vm,10,00 — CSRF,10,0,0,0,
+1,vm,10,01 — Connexion,10,0,0,0,
+1,vm,10,02 — Mes candidatures,1515,0,1173,0,0.0
+1,vm,20,00 — CSRF,20,0,0,0,
+1,vm,20,01 — Connexion,20,0,0,0,
+1,vm,20,02 — Mes candidatures,3023,0,2341,0,0.0
+1,vm,40,00 — CSRF,40,0,0,0,
+1,vm,40,01 — Connexion,40,0,0,0,
+1,vm,40,02 — Mes candidatures,6029,0,4680,0,0.0
+1,vm,80,00 — CSRF,80,0,0,0,
+1,vm,80,01 — Connexion,80,0,0,0,
+1,vm,80,02 — Mes candidatures,11742,0,9282,0,0.0
+1,vm,160,00 — CSRF,160,0,0,0,
+1,vm,160,01 — Connexion,160,0,0,0,
+1,vm,160,02 — Mes candidatures,11832,0,10096,0,0.0
+1,vm,120,00 — CSRF,120,0,0,0,
+1,vm,120,01 — Connexion,120,0,0,0,
+1,vm,120,02 — Mes candidatures,12620,0,10364,0,0.0
+1,vm,140,00 — CSRF,140,0,0,0,
+1,vm,140,01 — Connexion,140,0,0,0,
+1,vm,140,02 — Mes candidatures,12207,0,10212,0,0.0
+1,vm,150,00 — CSRF,150,0,0,0,
+1,vm,150,01 — Connexion,150,0,0,0,
+1,vm,150,02 — Mes candidatures,12215,0,10333,0,0.0
+1,docker,1,00 — CSRF,1,0,0,0,
+1,docker,1,01 — Connexion,1,0,0,0,
+1,docker,1,02 — Mes candidatures,164,0,117,0,0.0
+1,docker,5,00 — CSRF,5,0,0,0,
+1,docker,5,01 — Connexion,5,0,0,0,
+1,docker,5,02 — Mes candidatures,769,0,589,0,0.0
+1,docker,10,00 — CSRF,10,0,0,0,
+1,docker,10,01 — Connexion,10,0,0,0,
+1,docker,10,02 — Mes candidatures,1527,0,1178,0,0.0
+1,docker,20,00 — CSRF,20,0,0,0,
+1,docker,20,01 — Connexion,20,0,0,0,
+1,docker,20,02 — Mes candidatures,3044,0,2355,0,0.0
+1,docker,40,00 — CSRF,40,0,0,0,
+1,docker,40,01 — Connexion,40,0,0,0,
+1,docker,40,02 — Mes candidatures,6072,0,4716,0,0.0
+1,docker,80,00 — CSRF,80,0,0,0,
+1,docker,80,01 — Connexion,80,0,0,0,
+1,docker,80,02 — Mes candidatures,12129,0,9437,0,0.0
+1,docker,120,00 — CSRF,120,0,0,0,
+1,docker,120,01 — Connexion,120,0,0,0,
+1,docker,120,02 — Mes candidatures,17459,0,14143,0,0.0
+1,docker,140,00 — CSRF,140,0,0,0,
+1,docker,140,01 — Connexion,140,0,0,0,
+1,docker,140,02 — Mes candidatures,19574,0,16445,0,0.0
+1,docker,150,00 — CSRF,150,0,0,0,
+1,docker,150,01 — Connexion,150,0,0,0,
+1,docker,150,02 — Mes candidatures,20592,0,17535,0,0.0
+1,docker,160,00 — CSRF,160,0,0,0,
+1,docker,160,01 — Connexion,160,0,0,0,
+1,docker,160,02 — Mes candidatures,21359,0,18383,0,0.0
+1,docker,320,00 — CSRF,320,73,0,0,
+1,docker,320,01 — Connexion,247,77,0,0,
+1,docker,320,02 — Mes candidatures,2628,150,2260,0,0.0
+1,docker,240,00 — CSRF,240,11,0,0,
+1,docker,240,01 — Connexion,229,13,0,0,
+1,docker,240,02 — Mes candidatures,20494,26,18980,0,0.0
+1,docker,200,00 — CSRF,200,0,0,0,
+1,docker,200,01 — Connexion,200,45,0,0,
+1,docker,200,02 — Mes candidatures,1373,147,896,0,0.0
+1,docker,180,00 — CSRF,180,0,0,0,
+1,docker,180,01 — Connexion,180,0,0,0,
+1,docker,180,02 — Mes candidatures,21868,0,19447,0,0.0
+1,docker,190,00 — CSRF,190,0,0,0,
+1,docker,190,01 — Connexion,190,0,0,0,
+1,docker,190,02 — Mes candidatures,21899,0,19695,0,0.0
+2,docker,1,00 — CSRF,1,0,0,0,
+2,docker,1,01 — Connexion,1,0,0,0,
+2,docker,1,02 — Mes candidatures,164,0,118,0,0.0
+2,docker,5,00 — CSRF,5,0,0,0,
+2,docker,5,01 — Connexion,5,0,0,0,
+2,docker,5,02 — Mes candidatures,768,0,590,0,0.0
+2,docker,10,00 — CSRF,10,0,0,0,
+2,docker,10,01 — Connexion,10,0,0,0,
+2,docker,10,02 — Mes candidatures,1523,0,1178,0,0.0
+2,docker,20,00 — CSRF,20,0,0,0,
+2,docker,20,01 — Connexion,20,0,0,0,
+2,docker,20,02 — Mes candidatures,3044,0,2357,0,0.0
+2,docker,40,00 — CSRF,40,0,0,0,
+2,docker,40,01 — Connexion,40,0,0,0,
+2,docker,40,02 — Mes candidatures,6076,0,4716,0,0.0
+2,docker,80,00 — CSRF,80,0,0,0,
+2,docker,80,01 — Connexion,80,0,0,0,
+2,docker,80,02 — Mes candidatures,12128,0,9425,0,0.0
+2,docker,120,00 — CSRF,120,0,0,0,
+2,docker,120,01 — Connexion,120,0,0,0,
+2,docker,120,02 — Mes candidatures,17603,0,14148,0,0.0
+2,docker,140,00 — CSRF,140,0,0,0,
+2,docker,140,01 — Connexion,140,0,0,0,
+2,docker,140,02 — Mes candidatures,19703,0,16487,0,0.0
+2,docker,150,00 — CSRF,150,0,0,0,
+2,docker,150,01 — Connexion,150,0,0,0,
+2,docker,150,02 — Mes candidatures,20819,0,17586,0,0.0
+2,docker,160,00 — CSRF,160,0,0,0,
+2,docker,160,01 — Connexion,160,0,0,0,
+2,docker,160,02 — Mes candidatures,21700,0,18575,0,0.0
+2,docker,180,00 — CSRF,180,0,0,0,
+2,docker,180,01 — Connexion,180,0,0,0,
+2,docker,180,02 — Mes candidatures,22517,0,19782,0,0.0
+2,docker,190,00 — CSRF,190,0,0,0,
+2,docker,190,01 — Connexion,190,0,0,0,
+2,docker,190,02 — Mes candidatures,21997,0,19585,0,0.0
+2,docker,200,00 — CSRF,200,0,0,0,
+2,docker,200,01 — Connexion,200,0,0,0,
+2,docker,200,02 — Mes candidatures,22026,0,19774,0,0.0
+2,vm,1,00 — CSRF,1,0,0,0,
+2,vm,1,01 — Connexion,1,0,0,0,
+2,vm,1,02 — Mes candidatures,163,0,117,0,0.0
+2,vm,5,00 — CSRF,5,0,0,0,
+2,vm,5,01 — Connexion,5,0,0,0,
+2,vm,5,02 — Mes candidatures,765,0,585,0,0.0
+2,vm,10,00 — CSRF,10,0,0,0,
+2,vm,10,01 — Connexion,10,0,0,0,
+2,vm,10,02 — Mes candidatures,1518,0,1170,0,0.0
+2,vm,20,00 — CSRF,20,0,0,0,
+2,vm,20,01 — Connexion,20,0,0,0,
+2,vm,20,02 — Mes candidatures,3017,0,2340,0,0.0
+2,vm,40,00 — CSRF,40,0,0,0,
+2,vm,40,01 — Connexion,40,0,0,0,
+2,vm,40,02 — Mes candidatures,6020,0,4678,0,0.0
+2,vm,80,00 — CSRF,80,0,0,0,
+2,vm,80,01 — Connexion,80,0,0,0,
+2,vm,80,02 — Mes candidatures,11632,0,9272,0,0.0
+2,vm,120,00 — CSRF,120,0,0,0,
+2,vm,120,01 — Connexion,120,0,0,0,
+2,vm,120,02 — Mes candidatures,12436,0,10358,0,0.0
+2,vm,140,00 — CSRF,140,0,0,0,
+2,vm,140,01 — Connexion,140,0,0,0,
+2,vm,140,02 — Mes candidatures,12007,0,10210,0,0.0
+2,vm,150,00 — CSRF,150,0,0,0,
+2,vm,150,01 — Connexion,150,0,0,0,
+2,vm,150,02 — Mes candidatures,11660,0,10036,0,0.0
+2,vm,160,00 — CSRF,160,0,0,0,
+2,vm,160,01 — Connexion,160,0,0,0,
+2,vm,160,02 — Mes candidatures,11695,0,10147,0,0.0

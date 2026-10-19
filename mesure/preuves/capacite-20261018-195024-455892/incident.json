@@ -1,0 +1,14 @@
+{
+  "epoch_s": 1792353821.6835027,
+  "type": "RuntimeError",
+  "message": "Injector/host limiting; no deployment capacity conclusion: injector_cpu_pct_sustained",
+  "phase": "palier_complete",
+  "command_diagnostics": [
+    "command-errors/command-qj9mo7p3.json",
+    "command-errors/command-ltttfgny.json"
+  ],
+  "restoration_errors": [
+    "VM: Command failed; diagnostic saved in the private runtime directory"
+  ],
+  "safety_evidence": []
+}

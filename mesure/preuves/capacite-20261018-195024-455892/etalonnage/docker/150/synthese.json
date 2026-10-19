@@ -1,0 +1,37 @@
+{
+  "window_start_ms": 1792352173179,
+  "window_end_ms": 1792352233179,
+  "plateau_s": 60,
+  "users": 150,
+  "effective_users": [
+    150
+  ],
+  "requests": 541968,
+  "errors": 0,
+  "error_pct": 0.0,
+  "throughput_rps": 9032.8,
+  "successful_throughput_rps": 9032.8,
+  "p50_ms": 16.0,
+  "p90_ms": 21.0,
+  "p95_ms": 23.0,
+  "p99_ms": 31.0,
+  "total_samples": 676633,
+  "all_errors": 0,
+  "request_types": {
+    "Statique Nginx": {
+      "samples": 676633,
+      "errors": 0,
+      "stable_samples": 541968,
+      "stable_errors": 0,
+      "stable_error_pct": 0.0
+    }
+  },
+  "plateau_valid": true,
+  "plateau_issues": [],
+  "injector_cpu_pct_mean": 306.92938384461144,
+  "injector_cpu_pct_max": 324.1196685540624,
+  "injector_rss_bytes_mean": 913960082.2857143,
+  "injector_rss_bytes_max": 922120192.0,
+  "host_busy_pct_mean": 97.16340746435735,
+  "host_busy_pct_max": 97.59281925744594
+}

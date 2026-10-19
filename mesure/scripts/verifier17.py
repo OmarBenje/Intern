@@ -57,10 +57,42 @@ def main(argv=None, write_outputs=True):
     observed = [(r["series"], r["deployment"], r["users"]) for r in manifest["runs"]]
     require(observed == expected, "Missing, duplicate or out-of-order plateaus")
     events = [json.loads(line) for line in (root / "journal.jsonl").read_text().splitlines()]
+    allowed_protocols = {manifest['protocol_sha256']}
+    if manifest.get('resumptions'):
+        from reprendre17 import checked_protocol_hashes, effective_events
+        allowed_protocols = checked_protocol_hashes(root, manifest)
+        events = effective_events(events, manifest)
     require(events[-1]["action"] == "reference_restored", "Restoration event missing")
     starts = [(e["series"], e["deployment"], e["users"]) for e in events if e["action"] == "palier_start"]
     require(starts == expected, "Unexpected raw execution order")
-    resets = [e for e in events if e["action"] == "database_restored"]
+    if manifest.get("maintenance_guard"):
+        paused = [e for e in events if e["action"] == "updates_paused"]
+        restored = [e for e in events if e["action"] == "updates_restored"]
+        if manifest.get('resumptions'):
+            for event in events:
+                if event['action'] != 'palier_start' or event.get('deployment') != 'vm':
+                    continue
+                for service in SERVICES:
+                    previous = [e for e in events if e['epoch_s'] <= event['epoch_s']
+                                and e.get('service') == service
+                                and e['action'] in ('updates_paused', 'updates_restored')]
+                    require(previous and previous[-1]['action'] == 'updates_paused',
+                            'VM measurement without active update protection')
+            require(all(any(e['service'] == s for e in restored) for s in SERVICES),
+                    'Missing VM update restoration evidence')
+        else:
+            require([e["service"] for e in paused] == list(SERVICES) * 2, "Missing VM update pause evidence")
+            require([e["service"] for e in restored] == list(SERVICES), "Missing VM update restoration evidence")
+        for service in SERVICES:
+            require(len({e["packages_sha256"] for e in paused if e["service"] == service}) == 1,
+                    "VM package versions changed between repetitions")
+        require(max(e["epoch_s"] for e in paused[:3]) <= min(e["epoch_s"] for e in events if e["action"] == "palier_start"),
+                "Load began before updates were paused")
+    resets = [e for e in events if e["action"] == "database_restored" and not e.get('resume_reset')]
+    resume_resets = [e for e in events if e['action'] == 'database_restored' and e.get('resume_reset')]
+    require(len(resume_resets) == len(manifest.get('resumptions', [])), 'Missing checkpoint database reset')
+    require(all(e['snapshot_sha256'] == manifest['snapshot_sha256'] for e in resume_resets),
+            'Resume SQL snapshots differ')
     expected_resets = [block["deployment"] for block in manifest["blocks"]] if capacity else ["vm", "docker", "docker", "vm"]
     require([e["deployment"] for e in resets] == expected_resets, "Unexpected resets")
     require(all(e["snapshot_sha256"] == manifest["snapshot_sha256"] for e in resets), "SQL snapshots differ")
@@ -75,7 +107,7 @@ def main(argv=None, write_outputs=True):
 
     hashes = {name: digest(root / name) for name in ("manifest.json", "journal.jsonl")}
     if "repos_dynamique" in protocol:
-        checks = [e for e in events if e["action"] == "login_rate_limit_checked"]
+        checks = [e for e in events if e["action"] == "login_rate_limit_checked" and not e.get('resume_reset')]
         require([e["deployment"] for e in checks] == expected_resets
                 and all(e["enabled"] is False for e in checks), "Measurement login settings differ")
         expected_rests = [(s, d, u) for s, d, u in expected
@@ -86,7 +118,7 @@ def main(argv=None, write_outputs=True):
                               for e in events if e["action"] in ("palier_complete", "calibration_complete")]
         for action in ("cooldown_start", "cooldown_complete"):
             require([(e["series"], e["deployment"], e["users"]) for e in events
-                     if e["action"] == action] == expected_rests, "Missing or out-of-order rest evidence")
+                     if e["action"] == action and e.get('series') != 'reprise'] == expected_rests, "Missing or out-of-order rest evidence")
         for i, event in enumerate(events):
             if event["action"] != "cooldown_start":
                 continue
@@ -132,13 +164,13 @@ def main(argv=None, write_outputs=True):
         frozen = dict(mode="application", ramp_s=protocol["montee_s"],
                       warmup_s=protocol["stabilisation_s"], plateau_s=protocol["plateau_s"],
                       reflection_ms=protocol["reflexion_ms"],
-                      protocol_sha256=manifest["protocol_sha256"],
                       source_plan_sha256=manifest["source_plan_sha256"],
                       accounts_sha256=manifest["accounts_sha256"])
         require(all(config[key] == value for key, value in frozen.items()), "Frozen parameters differ")
+        require(config['protocol_sha256'] in allowed_protocols, 'Frozen protocol differs')
         for key in ("mode", "ramp_s", "warmup_s", "plateau_s", "duration_s", "port", "reflection_ms",
                     "source_plan_sha256", "accounts_sha256", "sql_schema_sha256", "sql_data_sha256",
-                    "seed_script_sha256", "protocol_sha256", "host"):
+                    "seed_script_sha256", "host"):
             if key not in common:
                 common[key] = config[key]
             require(config[key] == common[key], f"Configuration differs: {run['path']} {key}")
@@ -147,7 +179,8 @@ def main(argv=None, write_outputs=True):
         users = run["users"]
         plans.setdefault(users, config["run_plan_sha256"])
         require(plans[users] == config["run_plan_sha256"], "Plans differ for the same plateau")
-        recalculated = analyse(folder / "brut.csv", users, config["ramp_s"], config["warmup_s"], config["plateau_s"], capacity=capacity)
+        recalculated = analyse(folder / "brut.csv", users, config["ramp_s"], config["warmup_s"], config["plateau_s"],
+                               capacity=capacity, boundary_activity=config.get('plateau_activity_version', 1) == 2)
         saved = json.loads((folder / "synthese.json").read_text())
         require(all(saved[k] == v for k, v in recalculated.items()), f"Client summary differs: {run['path']}")
         require(run["errors"] == saved["all_errors"], "Manifest error count differs")

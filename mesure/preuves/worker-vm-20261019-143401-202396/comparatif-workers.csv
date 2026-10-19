@@ -1,0 +1,13 @@
+workers,series,users,throughput,p95,errors,valid,acceptable,path
+2,1,80,77.2,78.0,0,True,True,serie-1-workers-2/vm/80
+2,1,100,86.60833333333333,301.0,0,True,True,serie-1-workers-2/vm/100
+2,1,130,86.275,708.0,0,True,True,serie-1-workers-2/vm/130
+4,1,80,77.31666666666666,59.0,0,True,True,serie-1-workers-4/vm/80
+4,1,100,94.05833333333334,155.0,0,True,True,serie-1-workers-4/vm/100
+4,1,130,96.63333333333334,521.0,0,True,True,serie-1-workers-4/vm/130
+4,2,80,77.25833333333334,61.0,0,True,True,serie-2-workers-4/vm/80
+4,2,100,93.75833333333334,157.0,0,True,True,serie-2-workers-4/vm/100
+4,2,130,99.78333333333333,443.0,0,True,True,serie-2-workers-4/vm/130
+2,2,80,76.94166666666666,96.0,0,True,True,serie-2-workers-2/vm/80
+2,2,100,83.99166666666666,333.0,0,True,True,serie-2-workers-2/vm/100
+2,2,130,84.24166666666666,721.0,0,True,True,serie-2-workers-2/vm/130

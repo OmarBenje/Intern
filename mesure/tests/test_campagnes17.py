@@ -43,12 +43,103 @@ class CampaignSafetyTests(unittest.TestCase):
         return campaign.Campaigns(args)
 
     def ready(self, controller):
+        controller.updates = Mock(touched=set())
         controller.dc = Mock(return_value=result())
         controller.run = Mock(return_value=result())
         controller.vm_state = Mock(return_value='running')
         controller.vm_info = Mock(return_value='')
         controller.docker = Mock(side_effect=lambda *parts, **kw:
             result(code=1) if parts[:2] == ('volume', 'inspect') else result())
+
+    def test_failed_collector_names_service_and_preserves_diagnostic(self):
+        controller = self.controller()
+        folder = controller.output / 'serie-1/vm/5'
+        folder.mkdir(parents=True)
+        diagnostic = controller.runtime / 'proxy.log'
+        diagnostic.write_text('Service root process disappeared (PID 123)')
+        with (folder / 'serveur-proxy.jsonl').open('w') as stream, diagnostic.open('a') as errors:
+            controller.collectors = [(Mock(poll=Mock(return_value=1)), stream, errors)]
+            with self.assertRaisesRegex(RuntimeError, 'proxy.*exit 1.*proxy.log'):
+                controller.check_collectors(folder)
+        recorded = json.loads((folder / 'collecteurs-echec.json').read_text())
+        self.assertEqual(recorded['collectors'][0]['service'], 'proxy')
+        self.assertEqual(controller.manifest['collector_errors'], recorded['collectors'])
+        self.assertIn('PID 123', diagnostic.read_text())
+
+    def test_new_collector_does_not_overwrite_previous_plateau_logs(self):
+        controller = self.controller()
+        controller.ssh = Mock(return_value=result(b'123'))
+        first = controller.output / 'serie-1/vm/1'
+        second = controller.output / 'serie-1/vm/5'
+        first.mkdir(parents=True)
+        second.mkdir(parents=True)
+        with patch.object(campaign.subprocess, 'Popen'):
+            controller.collect('vm', first)
+            path = Path(controller.collectors[0][2].name)
+            controller.collectors[0][2].write('Original proxy diagnostic')
+            controller.stop_collectors()
+            controller.collect('vm', second)
+            self.assertNotEqual(path, Path(controller.collectors[0][2].name))
+            controller.stop_collectors()
+        self.assertEqual(path.read_text(), 'Original proxy diagnostic')
+
+    def test_bootstrap_and_resume_do_not_publish_the_vm_measurement_port(self):
+        controller = self.controller()
+        controller.pg_user = 'intern_user'
+        controller.accounts.write_text('username,password,application_id\nmesure01,fake,1\n')
+        (self.measure / 'scripts').mkdir()
+        (self.measure / 'scripts/preparer_comptes.py').write_text('# Input to the mocked Django shell\n')
+        created = set()
+        def dc(*parts, **kwargs):
+            if parts[0] == 'up':
+                # Model a live VM occupying 8081: a broad up would fail here.
+                self.assertEqual(parts[-2:], ('donnees', 'metier'))
+                self.assertNotIn('proxy', parts)
+            if parts[0] == 'create':
+                self.assertEqual(parts, ('create', '--no-build', 'proxy'))
+                created.add('proxy')
+            if 'shell' in parts:
+                return result(controller.accounts.read_bytes())
+            if 'pg_dump' in parts:
+                return result(b'-- dedicated fixture database\n')
+            if '-c' in parts:
+                return result(b'{"python":"test"}')
+            return result()
+        def docker(*parts, **kwargs):
+            if parts[0] == 'cp':
+                if '-proxy-1:' in parts[1]:
+                    self.assertIn('proxy', created)
+                target = Path(parts[2])
+                target.mkdir()
+                (target / 'asset.txt').write_text('fixture')
+                return result()
+            images = [{'Config': {'Labels': {'com.docker.compose.service': service}},
+                       'Image': 'image-' + service, 'HostConfig': {'NanoCpus': 0, 'Memory': 0}}
+                      for service in campaign.SERVICES]
+            return result(json.dumps(images).encode())
+        controller.dc = Mock(side_effect=dc)
+        controller.docker = Mock(side_effect=docker)
+        controller.stop_vm = Mock()
+        controller.bootstrap()
+        self.assertTrue((controller.runtime / 'base.sql').exists())
+        self.assertTrue((controller.runtime / 'sources.tar').exists())
+        controller.stop_vm.assert_not_called()
+        # A resumed snapshot also starts only the private services for versions.
+        controller.dc.reset_mock()
+        controller.bootstrap()
+        self.assertFalse(any(call.args[0] == 'create' for call in controller.dc.call_args_list))
+        self.assertEqual(sum(call.args[0] == 'up' for call in controller.dc.call_args_list), 1)
+
+    def test_update_guard_status_uses_events_instead_of_assuming_activation(self):
+        controller = self.controller()
+        self.assertEqual(launcher.update_guard_status(controller.output), 'protection pas encore activée')
+        journal = controller.output / 'journal.jsonl'
+        journal.write_text(json.dumps(dict(action='updates_paused', service='proxy')) + '\n')
+        self.assertEqual(launcher.update_guard_status(controller.output), 'protection active pour proxy')
+        with journal.open('a') as stream:
+            stream.write(json.dumps(dict(action='updates_restored', service='proxy')) + '\n')
+            stream.write('{"action":')  # Concurrent partial write must not break status.
+        self.assertEqual(launcher.update_guard_status(controller.output), 'politique initiale restaurée')
 
     def test_new_runtimes_have_distinct_projects_and_legacy_resume_keeps_name(self):
         first, second = self.controller(), self.controller('second')
@@ -162,6 +253,130 @@ class CampaignSafetyTests(unittest.TestCase):
         self.assertIn('VM locked', controller.manifest['restoration_errors'][0])
         self.assertEqual(controller.manifest['status'], 'failed')
         self.assertEqual(controller.manifest['error'], 'original error')
+        incident = json.loads((controller.output / 'incident.json').read_text())
+        self.assertEqual(incident['message'], 'original error')
+        self.assertIn('VM locked', incident['restoration_errors'][0])
+
+    def test_capacity_cleanup_releases_networks_without_removing_volumes(self):
+        controller = self.controller()
+        self.ready(controller)
+        controller.measurement_touched = True
+        controller.manifest['kind'] = 'capacity'
+        controller.restore()
+        self.assertEqual(controller.dc.call_args_list[-1].args, ('down', '--timeout', '30'))
+        self.assertEqual(controller.dc.call_args_list[-1].kwargs, dict(timeout=90))
+
+    def test_docker_logs_are_archived_before_capacity_container_removal(self):
+        controller = self.controller()
+        self.ready(controller)
+        controller.measurement_touched = True
+        controller.manifest['kind'] = 'capacity'
+        controller.dc = Mock(side_effect=lambda *parts, **kw: result(b'abc123\n') if parts[0] == 'ps' else result())
+        controller.docker = Mock(return_value=result(b'application message\n', stderr=b'stderr diagnostic\n'))
+        controller.restore()
+        archive = controller.runtime / controller.manifest['docker_log_archives'][0]
+        self.assertEqual(archive.read_text(), 'application message\nstderr diagnostic\n')
+        self.assertEqual(archive.stat().st_mode & 0o777, 0o600)
+        controller.docker.assert_called_once_with('logs', '--timestamps', 'abc123', check=False)
+        self.assertEqual(controller.dc.call_args_list[-1].args[0], 'down')
+
+    def test_log_archival_failure_cannot_block_docker_cleanup(self):
+        controller = self.controller()
+        self.ready(controller)
+        controller.measurement_touched = True
+        controller.manifest['kind'] = 'capacity'
+        controller.archive_measurement_logs = Mock(side_effect=OSError('disk full'))
+        controller.restore()
+        controller.dc.assert_called_once_with('down', '--timeout', '30', timeout=90)
+        self.assertIn('disk full', controller.manifest['diagnostic_errors'][0])
+
+    def test_failure_at_each_campaign_phase_always_attempts_restoration(self):
+        for phase in ('preflight', 'bootstrap', 'boot_vm', 'prepare_vm', 'campaign', 'stop_vm'):
+            with self.subTest(phase=phase):
+                controller = self.controller('failure-' + phase)
+                self.ready(controller)
+                for name in ('preflight', 'bootstrap', 'boot_vm', 'prepare_vm', 'campaign', 'stop_vm', 'restore'):
+                    setattr(controller, name, Mock())
+                getattr(controller, phase).side_effect = RuntimeError('injected ' + phase)
+                with self.assertRaisesRegex(RuntimeError, 'injected ' + phase):
+                    controller.main()
+                controller.restore.assert_called_once_with()
+                self.assertEqual(controller.manifest['status'], 'failed')
+                self.assertEqual(controller.manifest['error'], 'injected ' + phase)
+                incident = json.loads((controller.output / 'incident.json').read_text())
+                self.assertEqual(incident['message'], 'injected ' + phase)
+
+    def test_full_diagnostic_disk_does_not_skip_restore_or_mask_initial_error(self):
+        controller = self.controller()
+        self.ready(controller)
+        controller.preflight = Mock(side_effect=RuntimeError('original cause'))
+        controller.record_incident = Mock(side_effect=OSError('disk full'))
+        controller.restore = Mock()
+        with self.assertRaisesRegex(RuntimeError, '^original cause$'):
+            controller.main()
+        controller.restore.assert_called_once_with()
+
+    def test_requested_stop_records_stopped_and_still_restores(self):
+        controller = self.controller()
+        self.ready(controller)
+        controller.preflight = Mock(side_effect=InterruptedError('Graceful stop requested'))
+        controller.restore = Mock()
+        with self.assertRaises(InterruptedError):
+            controller.main()
+        controller.restore.assert_called_once_with()
+        self.assertEqual(controller.manifest['status'], 'stopped')
+        self.assertEqual(json.loads((controller.output / 'incident.json').read_text())['type'], 'InterruptedError')
+
+    def test_missing_manifest_does_not_claim_preparation_when_controller_has_exited(self):
+        controller = self.controller()
+        (controller.runtime / 'configuration.json').write_text(json.dumps({'output': str(controller.output)}))
+        (controller.runtime / 'controller.pid').write_text('123')
+        (controller.runtime / 'controller.log').write_text('startup failure diagnostic')
+        for active in (False, True):
+            output = io.StringIO()
+            with patch.object(sys, 'argv', ['lancer17.py', 'status', '--runtime', str(controller.runtime)]), \
+                    patch.object(launcher, 'alive', return_value=active), contextlib.redirect_stdout(output):
+                launcher.main()
+            if active:
+                self.assertIn('Préparation en cours', output.getvalue())
+            else:
+                self.assertNotIn('Préparation en cours', output.getvalue())
+                self.assertIn('Contrôleur inactif', output.getvalue())
+                self.assertIn('startup failure diagnostic', output.getvalue())
+
+    def test_restored_status_identifies_old_port_error_as_archived(self):
+        controller = self.controller()
+        controller.manifest.update(status='failed', error='injector_cpu_pct_sustained',
+                                   progress=dict(action='reference_restored'))
+        controller.manifest_path.write_text(json.dumps(controller.manifest))
+        (controller.runtime / 'configuration.json').write_text(json.dumps({'output': str(controller.output)}))
+        (controller.runtime / 'last-error.txt').write_text('8080: bind: address already in use')
+        output = io.StringIO()
+        with patch.object(sys, 'argv', ['lancer17.py', 'status', '--runtime', str(controller.runtime)]), \
+                contextlib.redirect_stdout(output):
+            launcher.main()
+        self.assertIn('Restauration : confirmée', output.getvalue())
+        self.assertIn('Diagnostic de commande archivé, antérieur', output.getvalue())
+        self.assertIn('8080: bind', output.getvalue())
+        self.assertIn('injector_cpu_pct_sustained', output.getvalue())
+
+    def test_completed_status_still_displays_failure_to_archive_diagnostics(self):
+        controller = self.controller()
+        controller.manifest.update(status='complete', diagnostic_errors=['Docker logs: disk full'])
+        controller.manifest_path.write_text(json.dumps(controller.manifest))
+        (controller.runtime / 'configuration.json').write_text(json.dumps({'output': str(controller.output)}))
+        output = io.StringIO()
+        with patch.object(sys, 'argv', ['lancer17.py', 'status', '--runtime', str(controller.runtime)]), \
+                contextlib.redirect_stdout(output):
+            launcher.main()
+        self.assertIn('Docker logs: disk full', output.getvalue())
+
+    def test_resumable_campaign_cleanup_keeps_containers_and_networks(self):
+        controller = self.controller()
+        self.ready(controller)
+        controller.measurement_touched = True
+        controller.restore()
+        controller.dc.assert_called_once_with('stop')
 
     @patch.object(campaign.time, 'sleep')
     def test_virtualbox_transient_lock_is_retried(self, sleep):
@@ -171,6 +386,23 @@ class CampaignSafetyTests(unittest.TestCase):
         self.assertEqual(controller.vm_state('proxy'), 'poweroff')
         self.assertEqual(controller.run.call_count, 2)
         sleep.assert_called_once_with(2)
+
+    @patch.object(campaign.time, 'sleep')
+    def test_shutdown_usb_session_error_is_retried(self, sleep):
+        controller = self.controller()
+        error = b'The object is not ready; E_ACCESSDENIED; COMGETTER(RemoteUSBDevices)'
+        controller.run = Mock(side_effect=[result(code=1, stderr=error),
+                                           result(b'VMState="poweroff"\n')])
+        self.assertEqual(controller.vm_state('donnees'), 'poweroff')
+        self.assertEqual(controller.run.call_count, 2)
+        sleep.assert_called_once_with(2)
+
+    def test_real_access_denial_is_not_retried(self):
+        controller = self.controller()
+        controller.run = Mock(return_value=result(code=1, stderr=b'E_ACCESSDENIED: permission denied'))
+        with self.assertRaisesRegex(RuntimeError, 'Cannot read vm-donnees'):
+            controller.vm_state('donnees')
+        self.assertEqual(controller.run.call_count, 1)
 
     @patch.object(campaign.time, 'sleep')
     def test_persistent_virtualbox_lock_has_bounded_retries(self, sleep):
@@ -195,7 +427,7 @@ class CampaignSafetyTests(unittest.TestCase):
             launcher.main()
         run.assert_not_called()
         spawn.assert_not_called()
-        for message in ('original error', 'VM locked', 'original traceback', 'controller.log'):
+        for message in ('original error', 'VM locked', 'original traceback', 'controller.log', 'Restauration : non confirmée'):
             self.assertIn(message, output.getvalue())
 
     def test_failed_preflight_never_starts_background_controller(self):
@@ -207,6 +439,32 @@ class CampaignSafetyTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 launcher.main()
         spawn.assert_not_called()
+
+    def test_preflight_failure_is_documented_before_detached_start(self):
+        controller = self.controller()
+        controller.preflight = Mock(side_effect=RuntimeError('foreign port owner'))
+        with self.assertRaisesRegex(RuntimeError, 'foreign port owner'):
+            controller.preflight_only()
+        incident = json.loads((controller.output / 'incident.json').read_text())
+        self.assertEqual(incident['phase'], 'preflight')
+        self.assertEqual(incident['message'], 'foreign port owner')
+        self.assertEqual(controller.manifest['status'], 'failed')
+        self.assertEqual(controller.manifest['progress']['action'], 'preflight_failed')
+        self.assertFalse(controller.reference_touched)
+        self.assertFalse(controller.vm_touched)
+
+    def test_lock_refusal_does_not_claim_failed_restoration(self):
+        controller = self.controller()
+        controller.manifest.update(status='failed', error='Mesure déjà active',
+                                   progress=dict(action='campaigns_refused'))
+        controller.manifest_path.write_text(json.dumps(controller.manifest))
+        (controller.runtime / 'configuration.json').write_text(json.dumps({'output': str(controller.output)}))
+        output = io.StringIO()
+        with patch.object(sys, 'argv', ['lancer17.py', 'status', '--runtime', str(controller.runtime)]), \
+                contextlib.redirect_stdout(output):
+            launcher.main()
+        self.assertIn('sans objet : contrôleur refusé avant modification', output.getvalue())
+        self.assertNotIn('non confirmée', output.getvalue())
         self.assertFalse((controller.runtime / 'controller.pid').exists())
 
     def test_running_status_does_not_display_errors_from_previous_attempt(self):
@@ -256,6 +514,49 @@ class CampaignSafetyTests(unittest.TestCase):
         self.assertEqual(commands, [['VBoxManage', 'controlvm', f'vm-{name}', 'acpipowerbutton']
                                     for name in ('metier', 'donnees', 'proxy')])
         controller.ssh.assert_not_called()
+
+    def test_shutdown_race_accepts_confirmed_stopping_state(self):
+        controller = self.controller()
+        controller.vm_state = Mock(return_value='stopping')
+        # Exercise the real command wrapper, including its private diagnostic.
+        with patch.object(campaign.subprocess, 'run', return_value=result(
+                code=1, stderr=b'Invalid machine state: Stopping')):
+            controller.request_vm_shutdown('metier')
+        self.assertEqual(len(controller.manifest['command_errors']), 1)
+
+    def test_shutdown_command_failure_while_running_still_raises(self):
+        controller = self.controller()
+        controller.vm_state = Mock(return_value='running')
+        with patch.object(campaign.subprocess, 'run', return_value=result(
+                code=1, stderr=b'Permission denied')):
+            with self.assertRaises(RuntimeError):
+                controller.request_vm_shutdown('metier')
+
+    def test_failed_ssh_recovery_still_attempts_acpi_shutdown(self):
+        controller = self.controller()
+        self.ready(controller)
+        controller.updates.touched = {'proxy', 'metier', 'donnees'}
+        controller.vm_state.return_value = 'poweroff'
+        controller.boot_vm = Mock(side_effect=subprocess.TimeoutExpired('ssh', 10))
+        controller.stop_vm = Mock()
+        with self.assertRaises(subprocess.TimeoutExpired):
+            controller.restore_vm()
+        controller.stop_vm.assert_called_once_with()
+
+    @patch.object(campaign.time, 'sleep')
+    def test_real_command_timeout_still_reaches_ssh_boot_retry(self, sleep):
+        controller = self.controller()
+        controller.vm_state = Mock(return_value='running')
+        controller.vm_info = Mock(return_value='\n'.join(
+            f'Forwarding({i})="{rule}"' for i, rule in enumerate(campaign.NAT_RULES)))
+        controller.dc = Mock()
+        controller.updates = Mock()
+        with patch.object(campaign.subprocess, 'run', side_effect=[
+                subprocess.TimeoutExpired('ssh', 10), result(), result(), result()]):
+            controller.boot_vm(restoring=True)
+        sleep.assert_called_once_with(3)
+        self.assertEqual(len(controller.manifest['command_errors']), 1)
+        self.assertEqual(controller.updates.pause.call_count, 3)
 
     @patch.object(campaign.time, 'sleep')
     def test_boot_waits_after_an_individual_ssh_timeout(self, sleep):

@@ -15,3 +15,10 @@ htmlcov/
 *.log
 .execution/
 .idea
+# Real production SSH maintenance profiles stay local.
+/deploiement/config/maintenance.*.json
+!/deploiement/config/maintenance.example.json
+# Local measurement campaigns; reviewed summaries live in mesure/preuves/.
+/mesure/resultats/
+/mesure/resultats/capacite
+/mesure/resultats/worker

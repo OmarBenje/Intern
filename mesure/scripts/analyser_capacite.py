@@ -53,6 +53,8 @@ def validate_design(root, manifest, protocol):
 
 
 def verify_calibration(root, manifest, protocol):
+    from reprendre17 import checked_protocol_hashes
+    allowed_protocols = checked_protocol_hashes(root, manifest)
     hashes = {}
     checks = {(r["deployment"], r["users"]) for r in manifest["runs"]}
     for dep, users in sorted(checks):
@@ -60,14 +62,15 @@ def verify_calibration(root, manifest, protocol):
         config = json.loads((folder / "configuration.json").read_text())
         profile = protocol["statique"]
         require(config["mode"] == "static" and config["users"] == users and config["exit_code"] == 0
-                and config["protocol_sha256"] == manifest["protocol_sha256"]
+                and config["protocol_sha256"] in allowed_protocols
                 and config["source_plan_sha256"] == manifest["source_plan_sha256"]
                 and config["accounts_sha256"] == manifest["accounts_sha256"]
                 and config["run_plan_sha256"] == digest(folder / "plan.jmx")
                 and config["ramp_s"] == profile["montee_s"]
                 and config["warmup_s"] == profile["stabilisation_s"]
                 and config["plateau_s"] == profile["plateau_s"], "Static calibration configuration differs")
-        sample = analyse(folder / "brut.csv", users, config["ramp_s"], config["warmup_s"], config["plateau_s"], capacity=True)
+        sample = analyse(folder / "brut.csv", users, config["ramp_s"], config["warmup_s"], config["plateau_s"],
+                         capacity=True, boundary_activity=config.get('plateau_activity_version', 1) == 2)
         saved = json.loads((folder / "synthese.json").read_text())
         require(all(saved[k] == v for k, v in sample.items()), "Static raw evidence differs")
         require(sample["plateau_valid"] and sample["all_errors"] == 0

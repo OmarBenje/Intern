@@ -1,0 +1,12 @@
+{
+  "ssh_config": "~/.ssh/config",
+  "egress": "direct",
+  "hosts": [
+    {
+      "alias": "intern-production",
+      "services": ["docker.service", "cloudflared.service"],
+      "restart_services": ["cloudflared.service"],
+      "health_url": "http://127.0.0.1:8080/health/ready/"
+    }
+  ]
+}

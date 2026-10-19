@@ -42,7 +42,7 @@ def snapshot(root):
         row["write_bytes"] = io.get("write_bytes")
         rows[pid] = row
     if root not in rows:
-        raise RuntimeError("Service root process disappeared")
+        raise RuntimeError(f"Service root process disappeared (PID {root})")
     return rows
 
 
@@ -94,7 +94,10 @@ def main():
     while True:
         time.sleep(args.interval)
         now, current = time.monotonic(), snapshot(args.pid)
+        if current[args.pid]["start_ticks"] != previous[args.pid]["start_ticks"]:
+            raise RuntimeError(f"Service root process replaced (PID {args.pid})")
         row = {"epoch_s": time.time(), "service": args.service,
+               "root_pid": args.pid, "root_start_ticks": current[args.pid]["start_ticks"],
                "interval_s": now - last, **interval(previous, current, now - last)}
         group_now = cgroup_snapshot(args.pid)
         row["cpu_io_method"] = "processes_currently_alive"

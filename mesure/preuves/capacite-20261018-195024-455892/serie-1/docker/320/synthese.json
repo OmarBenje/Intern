@@ -1,0 +1,55 @@
+{
+  "window_start_ms": 1792353010463,
+  "window_end_ms": 1792353130463,
+  "plateau_s": 120,
+  "users": 320,
+  "effective_users": [
+    20
+  ],
+  "requests": 2260,
+  "errors": 0,
+  "error_pct": 0.0,
+  "throughput_rps": 18.833333333333332,
+  "successful_throughput_rps": 18.833333333333332,
+  "p50_ms": 16.0,
+  "p90_ms": 24.0,
+  "p95_ms": 28.0,
+  "p99_ms": 48.0,
+  "total_samples": 3195,
+  "all_errors": 300,
+  "request_types": {
+    "00 — CSRF": {
+      "samples": 320,
+      "errors": 73,
+      "stable_samples": 0,
+      "stable_errors": 0,
+      "stable_error_pct": null
+    },
+    "01 — Connexion": {
+      "samples": 247,
+      "errors": 77,
+      "stable_samples": 0,
+      "stable_errors": 0,
+      "stable_error_pct": null
+    },
+    "02 — Mes candidatures": {
+      "samples": 2628,
+      "errors": 150,
+      "stable_samples": 2260,
+      "stable_errors": 0,
+      "stable_error_pct": 0.0
+    }
+  },
+  "plateau_valid": false,
+  "plateau_issues": [
+    "A user entered the plateau late",
+    "Expected 320 active users throughout plateau, observed [20]",
+    "Missing users in the stable window"
+  ],
+  "injector_cpu_pct_mean": 5.602097700470481,
+  "injector_cpu_pct_max": 14.356451563599379,
+  "injector_rss_bytes_mean": 422256778.84745765,
+  "injector_rss_bytes_max": 505376768.0,
+  "host_busy_pct_mean": 7.712380139430406,
+  "host_busy_pct_max": 28.030919446704637
+}

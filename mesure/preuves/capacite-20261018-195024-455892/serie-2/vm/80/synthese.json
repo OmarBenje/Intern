@@ -1,0 +1,51 @@
+{
+  "window_start_ms": 1792360162286,
+  "window_end_ms": 1792360282286,
+  "plateau_s": 120,
+  "users": 80,
+  "effective_users": [
+    80
+  ],
+  "requests": 9272,
+  "errors": 0,
+  "error_pct": 0.0,
+  "throughput_rps": 77.26666666666667,
+  "successful_throughput_rps": 77.26666666666667,
+  "p50_ms": 25.0,
+  "p90_ms": 57.899999999999636,
+  "p95_ms": 75.44999999999891,
+  "p99_ms": 164.28999999999905,
+  "total_samples": 11792,
+  "all_errors": 0,
+  "request_types": {
+    "00 — CSRF": {
+      "samples": 80,
+      "errors": 0,
+      "stable_samples": 0,
+      "stable_errors": 0,
+      "stable_error_pct": null
+    },
+    "01 — Connexion": {
+      "samples": 80,
+      "errors": 0,
+      "stable_samples": 0,
+      "stable_errors": 0,
+      "stable_error_pct": null
+    },
+    "02 — Mes candidatures": {
+      "samples": 11632,
+      "errors": 0,
+      "stable_samples": 9272,
+      "stable_errors": 0,
+      "stable_error_pct": 0.0
+    }
+  },
+  "plateau_valid": true,
+  "plateau_issues": [],
+  "injector_cpu_pct_mean": 17.988732519571737,
+  "injector_cpu_pct_max": 107.0178787949792,
+  "injector_rss_bytes_mean": 702351117.0169492,
+  "injector_rss_bytes_max": 886419456.0,
+  "host_busy_pct_mean": 24.750357429198377,
+  "host_busy_pct_max": 35.42526837324525
+}

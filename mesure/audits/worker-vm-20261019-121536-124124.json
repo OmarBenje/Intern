@@ -1,0 +1,111 @@
+{
+  "campaign": "worker-vm-20261019-121536-124124",
+  "audit_date": "2026-10-19",
+  "raw_sha256": "691922f65eb8ebfc7708a50de96f65b71aa64166f97899700e754b19087a52d4",
+  "saved_legacy": {
+    "window_start_ms": 1792406923518,
+    "window_end_ms": 1792406983518,
+    "plateau_s": 60,
+    "users": 180,
+    "effective_users": [
+      180
+    ],
+    "requests": 100948,
+    "errors": 0,
+    "error_pct": 0.0,
+    "throughput_rps": 1682.4666666666667,
+    "successful_throughput_rps": 1682.4666666666667,
+    "p50_ms": 104.0,
+    "p90_ms": 111.0,
+    "p95_ms": 116.0,
+    "p99_ms": 132.0,
+    "total_samples": 130266,
+    "all_errors": 0,
+    "request_types": {
+      "Statique Nginx": {
+        "samples": 130266,
+        "errors": 0,
+        "stable_samples": 100948,
+        "stable_errors": 0,
+        "stable_error_pct": 0.0
+      }
+    },
+    "plateau_valid": false,
+    "plateau_issues": [
+      "A user left the plateau early"
+    ],
+    "injector_cpu_pct_mean": 47.21424579985461,
+    "injector_cpu_pct_max": 51.07536673033819,
+    "injector_rss_bytes_mean": 877215470.9333333,
+    "injector_rss_bytes_max": 886067200.0,
+    "host_busy_pct_mean": 26.826473225141925,
+    "host_busy_pct_max": 30.02533783783784
+  },
+  "replay_v2": {
+    "window_start_ms": 1792406923518,
+    "window_end_ms": 1792406983518,
+    "plateau_s": 60,
+    "users": 180,
+    "effective_users": [
+      180
+    ],
+    "requests": 100948,
+    "errors": 0,
+    "error_pct": 0.0,
+    "throughput_rps": 1682.4666666666667,
+    "successful_throughput_rps": 1682.4666666666667,
+    "p50_ms": 104.0,
+    "p90_ms": 111.0,
+    "p95_ms": 116.0,
+    "p99_ms": 132.0,
+    "total_samples": 130266,
+    "all_errors": 0,
+    "request_types": {
+      "Statique Nginx": {
+        "samples": 130266,
+        "errors": 0,
+        "stable_samples": 100948,
+        "stable_errors": 0,
+        "stable_error_pct": 0.0
+      }
+    },
+    "plateau_valid": true,
+    "plateau_issues": [],
+    "boundary_activity_version": 2,
+    "boundary_crossing_requests": 357,
+    "max_elapsed_ms": 5550
+  },
+  "logs": {
+    "jmeter": {
+      "files": 11,
+      "warning_error_lines": 0
+    },
+    "collectors": {
+      "files": 54,
+      "warning_error_lines": 0
+    },
+    "containers": {
+      "files": 3,
+      "warning_error_lines": 0
+    }
+  },
+  "server_readings": 738,
+  "malformed_server_lines": 0,
+  "positive_oom_readings": 0,
+  "safety_files": 0,
+  "command_failures": [
+    {
+      "epoch_s": 1792405042.2949054,
+      "error": "TimeoutExpired",
+      "action": "common_snapshot_ready"
+    }
+  ],
+  "restoration": {
+    "epoch_s": 1792407037.539598,
+    "action": "reference_restored"
+  },
+  "limits": [
+    "Guest systemd journals were not archived by this campaign; VMs are currently stopped.",
+    "The cause of the slow requests is not established by these logs."
+  ]
+}

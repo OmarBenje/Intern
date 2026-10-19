@@ -4,12 +4,14 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import platform
 import statistics
 import signal
 import subprocess
+import tempfile
 import time
 import xml.etree.ElementTree as ET
 
@@ -21,7 +23,34 @@ def digest(path):
 
 
 def save(path, data):
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+    # Readers must see either the previous complete document or the new one.
+    payload = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix="." + path.name + "-", delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
+def private_jmeter_log(requested=None):
+    if requested is None:
+        descriptor, name = tempfile.mkstemp(prefix="intern-jmeter-", suffix=".log")
+        os.close(descriptor)
+        return Path(name)
+    path = requested.resolve()
+    if path.is_relative_to(ROOT.parent):
+        raise RuntimeError("Keep private Java logs outside the application repository")
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    os.close(descriptor)
+    return path
 
 
 def make_plan(output, mode, users, ramp, duration):
@@ -103,7 +132,7 @@ def percentile(values, fraction):
     return values[low] + (values[min(low + 1, len(values) - 1)] - values[low]) * (index - low)
 
 
-def analyse(csv_path, users, ramp, warmup, plateau, capacity=False):
+def analyse(csv_path, users, ramp, warmup, plateau, capacity=False, boundary_activity=False):
     with csv_path.open() as stream:
         rows = list(csv.DictReader(stream))
     if not rows:
@@ -123,7 +152,11 @@ def analyse(csv_path, users, ramp, warmup, plateau, capacity=False):
     if len(threads) != users:
         issues.append("Missing users in the stable window")
     for thread in threads:
-        samples = [row for row in window if row["threadName"] == thread]
+        # A request spanning a boundary is evidence of an active user even
+        # though it is excluded from the fully contained latency window.
+        samples = [row for row in (rows if boundary_activity else window)
+                   if row["threadName"] == thread and int(row["timeStamp"]) <= end
+                   and int(row["timeStamp"]) + int(row["elapsed"]) >= start]
         if min(int(row["timeStamp"]) for row in samples) > start + 5000:
             issues.append("A user entered the plateau late")
         if max(int(row["timeStamp"]) + int(row["elapsed"]) for row in samples) < end - 5000:
@@ -153,6 +186,14 @@ def analyse(csv_path, users, ramp, warmup, plateau, capacity=False):
     if capacity:
         result["plateau_valid"] = not issues
         result["plateau_issues"] = sorted(set(issues))
+        if boundary_activity:
+            crossing = [row for row in rows if int(row['timeStamp']) < end
+                        and int(row['timeStamp']) + int(row['elapsed']) > start
+                        and (int(row['timeStamp']) < start or
+                             int(row['timeStamp']) + int(row['elapsed']) > end)]
+            result['boundary_activity_version'] = 2
+            result['boundary_crossing_requests'] = len(crossing)
+            result['max_elapsed_ms'] = max(int(row['elapsed']) for row in rows)
         for label, record in result["request_types"].items():
             samples = [row for row in window if row["label"] == label]
             record["stable_samples"] = len(samples)
@@ -179,17 +220,30 @@ def machine_snapshot():
 
 
 def memory_blockers(snapshot, previous, policy):
+    fields = ("host_memory_total_bytes", "host_memory_available_bytes", "host_swap_pages",
+              "host_oom_kills", "host_memory_pressure_pct")
+    values = [snapshot.get(field) for field in fields]
+    values += [previous.get(field) for field in ("host_swap_pages", "host_oom_kills")]
+    if any(type(value) not in (int, float) or not math.isfinite(value) or value < 0 for value in values):
+        return ["invalid_host_memory_readings"]
+    if snapshot["host_memory_total_bytes"] == 0:
+        return ["invalid_host_memory_readings"]
+    if any(snapshot[field] < previous[field] for field in ("host_swap_pages", "host_oom_kills")):
+        return ["host_counters_reset"]
     minimum = max(policy["memoire_disponible_min_octets"],
                   snapshot["host_memory_total_bytes"] * policy["memoire_disponible_min_pct"] / 100)
     reasons = []
     if snapshot["host_memory_available_bytes"] < minimum:
         reasons.append("host_memory_low")
-    if snapshot["host_swap_pages"] > previous["host_swap_pages"]:
-        reasons.append("host_swapping")
     if snapshot["host_oom_kills"] > previous["host_oom_kills"]:
         reasons.append("host_oom")
     if snapshot["host_memory_pressure_pct"] > policy["pression_memoire_max_pct"]:
         reasons.append("host_memory_pressure")
+    if snapshot["host_swap_pages"] > previous["host_swap_pages"]:
+        # Swapping (including compressed RAM swap) alone does not establish
+        # memory pressure. Archived protocols retain their strict activity rule.
+        if not policy.get("swap_avec_pression_uniquement", False) or reasons:
+            reasons.append("host_swapping")
     return reasons
 
 
@@ -222,6 +276,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--protocol", type=Path, default=PERFORMANCE_PROTOCOL)
     parser.add_argument("--capacity-guard", action="store_true")
+    parser.add_argument("--private-log", type=Path)
     args = parser.parse_args()
     protocol = json.loads(args.protocol.read_text())
     profile = protocol["statique"] if args.mode == "static" else protocol
@@ -250,9 +305,11 @@ def main():
                "-j", str((output / "jmeter.log").relative_to(ROOT)), f"-Jport={args.port}",
                f"-Jcomptes={args.accounts.resolve()}"]
     # Paths in the Java log can contain local context; keep that log outside deliverables.
-    command[command.index("-j") + 1] = str(Path("/tmp") / ("intern-jmeter-" + output.name + ".log"))
+    java_log = private_jmeter_log(args.private_log)
+    command[command.index("-j") + 1] = str(java_log)
     metadata = {
         "mode": args.mode, "users": args.users, "ramp_s": args.ramp,
+        "private_java_log": str(java_log),
         "warmup_s": args.warmup, "plateau_s": args.plateau,
         "duration_s": args.ramp + args.warmup + args.plateau + 5,
         "port": args.port, "reflection_ms": 1000 if args.mode == "application" else 0,
@@ -265,6 +322,7 @@ def main():
         "host": {"system": platform.system(), "release": platform.release(), "logical_cpus": os.cpu_count()},
         "cpu_units": "100 percent injector CPU = one logical CPU; host busy percent = all CPUs",
         "started_epoch_s": time.time(),
+        "plateau_activity_version": 2,
     }
     save(output / "configuration.json", metadata)
     with (output / "console.txt").open("w") as console, (output / "ressources.csv").open("w") as resources:
@@ -334,7 +392,8 @@ def main():
     save(output / "configuration.json", metadata)
     if process.returncode:
         raise RuntimeError("JMeter failed; inspect console.txt")
-    result = analyse(csv_path, args.users, args.ramp, args.warmup, args.plateau, capacity=args.capacity_guard)
+    result = analyse(csv_path, args.users, args.ramp, args.warmup, args.plateau,
+                     capacity=args.capacity_guard, boundary_activity=True)
     with (output / "ressources.csv").open() as stream:
         samples = [row for row in csv.DictReader(stream)
                    if result["window_start_ms"] / 1000 <= float(row["epoch_s"]) <= result["window_end_ms"] / 1000]

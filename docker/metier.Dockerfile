@@ -3,8 +3,9 @@ ENV UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never UV_NO_CACHE=1
 WORKDIR /app/metier
 RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir uv==0.11.29
-COPY metier/pyproject.toml metier/uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project --python /usr/local/bin/python
+COPY metier/pyproject.toml metier/uv.lock metier/.python-version ./
+RUN test "$(python -c 'import platform; print(platform.python_version())')" = "$(cat .python-version)" \
+    && uv sync --frozen --no-dev --no-install-project --python /usr/local/bin/python
 
 FROM python:3.12.15-slim-bookworm
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1

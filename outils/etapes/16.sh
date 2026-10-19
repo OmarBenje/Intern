@@ -2,6 +2,11 @@ etape_16() {
   case ${1:-consulter} in
     consulter) cat mesure/ETAPE16.md ;;
     mesurer)
+      mkdir -p .execution
+      local maintenance_lock
+      exec {maintenance_lock}>.execution/operations-vm.lock
+      flock -n "$maintenance_lock" || fail 'Mesure ou maintenance déjà active.'
+      trap "flock -u $maintenance_lock" EXIT
       local output=${MESURE16_OUTPUT:-mesure/resultats/etape16-$(date +%Y%m%d-%H%M%S)-$$}
       [[ ! -e $output ]] || fail "Résultats déjà présents : $output. Choisir MESURE16_OUTPUT neuf."
       # Reserve a new output directory before starting any load.
@@ -22,6 +27,9 @@ PY
       python3 mesure/scripts/etalonnage.py application --jmeter "$JMETER_BIN" --users 10 --output "$output/controle-2"
       python3 outils/resumer_etalonnage.py "$output"
       echo "Nouvelles mesures et rapport : $output. Les preuves canoniques sont conservées."
+      flock -u "$maintenance_lock"
+      exec {maintenance_lock}>&-
+      trap - EXIT
       ;;
     *) bad_action "$1" ;;
   esac

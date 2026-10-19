@@ -1,4 +1,0 @@
-timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
-1791976707743,91,00 — CSRF,200,OK,Candidats 1-1,text,true,,557,134,1,1,http://127.0.0.1:8081/api/v1/auth/csrf/,90,0,62
-1791976710272,775,01 — Connexion,200,OK,Candidats 1-1,text,true,,819,376,1,1,http://127.0.0.1:8081/api/v1/auth/login/,775,0,0
-1791976712208,45,02 — Mes candidatures,200,OK,Candidats 1-1,text,true,,574,246,1,1,http://127.0.0.1:8081/api/v1/applications/?page_size=20,44,0,0

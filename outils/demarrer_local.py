@@ -85,6 +85,9 @@ def local_environment(frontend_url, api_url):
         env = json.loads(output)
     # uv must use metier/.venv, even when the caller activated another venv.
     env.pop('VIRTUAL_ENV', None)
+    env.setdefault('UV_PYTHON_INSTALL_DIR', str(RUNTIME / 'python-runtime'))
+    env.setdefault('UV_PYTHON_DOWNLOADS_JSON_URL',
+                   'https://raw.githubusercontent.com/astral-sh/uv/0.13.1/crates/uv-python-managed/download-metadata.json')
     env.update(POSTGRES_HOST='127.0.0.1', POSTGRES_PORT='5433',
                POSTGRES_USER='intern_user', POSTGRES_PASSWORD='1234',
                POSTGRES_DB='intern_execution', PRIVATE_STORAGE_BACKEND='local',

@@ -26,12 +26,14 @@ flowchart LR
 
 ## Lancer l'API
 
-Prérequis : Python 3.12 ou plus récent, `uv` et PostgreSQL.
+Prérequis : Python **3.12.15**, épinglé dans `.python-version`, `uv` et PostgreSQL.
 
 Depuis ce dossier :
 
 ```sh
 cp .env.example .env
+export UV_PYTHON_INSTALL_DIR="$(cd .. && pwd)/.execution/python-runtime"
+export UV_PYTHON_DOWNLOADS_JSON_URL=https://raw.githubusercontent.com/astral-sh/uv/0.13.1/crates/uv-python-managed/download-metadata.json
 uv sync --frozen
 uv run --env-file .env app/manage.py migrate
 uv run --env-file .env app/manage.py runserver 127.0.0.1:8000

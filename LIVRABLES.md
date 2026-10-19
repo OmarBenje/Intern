@@ -367,6 +367,11 @@ Détail : [source du rapport](mesure/docs/rapport-charge.md)
 · [calculs vérifiables](mesure/resultats/etape18/analyse.json)
 · [reproduction](mesure/ETAPE18.md).
 
+Mesures complémentaires de capacité et de workers :
+[dossier léger de preuves et archive des données brutes](mesure/preuves/README.md).
+Les rapports conservent les limites de répétabilité ; ils ne valident pas
+automatiquement une capacité maximale.
+
 ## Points ouverts pour le rendu
 
 | Étape | Point à compléter ou limite à présenter |

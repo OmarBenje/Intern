@@ -48,6 +48,9 @@
     "hote_cpu_max_pct": 90,
     "memoire_disponible_min_pct": 10,
     "memoire_disponible_min_octets": 536870912,
-    "pression_memoire_max_pct": 10
+    "pression_memoire_max_pct": 10,
+    "cpu_soutenu_s": 10,
+    "disponibilite_timeout_s": 10,
+    "swap_avec_pression_uniquement": true
   }
 }

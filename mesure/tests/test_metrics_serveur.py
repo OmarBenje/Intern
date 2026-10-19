@@ -16,6 +16,10 @@ spec.loader.exec_module(metrics)
 
 
 class ServerMetricsTests(unittest.TestCase):
+    def test_disappeared_service_reports_the_monitored_pid(self):
+        with self.assertRaisesRegex(RuntimeError, r'Service root process disappeared \(PID 999999999\)'):
+            metrics.snapshot(999999999)
+
     def test_linux_cpu_counter_tracks_actual_work(self):
         before = metrics.snapshot(os.getpid())
         start = time.monotonic()

@@ -1,5 +1,8 @@
 # Étape 9 — Déployer les trois couches
 
+Pour la maintenance des VM et la protection des campagnes de mesure, voir
+[MAINTENANCE.md](MAINTENANCE.md).
+
 ## Objectif et prérequis
 
 Installer les couches existantes sur les VM dont le réseau a été vérifié à

@@ -6,7 +6,8 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, MagicMock
+import urllib.error
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from capacite import CapacityCampaign, acceptable, bracket, refinement
@@ -149,7 +150,49 @@ class CapacityTests(unittest.TestCase):
             ('host_swap_pages', 1, 'host_swapping'),
             ('host_oom_kills', 1, 'host_oom'),
             ('host_memory_pressure_pct', 20, 'host_memory_pressure')):
-            self.assertIn(reason, memory_blockers({**before, field: value}, before, self.policy))
+            # Legacy protocols intentionally rejected any swap activity.
+            legacy = {key: value for key, value in self.policy.items() if key != 'swap_avec_pression_uniquement'}
+            self.assertIn(reason, memory_blockers({**before, field: value}, before, legacy))
+
+    def test_swap_activity_without_pressure_does_not_abort_new_protocol(self):
+        before = dict(host_memory_total_bytes=16424861696, host_memory_available_bytes=8670937088,
+                      host_swap_pages=2000, host_oom_kills=0, host_memory_pressure_pct=0)
+        current = {**before, 'host_swap_pages': 2167}
+        self.assertEqual(memory_blockers(current, before, self.policy), [])
+        for field, value, reason in (
+                ('host_memory_available_bytes', 1, 'host_memory_low'),
+                ('host_memory_pressure_pct', 20, 'host_memory_pressure'),
+                ('host_oom_kills', 1, 'host_oom')):
+            with self.subTest(field=field):
+                blockers = memory_blockers({**current, field: value}, before, self.policy)
+                self.assertIn(reason, blockers)
+                self.assertIn('host_swapping', blockers)
+
+    def test_memory_pressure_without_swap_still_aborts(self):
+        before = dict(host_memory_total_bytes=4 * 2**30, host_memory_available_bytes=2**30,
+                      host_swap_pages=0, host_oom_kills=0, host_memory_pressure_pct=0)
+        for change in (dict(host_memory_available_bytes=1), dict(host_memory_pressure_pct=20),
+                       dict(host_oom_kills=1)):
+            self.assertTrue(memory_blockers({**before, **change}, before, self.policy))
+
+    def test_swap_pressure_policy_must_be_an_explicit_boolean(self):
+        protocol = json.loads((ROOT / 'protocole-capacite.json').read_text())
+        protocol['capacite']['swap_avec_pression_uniquement'] = 'true'
+        path = self.root / 'invalid-protocol.json'
+        path.write_text(json.dumps(protocol))
+        with self.assertRaisesRegex(RuntimeError, 'must be a boolean'):
+            CapacityCampaign(Mock(capacity_protocol=path))
+
+    def test_invalid_or_reset_memory_counters_cannot_validate_host_safety(self):
+        before = dict(host_memory_available_bytes=2**30, host_memory_total_bytes=4 * 2**30,
+                      host_swap_pages=10, host_oom_kills=1, host_memory_pressure_pct=0)
+        for field in before:
+            for value in (float('nan'), float('inf'), -1, None):
+                with self.subTest(field=field, value=value):
+                    self.assertEqual(memory_blockers({**before, field: value}, before, self.policy),
+                                     ['invalid_host_memory_readings'])
+        for field in ('host_swap_pages', 'host_oom_kills'):
+            self.assertEqual(memory_blockers({**before, field: 0}, before, self.policy), ['host_counters_reset'])
 
     def test_missing_confirmation_evidence_is_rejected(self):
         controller = self.controller(1000, 1000)
@@ -157,6 +200,118 @@ class CapacityTests(unittest.TestCase):
         controller.manifest['runs'].pop()
         with self.assertRaisesRegex(RuntimeError, 'not confirmed'):
             validate_design(self.root, controller.manifest, self.protocol)
+
+    def health_controller(self):
+        controller = CapacityCampaign.__new__(CapacityCampaign)
+        controller.policy = self.policy.copy()
+        controller.check_collectors = Mock()
+        controller.health_failures = 0
+        controller.previous_machine = {}
+        return controller
+
+    def test_slow_success_within_jmeter_timeout_is_not_unavailability(self):
+        controller = self.health_controller()
+        def slow_response(url, timeout):
+            if timeout < 4.753:
+                raise TimeoutError('timed out')
+            response = MagicMock()
+            response.__enter__.return_value.status = 200
+            return response
+        with patch('capacite.urllib.request.urlopen', side_effect=slow_response) as request, \
+                patch('capacite.machine_snapshot', return_value={}), \
+                patch('capacite.memory_blockers', return_value=[]), \
+                patch('capacite.time.monotonic', side_effect=[0, 4.753]):
+            controller.check_capacity_health(self.root)
+        self.assertEqual(request.call_args.kwargs['timeout'], 10)
+        probe = json.loads((self.root / 'disponibilite.jsonl').read_text())
+        self.assertEqual(probe['elapsed_s'], 4.753)
+        self.assertTrue(probe['ready'])
+        self.assertEqual(controller.health_failures, 0)
+        self.assertFalse((self.root / 'arret-securite.json').exists())
+
+    def test_three_timeouts_still_stop_and_preserve_diagnostic(self):
+        controller = self.health_controller()
+        with patch('capacite.urllib.request.urlopen', side_effect=TimeoutError('timed out')), \
+                patch('capacite.machine_snapshot', return_value={}), \
+                patch('capacite.memory_blockers', return_value=[]):
+            controller.check_capacity_health(self.root)
+            controller.check_capacity_health(self.root)
+            with self.assertRaisesRegex(RuntimeError, 'Service unavailable'):
+                controller.check_capacity_health(self.root)
+        failure = json.loads((self.root / 'arret-securite.json').read_text())
+        self.assertEqual(failure['last_probe']['error']['type'], 'TimeoutError')
+        self.assertEqual(failure['last_probe']['consecutive_failures'], 3)
+        self.assertEqual(len((self.root / 'disponibilite.jsonl').read_text().splitlines()), 3)
+
+    def test_http_failure_then_recovery_resets_counter(self):
+        controller = self.health_controller()
+        response = MagicMock()
+        response.__enter__.return_value.status = 200
+        error = urllib.error.HTTPError('http://localhost/', 503, 'unavailable', {}, None)
+        with patch('capacite.urllib.request.urlopen', side_effect=[error, response]), \
+                patch('capacite.machine_snapshot', return_value={}), \
+                patch('capacite.memory_blockers', return_value=[]):
+            controller.check_capacity_health(self.root)
+            self.assertEqual(controller.health_failures, 1)
+            controller.check_capacity_health(self.root)
+        probes = [json.loads(line) for line in (self.root / 'disponibilite.jsonl').read_text().splitlines()]
+        self.assertEqual(probes[0]['status'], 503)
+        self.assertEqual(controller.health_failures, 0)
+
+    def test_archived_protocol_keeps_two_second_timeout(self):
+        controller = self.health_controller()
+        del controller.policy['disponibilite_timeout_s']
+        with patch('capacite.urllib.request.urlopen', side_effect=TimeoutError('timed out')) as request, \
+                patch('capacite.machine_snapshot', return_value={}), \
+                patch('capacite.memory_blockers', return_value=[]):
+            controller.check_capacity_health(self.root)
+        self.assertEqual(request.call_args.kwargs['timeout'], 2)
+
+    def test_calibration_reports_resource_guard_instead_of_generic_failure(self):
+        controller = self.controller()
+        controller.runtime = self.root
+        controller.calibrated = set()
+        controller.args = Mock(jmeter='jmeter')
+        controller.accounts = self.root / 'comptes.csv'
+        controller.protocol_path = self.root / 'protocole.json'
+        controller.env = {}
+        controller.terminate_runner = Mock()
+        folder = self.root / 'etalonnage/vm/140'
+        folder.mkdir(parents=True)
+        (folder / 'arret-securite.json').write_text(json.dumps(dict(reasons=['host_swapping'])))
+        process = Mock(returncode=1)
+        process.poll.return_value = 1
+        with patch('capacite.subprocess.Popen', return_value=process):
+            with self.assertRaisesRegex(RuntimeError, 'resource guard: host_swapping'):
+                controller.calibrate('vm', 140)
+        failure = controller.manifest['calibration_failure']
+        self.assertEqual(failure['users'], 140)
+        self.assertEqual(failure['reasons'], ['host_swapping'])
+        controller.event.assert_called_with('calibration_failed', **failure)
+        controller.terminate_runner.assert_called_once_with(process)
+
+    def test_memory_counter_baseline_is_reset_after_calibration(self):
+        controller = self.controller()
+        controller.calibrate = Mock()
+        controller.previous_machine = dict(host_swap_pages=0)
+        current = dict(host_swap_pages=245)
+        controller.run_plateau = Mock(side_effect=RuntimeError('fixture stops before load'))
+        with patch('capacite.machine_snapshot', return_value=current):
+            with self.assertRaisesRegex(RuntimeError, 'fixture stops before load'):
+                CapacityCampaign.measure(controller, 'vm', 1, 1)
+        self.assertIs(controller.previous_machine, current)
+        controller.calibrate.assert_called_once_with('vm', 1)
+        controller.run_plateau.assert_called_once_with('vm', 1, 1)
+
+    def test_nonfinite_or_boolean_thresholds_are_refused_before_any_deployment_change(self):
+        for value in (float('nan'), float('inf'), True, 0, -1):
+            with self.subTest(value=value):
+                protocol = json.loads((ROOT / 'protocole-capacite.json').read_text())
+                protocol['capacite']['p95_max_ms'] = value
+                path = self.root / 'invalid-protocol.json'
+                path.write_text(json.dumps(protocol))
+                with self.assertRaisesRegex(RuntimeError, 'finite positive'):
+                    CapacityCampaign(Mock(capacity_protocol=path))
 
 
 if __name__ == '__main__':

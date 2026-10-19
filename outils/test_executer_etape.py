@@ -3,6 +3,8 @@
 import importlib.util
 import json
 import os
+import fcntl
+import signal
 from pathlib import Path
 import shutil
 import subprocess
@@ -87,6 +89,57 @@ esac''')
 
     def calls(self):
         return self.log.read_text() if self.log.exists() else ''
+
+    def test_worker_launch_uses_separate_campaign_without_vm_deployment(self):
+        result = self.run_step(17, 'worker')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = self.calls()
+        self.assertIn('mesure/scripts/lancer17.py start --runtime', calls)
+        self.assertIn('/.execution-campagnes/worker-', calls)
+        self.assertNotIn('preparer_vm.sh', calls)
+        self.assertNotIn('VBoxManage startvm', calls)
+
+    def test_vm_worker_launch_preserves_existing_vm_deployment(self):
+        result = self.run_step(17, 'worker-vm')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('/.execution-campagnes/worker-vm-', self.calls())
+        self.assertNotIn('preparer_vm.sh', self.calls())
+
+    def test_preparation_releases_lock_even_when_daemon_inherits_descriptor(self):
+        for step in (16, 17):
+            for fails in (False, True):
+                with self.subTest(step=step, preparation_fails=fails):
+                    pidfile = self.root / 'daemon.pid'
+                    spawn = ('import subprocess,pathlib; p=subprocess.Popen(["/bin/sleep","30"], '
+                             'close_fds=False,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,'
+                             'stderr=subprocess.DEVNULL,start_new_session=True); '
+                             f'pathlib.Path({str(pidfile)!r}).write_text(str(p.pid))')
+                    import shlex
+                    script = f'''set -euo pipefail
+source outils/etapes/commun.sh
+source outils/etapes/{step}.sh
+prepare_test() {{ {shlex.quote(sys.executable)} -c {shlex.quote(spawn)}; {'return 42' if fails else ':'}; }}
+vm_deploy() {{ prepare_test; }}
+measure_prepare() {{ prepare_test; }}
+measure_isolated() {{ :; }}
+engine_ready() {{ :; }}
+jmeter_ready() {{ :; }}
+python3() {{ :; }}
+sleep() {{ :; }}
+etape_{step} {'preparer' if step == 17 else 'mesurer'}
+'''
+                    try:
+                        result = subprocess.run(['bash', '-c', script], cwd=self.root,
+                                                env=self.env, capture_output=True, text=True, timeout=10)
+                        self.assertEqual(result.returncode, 42 if fails else 0, result.stderr)
+                        daemon = int(pidfile.read_text())
+                        os.kill(daemon, 0)  # It still owns its inherited descriptor.
+                        with (self.root / '.execution/operations-vm.lock').open('a') as stream:
+                            fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    finally:
+                        if pidfile.exists():
+                            os.kill(int(pidfile.read_text()), signal.SIGTERM)
+                            pidfile.unlink()
 
     def test_invalid_actions_fail_without_starting_tools(self):
         for step in range(8, 19):

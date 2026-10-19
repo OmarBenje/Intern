@@ -18,6 +18,8 @@ import urllib.request
 
 from etalonnage import ROOT, PERFORMANCE_PROTOCOL, digest, save
 from repos import idle_window, idle_blockers
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from deploiement.scripts.maintenance.commun import VMUpdates, operation_lock
 
 DATABASE = "intern_mesure17"
 PROJECT = "intern-etape17"
@@ -28,6 +30,14 @@ QUERY = """SELECT json_build_object(
 'db_active_connections',(SELECT count(*) FROM pg_stat_activity WHERE datname='intern_mesure17' AND state='active'),
 'db_blocks_read',blks_read,'db_blocks_hit',blks_hit,'db_transactions',xact_commit+xact_rollback)
 FROM pg_stat_database WHERE datname='intern_mesure17';"""
+
+
+def validate_runtime_versions(vm, docker):
+    for library in ("python", "django", "drf", "gunicorn"):
+        if library not in vm or library not in docker:
+            raise RuntimeError("Missing runtime version: " + library)
+        if vm[library] != docker[library]:
+            raise RuntimeError("VM and Docker dependency versions differ: " + library)
 
 
 class Campaigns:
@@ -54,6 +64,7 @@ class Campaigns:
             self.project = PROJECT  # Resume campaigns created by the original controller.
         else:
             self.project = PROJECT + "-" + secrets.token_hex(6)
+        self.updates = VMUpdates(lambda *a, **kw: self.ssh(*a, **kw), self.project, self.event)
         self.reference_touched = False
         self.measurement_touched = False
         self.vm_touched = False
@@ -72,7 +83,7 @@ class Campaigns:
         self.manifest = json.loads(self.manifest_path.read_text()) if self.manifest_path.exists() else {
             "status": "preparing", "protocol_sha256": digest(self.protocol_path),
             "source_plan_sha256": digest(ROOT / "plan.jmx"), "order": ["vm", "docker", "docker", "vm"],
-            "runs": [], "started_epoch_s": time.time(),
+            "runs": [], "started_epoch_s": time.time(), "maintenance_guard": True,
         }
         if self.manifest["protocol_sha256"] != digest(self.protocol_path):
             raise RuntimeError("Protocol changed since campaign preparation")
@@ -86,14 +97,51 @@ class Campaigns:
         print(json.dumps(value), flush=True)
 
     def check_stop(self):
-        if (self.runtime / "stop-requested").exists():
+        if getattr(self, "stop_requested", False) or (self.runtime / "stop-requested").exists():
             raise InterruptedError("Graceful stop requested")
 
+    def record_incident(self, error, phase=None):
+        incident = self.manifest.setdefault("incident", dict(
+            epoch_s=time.time(), type=type(error).__name__, message=str(error),
+            phase=phase or self.manifest.get("progress", {}).get("action", "preparation")))
+        incident["command_diagnostics"] = self.manifest.get("command_errors", [])
+        incident["restoration_errors"] = self.manifest.get("restoration_errors", [])
+        incident["safety_evidence"] = sorted(str(path.relative_to(self.output))
+                                             for path in self.output.rglob("arret-securite.json"))
+        save(self.output / "incident.json", incident)
+
+    def record_command_failure(self, command, *, stdout=None, stderr=None, returncode=None, error=None):
+        def decode(value):
+            return value.decode("utf-8", errors="replace") if isinstance(value, bytes) else value or ""
+        directory = self.runtime / "command-errors"
+        directory.mkdir(mode=0o700, exist_ok=True)
+        diagnostic = dict(epoch_s=time.time(), command=list(map(str, command)), returncode=returncode,
+                          error=type(error).__name__ if error else None,
+                          message=str(error) if error else None,
+                          stdout=decode(stdout), stderr=decode(stderr),
+                          action=self.manifest.get("progress", {}).get("action"))
+        # Keep the first failure even when recovery commands fail afterwards.
+        with tempfile.NamedTemporaryFile(dir=directory, prefix="command-", suffix=".json",
+                                         mode="w", encoding="utf-8", delete=False) as stream:
+            json.dump(diagnostic, stream, ensure_ascii=False, indent=2)
+            path = Path(stream.name)
+        (self.runtime / "last-error.txt").write_text(diagnostic["stderr"] or diagnostic["stdout"] or
+                                                       diagnostic["message"] or "Command failed")
+        self.manifest.setdefault("command_errors", []).append(str(path.relative_to(self.runtime)))
+        return path
+
     def run(self, command, *, data=None, check=True, timeout=90, cwd=None):
-        result = subprocess.run(command, input=data, capture_output=True, env=self.env, timeout=timeout, cwd=cwd)
+        try:
+            result = subprocess.run(command, input=data, capture_output=True, env=self.env, timeout=timeout, cwd=cwd)
+        except (subprocess.TimeoutExpired, OSError) as error:
+            self.record_command_failure(command, stdout=getattr(error, "stdout", None),
+                                        stderr=getattr(error, "stderr", None), error=error)
+            # Preserve the type: bounded SSH boot retries handle TimeoutExpired.
+            raise
         if check and result.returncode:
             # Keep diagnostics outside deliverables; they can contain local paths.
-            (self.runtime / "last-error.txt").write_bytes(result.stderr)
+            self.record_command_failure(command, stdout=result.stdout, stderr=result.stderr,
+                                        returncode=result.returncode)
             raise RuntimeError("Command failed; diagnostic saved in the private runtime directory")
         return result
 
@@ -108,12 +156,16 @@ class Campaigns:
 
     def vm_info(self, service):
         command = ["VBoxManage", "showvminfo", f"vm-{service}", "--machinereadable"]
-        # VirtualBox can briefly reject a shared lock while a guest powers off.
+        # Guest shutdown can transiently invalidate the shared session or its
+        # RemoteUSBDevices object. Other access errors still fail immediately.
         for attempt in range(6):
             result = self.run(command, check=False)
             if result.returncode == 0:
                 break
-            if b"VBOX_E_INVALID_OBJECT_STATE" not in result.stderr or attempt == 5:
+            transient = (b"VBOX_E_INVALID_OBJECT_STATE" in result.stderr or
+                         (b"RemoteUSBDevices" in result.stderr and b"E_ACCESSDENIED" in result.stderr
+                          and b"The object is not ready" in result.stderr))
+            if not transient or attempt == 5:
                 (self.runtime / "last-error.txt").write_bytes(result.stderr)
                 raise RuntimeError(f"Cannot read vm-{service} state; inspect last-error.txt")
             time.sleep(2)
@@ -142,7 +194,7 @@ class Campaigns:
                 raise RuntimeError(f"Redirection NAT incompatible : {current} ; attendue : {rule}. Règle existante conservée.")
         return True
 
-    def boot_vm(self):
+    def boot_vm(self, restoring=False):
         self.vm_touched = True
         self.dc("stop", check=False)
         for service in ("donnees", "metier", "proxy"):
@@ -167,12 +219,25 @@ class Campaigns:
                 if time.monotonic() > deadline:
                     raise RuntimeError(f"SSH indisponible sur vm-{service} après 240 s")
                 time.sleep(3)
+        for service in SERVICES:
+            self.updates.pause(service, purpose='maintenance' if restoring else 'measurement',
+                               check_stop=(lambda: None) if restoring else self.check_stop)
+
+
+    def request_vm_shutdown(self, service):
+        try:
+            self.run(["VBoxManage", "controlvm", f"vm-{service}", "acpipowerbutton"])
+        except RuntimeError:
+            # The guest may have begun shutting down since the state query.
+            # Confirm that transition; unrelated command failures still propagate.
+            if self.vm_state(service) not in ("stopping", "poweroff", "aborted"):
+                raise
 
     def stop_vm(self):
         # ACPI works even when SSH or the proxy forwarding is unavailable.
         for service in ("metier", "donnees", "proxy"):
             if self.vm_state(service) == "running":
-                self.run(["VBoxManage", "controlvm", f"vm-{service}", "acpipowerbutton"])
+                self.request_vm_shutdown(service)
         deadline = time.monotonic() + 120
         next_acpi = time.monotonic() + 10
         while True:
@@ -185,7 +250,7 @@ class Campaigns:
             if time.monotonic() >= next_acpi:
                 for service, state in pending.items():
                     if state == "running":
-                        self.run(["VBoxManage", "controlvm", f"vm-{service}", "acpipowerbutton"])
+                        self.request_vm_shutdown(service)
                 next_acpi = time.monotonic() + 10
             time.sleep(2)
         rules = self.nat_rules(self.vm_info("proxy"))
@@ -256,11 +321,23 @@ class Campaigns:
             if following.get("action") != "cooldown_complete" or following.get("path") != event["path"]:
                 raise RuntimeError(f"Repos non validé : {event['path']}. Mesures conservées ; consulter les relevés de repos et choisir un nouveau MESURE_RUNTIME et MESURE_OUTPUT après correction. La reprise ne peut pas sauter ce repos.")
 
+    def preflight_only(self):
+        try:
+            self.preflight()
+        except Exception as error:
+            self.manifest.update(status="failed", error=str(error))
+            self.record_incident(error, phase="preflight")
+            self.event("preflight_failed")
+            raise
+
     def bootstrap(self):
         snapshot = self.runtime / "base.sql"
         self.measurement_touched = True
         if not snapshot.exists():
-            self.dc("up", "-d", "--no-build", "--wait", "--wait-timeout", "180", timeout=240)
+            # The VM proxy may still reserve 8081. Bootstrap needs only private
+            # database/API services; copy frontend assets from a stopped container.
+            self.dc("up", "-d", "--no-build", "--wait", "--wait-timeout", "180", "donnees", "metier", timeout=240)
+            self.dc("create", "--no-build", "proxy")
             seed = self.dc("exec", "-T", "-e",
                            f"MESURE_ACCOUNTS={max(self.protocol['paliers_utilisateurs'])}",
                            "metier", ".venv/bin/python", "app/manage.py", "shell",
@@ -303,7 +380,7 @@ class Campaigns:
         }
         version_code = "import json,platform,django,rest_framework,gunicorn; print(json.dumps(dict(python=platform.python_version(),django=django.get_version(),drf=rest_framework.VERSION,gunicorn=gunicorn.__version__)))"
         # A saved snapshot can belong to an interrupted run with stopped services.
-        self.dc("up", "-d", "--no-build", "--wait", "--wait-timeout", "180", timeout=240)
+        self.dc("up", "-d", "--no-build", "--wait", "--wait-timeout", "180", "donnees", "metier", timeout=240)
         self.manifest["docker_versions"] = json.loads(self.dc("exec", "-T", "metier", ".venv/bin/python", "-c", version_code).stdout)
         self.dc("stop")
         self.event("common_snapshot_ready")
@@ -320,9 +397,7 @@ class Campaigns:
         self.ssh("metier", "sudo systemctl stop intern")
         version_code = "import json,platform,django,rest_framework,gunicorn; print(json.dumps(dict(python=platform.python_version(),django=django.get_version(),drf=rest_framework.VERSION,gunicorn=gunicorn.__version__)))"
         self.manifest["vm_versions"] = json.loads(self.ssh("metier", shlex.join(["/opt/intern/metier/.venv/bin/python", "-c", version_code])).stdout)
-        for library in ("django", "drf", "gunicorn"):
-            if self.manifest["vm_versions"][library] != self.manifest["docker_versions"][library]:
-                raise RuntimeError("VM and Docker dependency versions differ: " + library)
+        validate_runtime_versions(self.manifest["vm_versions"], self.manifest["docker_versions"])
         self.manifest["vm_configuration"] = {}
         for service in SERVICES:
             info = self.run(["VBoxManage", "showvminfo", f"vm-{service}", "--machinereadable"]).stdout.decode()
@@ -389,11 +464,29 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
                     remote += ["--sql-command", json.dumps(["sudo", "-u", "postgres", "psql", "-d", "postgres", "-XAtc", QUERY])]
                 command = ["ssh", "-F", self.ssh_config.name, f"vm-{service}", shlex.join(remote)]
             stream = (folder / f"serveur-{service}.jsonl").open("w")
-            errors = (self.runtime / f"collector-{service}.log").open("w")
+            # Keep each plateau/rest diagnostic; later collectors must not erase it.
+            log_folder = self.runtime / "collecteurs" / folder.relative_to(self.output)
+            log_folder.mkdir(parents=True, exist_ok=True)
+            errors = (log_folder / f"{service}.log").open("w")
             wrapped = [sys.executable, str(ROOT / "scripts/collecteur_serveur.py"), "--command", json.dumps(command)]
             process = subprocess.Popen(wrapped, stdout=stream, stderr=errors, env=self.env,
                                        cwd=self.ssh_config.parent if deployment == "vm" else None)
             self.collectors.append((process, stream, errors))
+
+    def check_collectors(self, folder):
+        failures = []
+        for process, stream, errors in self.collectors:
+            code = process.poll()
+            if code is not None:
+                failures.append(dict(service=Path(stream.name).stem.removeprefix("serveur-"),
+                                     exit_code=code,
+                                     diagnostic=str(Path(errors.name).relative_to(self.runtime))))
+        if failures:
+            save(folder / "collecteurs-echec.json", dict(collectors=failures))
+            self.manifest["collector_errors"] = failures
+            self.event("collector_failed", collectors=failures, path=str(folder.relative_to(self.output)))
+            details = "; ".join(f"{r['service']} (exit {r['exit_code']}, log: {r['diagnostic']})" for r in failures)
+            raise RuntimeError("Server collector stopped: " + details + "; plateau preserved")
 
     def stop_collectors(self):
         for process, stream, errors in self.collectors:
@@ -451,7 +544,8 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
         self.event("palier_start", series=series, deployment=deployment, users=users)
         command = [sys.executable, str(ROOT / "scripts/etalonnage.py"), "application", "--jmeter", self.args.jmeter,
                    "--users", str(users), "--output", str(folder),
-                   "--accounts", str(self.accounts), "--protocol", str(self.protocol_path)]
+                   "--accounts", str(self.accounts), "--protocol", str(self.protocol_path),
+                   "--private-log", str(self.runtime / "jmeter" / name / "jmeter.log")]
         if getattr(self.args, "capacity_protocol", None):
             command += ["--capacity-guard"]
         with (self.runtime / "runner.log").open("w") as console:
@@ -502,6 +596,7 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
             self.collect(deployment, folder)
             while time.monotonic() - started < policy["maximum_s"]:
                 self.check_stop()
+                self.check_collectors(folder)
                 time.sleep(2)
                 elapsed = time.monotonic() - started
                 if elapsed < policy["minimum_s"]:
@@ -543,12 +638,49 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
         finally:
             self.stop_collectors()
 
-    def restore_vm(self):
+    def restore_vm_configuration(self, timer_policies):
+        # Masks survive the powered-off Docker passes. Reopen SSH if cleanup is needed there.
+        if self.updates.touched and any(self.vm_state(s) != "running" for s in SERVICES):
+            self.boot_vm(restoring=True)
         if self.vm_state("proxy") == "running":
             self.ssh("metier", "if [ -f /opt/intern-mesure17/.measurement-owned ]; then sudo systemctl stop intern-mesure17; sudo rm -f /etc/intern/mesure17.env /etc/systemd/system/intern-mesure17.service; sudo systemctl daemon-reload; sudo systemctl start intern; fi", check=False)
             self.ssh("proxy", "if [ -f /opt/intern-mesure17/.measurement-owned ]; then sudo rm -f /etc/nginx/conf.d/mesure17.conf; sudo nginx -t && sudo systemctl reload nginx; fi", check=False)
             self.ssh("donnees", "if [ -f /opt/intern-mesure17/.measurement-owned ] && [ -f /etc/postgresql/16/main/pg_hba.conf.before-mesure17 ]; then sudo cp /etc/postgresql/16/main/pg_hba.conf.before-mesure17 /etc/postgresql/16/main/pg_hba.conf; sudo systemctl reload postgresql@16-main; fi", check=False)
-        self.stop_vm()
+        for service in SERVICES:
+            if service in self.updates.touched:
+                state = self.updates.restore(service, poweroff=True)
+                timer_policies[service] = state.get("restored_timers", [])
+
+    def restore_vm(self):
+        timer_policies = {}
+        try:
+            self.restore_vm_configuration(timer_policies)
+        finally:
+            # Even permanent SSH failure must not leave the proxy reserving
+            # 8080 and thereby prevent the independent Docker restoration.
+            try:
+                self.stop_vm()
+            except Exception:
+                # If shutdown fails, restart only the original timers already restored.
+                for service, timers in timer_policies.items():
+                    if timers and self.vm_state(service) == "running":
+                        self.ssh(service, shlex.join(["sudo", "systemctl", "start", *timers]), check=False)
+                raise
+
+    def archive_measurement_logs(self):
+        containers = self.dc("ps", "-a", "-q").stdout.decode().split()
+        directory = self.runtime / "container-logs"
+        directory.mkdir(mode=0o700, exist_ok=True)
+        for container in containers:
+            result = self.docker("logs", "--timestamps", container, check=False)
+            with tempfile.NamedTemporaryFile(dir=directory, prefix=container + "-", suffix=".log",
+                                             delete=False) as stream:
+                stream.write(result.stdout)
+                stream.write(result.stderr)
+                path = Path(stream.name)
+            self.manifest.setdefault("docker_log_archives", []).append(str(path.relative_to(self.runtime)))
+            if result.returncode:
+                raise RuntimeError("Cannot read logs for measurement container " + container)
 
     def restore(self):
         errors = []
@@ -561,7 +693,17 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
 
         attempt("collecteurs", self.stop_collectors)
         if self.measurement_touched:
-            attempt("Docker de mesure", lambda: self.dc("stop"))
+            # Capacity runs are immutable. Release their per-run networks while
+            # keeping named volumes, private snapshots and measurement evidence.
+            if self.manifest.get("kind") in ("capacity", "worker"):
+                try:
+                    self.archive_measurement_logs()
+                except Exception as error:
+                    self.manifest.setdefault("diagnostic_errors", []).append("Docker logs: " + str(error))
+                    print("Cannot archive measurement container logs; cleanup continues", file=sys.stderr, flush=True)
+                attempt("Docker de mesure", lambda: self.dc("down", "--timeout", "30", timeout=90))
+            else:
+                attempt("Docker de mesure", lambda: self.dc("stop"))
         if self.vm_touched:
             attempt("VM", self.restore_vm)
         # A VM error must not prevent Docker restoration.
@@ -572,6 +714,7 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
             attempt("Docker d’étalonnage", lambda: self.docker("start", *self.suspended_containers))
         if errors:
             self.manifest["restoration_errors"] = errors
+            self.record_incident(RuntimeError("; ".join(errors)), phase="restoration")
             self.event("restoration_failed", errors=errors)
             raise RuntimeError("Restauration incomplète ; consulter statut et controller.log")
         if self.reference_touched:
@@ -579,8 +722,34 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
             self.event("reference_restored")
 
     def main(self):
+        previous_handlers = {}
+        self.stop_requested = False
+
+        def request_stop(signum, frame):
+            # A second signal must not interrupt recovery or package-manager cleanup.
+            self.stop_requested = True
+
+        try:
+            for signum in (signal.SIGTERM, signal.SIGINT):
+                previous_handlers[signum] = signal.signal(signum, request_stop)
+            with operation_lock(ROOT.parent / '.execution/operations-vm.lock'):
+                self.run_campaigns()
+        except RuntimeError as error:
+            if self.manifest["status"] != "failed" and not self.reference_touched and not self.vm_touched and not self.measurement_touched:
+                self.manifest.update(status="failed", error=str(error))
+                self.record_incident(error, phase="operation_lock")
+                self.event("campaigns_refused")
+            raise
+        finally:
+            for signum, handler in previous_handlers.items():
+                signal.signal(signum, handler)
+
+    def run_campaigns(self):
         primary_error = None
         try:
+            if getattr(self, "resuming", False):
+                self.resume_work()
+                return
             self.preflight()
             self.manifest.pop("error", None)
             self.manifest.pop("restoration_errors", None)
@@ -608,10 +777,15 @@ print(settings.AUTH_LOGIN_RATE_LIMIT_ENABLED)
         except BaseException as error:
             primary_error = error
             self.manifest["error"] = str(error)
-            if (self.runtime / "last-error.txt").exists():
-                (self.runtime / "campaign-error.txt").write_bytes((self.runtime / "last-error.txt").read_bytes())
             self.manifest["status"] = "stopped" if isinstance(error, InterruptedError) else "failed"
-            self.event("campaigns_stopped" if isinstance(error, InterruptedError) else "campaigns_failed")
+            try:
+                if (self.runtime / "last-error.txt").exists():
+                    (self.runtime / "campaign-error.txt").write_bytes((self.runtime / "last-error.txt").read_bytes())
+                self.record_incident(error)
+                self.event("campaigns_stopped" if isinstance(error, InterruptedError) else "campaigns_failed")
+            except OSError as diagnostic_error:
+                # Full/unavailable storage must not skip recovery or mask the cause.
+                print(f"Failure: {error}; cannot save diagnostics: {diagnostic_error}", file=sys.stderr, flush=True)
             raise
         finally:
             try:
@@ -640,12 +814,16 @@ def main():
     parser.add_argument("--capacity-protocol", type=Path)
     args = parser.parse_args()
     if args.capacity_protocol:
-        from capacite import CapacityCampaign
-        controller = CapacityCampaign(args)
+        if json.loads(args.capacity_protocol.read_text()).get("worker_comparison"):
+            from workers import WorkerCampaign
+            controller = WorkerCampaign(args)
+        else:
+            from capacite import CapacityCampaign
+            controller = CapacityCampaign(args)
     else:
         controller = Campaigns(args)
     if args.preflight:
-        controller.preflight()
+        controller.preflight_only()
     else:
         controller.main()
 

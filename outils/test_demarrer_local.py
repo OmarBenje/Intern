@@ -67,6 +67,17 @@ class LauncherTests(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, 'local.env:1'):
             launcher.local_environment('http://localhost:5173', 'http://localhost:8000')
 
+    def test_local_launcher_finds_pinned_python_and_keeps_explicit_overrides(self):
+        with patch.dict(os.environ, {}, clear=True):
+            env = launcher.local_environment('http://localhost:5173', 'http://localhost:8000')
+        self.assertEqual(env['UV_PYTHON_INSTALL_DIR'], str(self.runtime / 'python-runtime'))
+        self.assertIn('/0.13.1/crates/uv-python-managed/', env['UV_PYTHON_DOWNLOADS_JSON_URL'])
+        with patch.dict(os.environ, dict(UV_PYTHON_INSTALL_DIR='/custom/python',
+                                        UV_PYTHON_DOWNLOADS_JSON_URL='https://example.org/catalog.json'), clear=True):
+            env = launcher.local_environment('http://localhost:5173', 'http://localhost:8000')
+        self.assertEqual(env['UV_PYTHON_INSTALL_DIR'], '/custom/python')
+        self.assertEqual(env['UV_PYTHON_DOWNLOADS_JSON_URL'], 'https://example.org/catalog.json')
+
 
 if __name__ == '__main__':
     unittest.main()

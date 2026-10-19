@@ -1,0 +1,9 @@
+{
+  "valid": true,
+  "blockers": [],
+  "cpu_window_s": 10,
+  "cpu_sustained_max": {
+    "injector_cpu_pct": 50.84608927352726,
+    "host_busy_pct": 18.137830567278364
+  }
+}

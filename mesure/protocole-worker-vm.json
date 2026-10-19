@@ -1,0 +1,56 @@
+{
+  "paliers_utilisateurs": [
+    80,
+    100,
+    130
+  ],
+  "montee_s": 30,
+  "stabilisation_s": 15,
+  "plateau_s": 120,
+  "marge_arret_s": 5,
+  "reflexion_ms": 1000,
+  "controle_utilisateurs": 10,
+  "connexion_limitee": false,
+  "repos_dynamique": {
+    "minimum_s": 30,
+    "stabilite_s": 30,
+    "maximum_s": 180,
+    "fraicheur_s": 10,
+    "cpu_max_pct": 5,
+    "io_max_octets_s": 1048576,
+    "connexions_actives_max": 0
+  },
+  "repos_entre_controles_s": 30,
+  "statique": {
+    "ressource": "/static/admin/css/base.css",
+    "utilisateurs": [
+      1,
+      20
+    ],
+    "montee_s": 10,
+    "stabilisation_s": 5,
+    "plateau_s": 60
+  },
+  "capacite": {
+    "p95_max_ms": 1000,
+    "erreurs_max_pct": 1,
+    "ecart_repetitions_max_pct": 10,
+    "affinement_pas": 10,
+    "debit_plafond_gain_max_pct": 5,
+    "latence_hausse_min_pct": 10,
+    "marge_statique_min": 2,
+    "injecteur_cpu_max_pct": 80,
+    "hote_cpu_max_pct": 90,
+    "memoire_disponible_min_pct": 10,
+    "memoire_disponible_min_octets": 536870912,
+    "pression_memoire_max_pct": 10,
+    "cpu_soutenu_s": 10,
+    "disponibilite_timeout_s": 10,
+    "swap_avec_pression_uniquement": true
+  },
+  "worker_comparison": [
+    2,
+    4
+  ],
+  "worker_deployment": "vm"
+}

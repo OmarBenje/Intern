@@ -723,6 +723,24 @@ seulement une borne inférieure et demande une exploration plus haute.
 Détails, paramètres, limites et preuves : [mesure/CAPACITE.md](mesure/CAPACITE.md).
 La commande historique `17 lancer` conserve sa limite étalonnée de 20 utilisateurs.
 
+Pour diagnostiquer une limite liée aux workers du service métier Docker :
+
+```bash
+bash outils/executer_etape.sh 17 worker
+bash outils/executer_etape.sh 17 statut
+```
+
+Ce comparatif utilise 2 puis 4 workers, puis l’ordre inverse, à 150, 180 et
+200 utilisateurs. Il produit automatiquement `rapport-workers.md` dans son
+dossier `mesure/resultats/worker-DATE/`, avec les mêmes images, quotas et données.
+Les VM doivent être arrêtées. Procédure et interprétation :
+[mesure/WORKERS.md](mesure/WORKERS.md).
+
+Pour le même diagnostic sur les trois VM, utiliser
+`bash outils/executer_etape.sh 17 worker-vm`, puis `17 statut`.
+Les mesures et le rapport sont conservés dans `mesure/resultats/worker-vm-DATE/`.
+Le service de mesure est isolé ; les services habituels sont restaurés ensuite.
+
 ## Étape 18 — Analyse des mesures
 
 Prérequis : Python et pip/venv. Depuis Intern :

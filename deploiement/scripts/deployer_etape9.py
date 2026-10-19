@@ -119,7 +119,7 @@ def main():
         close_nat(config, name)
         print(ssh(config, name, "sudo systemctl is-active postgresql@16-main; sudo ss -tlnp | grep 5432").stdout)
     elif args.phase == "metier":
-        payload = archive(project, ["metier/app", "metier/pyproject.toml", "metier/uv.lock",
+        payload = archive(project, ["metier/app", "metier/pyproject.toml", "metier/uv.lock", "metier/.python-version",
                                     "donnees/verifier.py", "donnees/jeu_fictif.py", "donnees/cv_fictif.pdf", "deploiement/metier"])
         upload(config, name, "/opt/intern", payload)
         env = (deployment / "metier/intern.env.example").read_text()

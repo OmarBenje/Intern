@@ -13,8 +13,14 @@ install -m 0755 /opt/intern-tools/bin/uv /usr/local/bin/uv
 chown -R intern:intern /opt/intern
 chown root:intern /etc/intern/intern.env
 chmod 0640 /etc/intern/intern.env
+python_version=$(cat /opt/intern/metier/.python-version)
+runuser -u intern -- env UV_CACHE_DIR=/var/cache/intern-uv UV_PYTHON_INSTALL_DIR=/opt/intern/python UV_PYTHON_DOWNLOADS=automatic \
+    uv python install "$python_version" --no-bin \
+    --python-downloads-json-url https://raw.githubusercontent.com/astral-sh/uv/0.13.1/crates/uv-python-managed/download-metadata.json
+python_binary=$(runuser -u intern -- env UV_CACHE_DIR=/var/cache/intern-uv UV_PYTHON_INSTALL_DIR=/opt/intern/python \
+    uv python find "$python_version" --managed-python)
 runuser -u intern -- env UV_CACHE_DIR=/var/cache/intern-uv UV_PYTHON_DOWNLOADS=never \
-    uv sync --project /opt/intern/metier --frozen --no-dev --python /usr/bin/python3
+    uv sync --project /opt/intern/metier --frozen --no-dev --python "$python_binary"
 set -a
 source /etc/intern/intern.env
 set +a

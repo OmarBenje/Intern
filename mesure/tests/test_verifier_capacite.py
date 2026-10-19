@@ -4,6 +4,7 @@ import contextlib
 import csv
 import io
 import json
+import statistics
 from pathlib import Path
 import sys
 import tempfile
@@ -125,6 +126,55 @@ class CapacityEvidenceTests(unittest.TestCase):
         etalonnage.save(path, value)
         with self.assertRaisesRegex(RuntimeError, 'Client summary differs'):
             verifier17.main(['--output', str(self.root)])
+
+    def set_cpu_readings(self, field, function):
+        folder = self.root / 'serie-2/vm/1'
+        path = folder / 'ressources.csv'
+        with path.open() as stream:
+            reader = csv.DictReader(stream)
+            fields = reader.fieldnames
+            rows = list(reader)
+        for index, row in enumerate(rows):
+            row[field] = function(index)
+        with path.open('w') as stream:
+            writer = csv.DictWriter(stream, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(rows)
+        sample = json.loads((folder / 'synthese.json').read_text())
+        values = [float(row[field]) for row in rows]
+        sample[field + '_mean'] = statistics.mean(values)
+        sample[field + '_max'] = max(values)
+        etalonnage.save(folder / 'synthese.json', sample)
+        return folder
+
+    def test_short_cpu_spike_does_not_reject_a_new_campaign(self):
+        self.set_cpu_readings('injector_cpu_pct', lambda index: 95 if index == 10 else 2)
+        with contextlib.redirect_stdout(io.StringIO()):
+            result = verifier17.main(['--output', str(self.root)])
+        self.assertEqual(result['status'], 'verified')
+
+    def test_sustained_injector_load_still_stops_the_campaign(self):
+        self.set_cpu_readings('injector_cpu_pct', lambda index: 95 if 10 <= index <= 20 else 2)
+        with self.assertRaisesRegex(RuntimeError, 'Injector/host limiting'):
+            verifier17.main(['--output', str(self.root)])
+
+    def test_sustained_host_load_still_stops_the_campaign(self):
+        self.set_cpu_readings('host_busy_pct', lambda index: 95 if 10 <= index <= 20 else 5)
+        with self.assertRaisesRegex(RuntimeError, 'Injector/host limiting'):
+            verifier17.main(['--output', str(self.root)])
+
+    def test_legacy_protocol_retains_its_maximum_sample_rule(self):
+        from capacite import injector_blockers
+        folder = self.set_cpu_readings('injector_cpu_pct', lambda index: 95 if index == 10 else 2)
+        policy = dict(self.protocol['capacite'])
+        policy.pop('cpu_soutenu_s')
+        self.assertIn('injector_cpu_pct_max', injector_blockers(folder, policy))
+
+    def test_cpu_window_weights_time_and_rejects_sampling_gaps(self):
+        from capacite import sustained_cpu_max
+        rows = [dict(epoch_s=t, cpu=cpu) for t, cpu in ((0, 0), (1, 100), (5, 0))]
+        self.assertEqual(sustained_cpu_max(rows, 'cpu', 5), 20)
+        self.assertIsNone(sustained_cpu_max([dict(epoch_s=0, cpu=0), dict(epoch_s=20, cpu=100)], 'cpu', 10))
 
     def test_saturated_injector_prevents_capacity_verification(self):
         path = self.root / 'serie-2/vm/1/synthese.json'

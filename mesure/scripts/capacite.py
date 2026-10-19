@@ -7,10 +7,15 @@ import statistics
 import subprocess
 import time
 import sys
+import urllib.error
 import urllib.request
 
 from campagnes17 import Campaigns, SERVICES
 from etalonnage import ROOT, digest, save, memory_blockers, machine_snapshot
+
+
+class CalibrationRejected(RuntimeError):
+    """Completed calibration with insufficient or invalid measurement evidence."""
 
 
 def acceptable(sample, policy):
@@ -41,18 +46,67 @@ def variation(a, b):
     return abs(a - b) / ((a + b) / 2) * 100 if a + b else 0
 
 
+def sustained_cpu_max(rows, field, window_s):
+    """Maximum time-weighted CPU over a fully observed contiguous window.
+
+    Each reading describes the interval ending at its timestamp. Gaps longer
+    than five seconds cannot establish a sustained CPU condition.
+    """
+    intervals = []
+    for previous, current in zip(rows, rows[1:]):
+        start, end = float(previous["epoch_s"]), float(current["epoch_s"])
+        value = float(current[field])
+        if not all(math.isfinite(v) for v in (start, end, value)) or end <= start or value < 0:
+            return None
+        if end - start <= 5:
+            intervals.append((start, end, value))
+    candidates = {end for _, end, _ in intervals}
+    candidates.update(start + window_s for start, _, _ in intervals)
+    maximum = None
+    for end in candidates:
+        duration, total = 0, 0
+        for start, stop, value in intervals:
+            overlap = max(0, min(stop, end) - max(start, end - window_s))
+            duration += overlap
+            total += value * overlap
+        if math.isclose(duration, window_s, abs_tol=1e-6):
+            average = total / window_s
+            maximum = average if maximum is None else max(maximum, average)
+    return maximum
+
+
+def cpu_assessment(rows, policy):
+    window = policy.get("cpu_soutenu_s")
+    if window is None:
+        return {}  # Frozen legacy protocols retain their maximum-sample rule.
+    result = {field: sustained_cpu_max(rows, field, window)
+              for field in ("injector_cpu_pct", "host_busy_pct")}
+    cores = policy.get("injecteur_cpu_capacite_coeurs", 1)
+    if result["injector_cpu_pct"] is not None:
+        result["injector_cpu_pct"] /= cores
+    return result
+
+
 def injector_blockers(folder, policy, check_cpu=True):
     sample = json.loads((folder / "synthese.json").read_text())
     reasons = []
-    for field, limit in (("injector_cpu_pct_max", policy["injecteur_cpu_max_pct"]),
-                         ("host_busy_pct_max", policy["hote_cpu_max_pct"])):
-        if check_cpu and sample[field] >= limit:
-            reasons.append(field)
     with (folder / "ressources.csv").open() as stream:
         rows = list(csv.DictReader(stream))
     stable = [row for row in rows if sample["window_start_ms"] / 1000 <= float(row["epoch_s"]) <= sample["window_end_ms"] / 1000]
     if not stable:
         return reasons + ["missing_injector_readings"]
+    if check_cpu:
+        assessment = cpu_assessment(stable, policy)
+        for field, limit in (("injector_cpu_pct", policy["injecteur_cpu_max_pct"]),
+                             ("host_busy_pct", policy["hote_cpu_max_pct"])):
+            if "cpu_soutenu_s" in policy:
+                value = assessment[field]
+                if value is None:
+                    reasons.append("missing_sustained_cpu_readings")
+                elif value >= limit:
+                    reasons.append(field + "_sustained")
+            elif sample[field + "_max"] >= limit:
+                reasons.append(field + "_max")
     for field in ("injector_cpu_pct", "injector_rss_bytes", "host_busy_pct"):
         values = [float(row[field]) for row in stable]
         if not all(math.isfinite(v) and v >= 0 for v in values):
@@ -78,10 +132,15 @@ class CapacityCampaign(Campaigns):
         if (protocol["montee_s"], protocol["stabilisation_s"], protocol["plateau_s"], protocol["reflexion_ms"]) != (30, 15, 120, 1000):
             raise RuntimeError("Capacity timing must remain 30/15/120 seconds with 1 second reflection")
         policy = protocol["capacite"]
-        if any(not isinstance(v, (int, float)) or v <= 0 for v in policy.values()):
-            raise RuntimeError("Capacity policy thresholds must be positive numbers")
+        if type(policy.get("swap_avec_pression_uniquement", False)) is not bool:
+            raise RuntimeError("swap_avec_pression_uniquement must be a boolean")
+        if any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0
+               for key, v in policy.items() if key != "swap_avec_pression_uniquement"):
+            raise RuntimeError("Capacity policy thresholds must be finite positive numbers")
         if policy["affinement_pas"] != int(policy["affinement_pas"]):
             raise RuntimeError("Refinement step must be an integer")
+        if "cpu_soutenu_s" in policy and not 2 <= policy["cpu_soutenu_s"] <= protocol["plateau_s"] / 2:
+            raise RuntimeError("Sustained CPU window must be between 2 seconds and half the plateau")
         # Freeze a copy, including thresholds, before any infrastructure is changed.
         output = args.output.resolve()
         if not output.is_relative_to(ROOT / "resultats") or output == ROOT / "resultats/etape17":
@@ -104,19 +163,30 @@ class CapacityCampaign(Campaigns):
         self.calibrated = set()
 
     def check_capacity_health(self, folder):
-        if any(process.poll() is not None for process, _, _ in self.collectors):
-            raise RuntimeError("A server collector stopped; plateau preserved")
+        self.check_collectors(folder)
+        timeout = self.policy.get("disponibilite_timeout_s", 2)
+        probe = dict(epoch_s=time.time(), timeout_s=timeout, status=None, error=None)
+        started = time.monotonic()
         try:
-            with urllib.request.urlopen("http://127.0.0.1:8081/health/ready/", timeout=2) as response:
+            with urllib.request.urlopen("http://127.0.0.1:8081/health/ready/", timeout=timeout) as response:
+                probe["status"] = response.status
                 ready = response.status == 200
-        except OSError:
+        except OSError as error:
+            if isinstance(error, urllib.error.HTTPError):
+                probe["status"] = error.code
+            probe["error"] = dict(type=type(error).__name__, message=str(error))
             ready = False
         self.health_failures = 0 if ready else self.health_failures + 1
+        probe.update(elapsed_s=time.monotonic() - started, ready=ready,
+                     consecutive_failures=self.health_failures)
+        with (folder / "disponibilite.jsonl").open("a") as stream:
+            stream.write(json.dumps(probe) + "\n")
         if self.health_failures >= 3:
-            save(folder / "arret-securite.json", dict(reasons=["service_unavailable"]))
+            save(folder / "arret-securite.json", dict(reasons=["service_unavailable"], last_probe=probe))
             raise RuntimeError("Service unavailable; escalation stopped")
         current = machine_snapshot()
         reasons = memory_blockers(current, self.previous_machine, self.policy)
+        previous = self.previous_machine
         self.previous_machine = current
         for service in SERVICES:
             path = folder / f"serveur-{service}.jsonl"
@@ -132,8 +202,8 @@ class CapacityCampaign(Campaigns):
                     reasons.append(f"{service}_memory_low")
                 break
         if reasons:
-            save(folder / "arret-securite.json", dict(reasons=reasons, snapshot=current))
-            raise RuntimeError("Memory pressure; escalation stopped")
+            save(folder / "arret-securite.json", dict(reasons=reasons, snapshot=current, previous_snapshot=previous))
+            raise RuntimeError("Memory pressure; escalation stopped: " + ", ".join(reasons))
 
     def samples(self, deployment, series):
         return {run["users"]: json.loads((self.output / run["path"] / "synthese.json").read_text())
@@ -143,42 +213,84 @@ class CapacityCampaign(Campaigns):
         key = (deployment, users)
         if key in self.calibrated:
             return
-        folder = self.output / f"etalonnage/{deployment}/{users}"
+        prefix = getattr(self, "calibration_prefix", "")
+        folder = self.output / prefix / f"etalonnage/{deployment}/{users}"
         self.event("calibration_start", deployment=deployment, users=users)
         command = [sys.executable, str(ROOT / "scripts/etalonnage.py"), "static",
                    "--jmeter", self.args.jmeter, "--users", str(users), "--output", str(folder),
                    "--accounts", str(self.accounts), "--protocol", str(self.protocol_path),
+                   "--private-log", str(self.runtime / "jmeter" / prefix / f"etalonnage/{deployment}/{users}/jmeter.log"),
                    "--capacity-guard"]
-        with (self.runtime / "calibration.log").open("w") as console:
+        console_path = (self.runtime / 'jmeter' / prefix / f'etalonnage/{deployment}/{users}/console.log'
+                        if prefix else self.runtime / 'calibration.log')
+        console_path.parent.mkdir(parents=True, exist_ok=True)
+        with console_path.open("w") as console:
             process = subprocess.Popen(command, stdout=console, stderr=console, env=self.env, start_new_session=True)
             try:
                 deadline = time.monotonic() + 120
                 while process.poll() is None:
                     self.check_stop()
                     if time.monotonic() >= deadline:
-                        raise RuntimeError("Calibration timed out; inspect private calibration.log")
+                        raise RuntimeError(f"Calibration timed out; inspect {console_path}")
                     time.sleep(2)
                 if process.returncode:
-                    raise RuntimeError("Calibration failed; inspect private calibration.log")
+                    safety_path = folder / "arret-securite.json"
+                    if safety_path.exists():
+                        safety = json.loads(safety_path.read_text())
+                        reasons = safety.get("reasons", [])
+                        self.manifest["calibration_failure"] = dict(deployment=deployment, users=users,
+                            reasons=reasons, path=str(safety_path.relative_to(self.output)))
+                        self.event("calibration_failed", **self.manifest["calibration_failure"])
+                        raise RuntimeError("Calibration stopped by resource guard: " + ", ".join(reasons))
+                    raise RuntimeError(f"Calibration failed; inspect {console_path}")
             finally:
                 self.terminate_runner(process)
         sample = json.loads((folder / "synthese.json").read_text())
-        if (not sample["plateau_valid"] or sample["all_errors"]
-                or sample["successful_throughput_rps"] < users * self.policy["marge_statique_min"]):
-            raise RuntimeError("Static injector/proxy headroom insufficient; capacity cannot be inferred")
+        reasons = []
+        if not sample['plateau_valid']:
+            reasons.extend(sample['plateau_issues'])
+        if sample['all_errors']:
+            reasons.append(f"HTTP/assertion errors: {sample['all_errors']}")
+        minimum = users * self.policy['marge_statique_min']
+        if sample['successful_throughput_rps'] < minimum:
+            reasons.append(f"Static throughput {sample['successful_throughput_rps']:.2f} < {minimum:.2f} req/s")
+        if reasons:
+            rejection = dict(deployment=deployment, users=users, reasons=reasons,
+                             path=str(folder.relative_to(self.output)),
+                             successful_throughput_rps=sample['successful_throughput_rps'],
+                             minimum_throughput_rps=minimum)
+            save(folder / 'rejet.json', rejection)
+            self.manifest['calibration_failure'] = rejection
+            self.event('calibration_rejected', **rejection)
+            raise CalibrationRejected('Static calibration rejected: ' + '; '.join(reasons))
+        if sample.get('max_elapsed_ms', 0) > 5000:
+            warning = dict(deployment=deployment, users=users, path=str(folder.relative_to(self.output)),
+                           max_elapsed_ms=sample['max_elapsed_ms'],
+                           boundary_crossing_requests=sample.get('boundary_crossing_requests', 0))
+            self.manifest.setdefault('calibration_warnings', []).append(warning)
+            self.event('calibration_slow_requests', **warning)
         self.event("calibration_complete", deployment=deployment, users=users,
                    successful_throughput_rps=sample["successful_throughput_rps"])
-        self.cooldown(deployment, f"etalonnage-{deployment}", users)
+        self.cooldown(deployment, f"etalonnage-{deployment}" + ("-" + prefix.replace("/", "-") if prefix else ""), users)
         self.calibrated.add(key)
 
     def measure(self, deployment, series, users):
         self.check_stop()
         self.calibrate(deployment, users)
         self.health_failures = 0
+        # Cumulative host counters must describe this load, not VM preparation
+        # or the preceding static calibration and cooldown.
+        self.previous_machine = machine_snapshot()
         self.run_plateau(deployment, series, users)
         folder = self.output / f"serie-{series}/{deployment}/{users}"
         blockers = injector_blockers(folder, self.policy)
-        save(folder / "injecteur.json", dict(valid=not blockers, blockers=blockers))
+        with (folder / "ressources.csv").open() as stream:
+            rows = list(csv.DictReader(stream))
+        sample = json.loads((folder / "synthese.json").read_text())
+        stable = [row for row in rows if sample["window_start_ms"] / 1000 <= float(row["epoch_s"]) <= sample["window_end_ms"] / 1000]
+        save(folder / "injecteur.json", dict(valid=not blockers, blockers=blockers,
+             cpu_capacity_cores=self.policy.get("injecteur_cpu_capacite_coeurs", 1),
+             cpu_window_s=self.policy.get("cpu_soutenu_s"), cpu_sustained_max=cpu_assessment(stable, self.policy)))
         if blockers:
             raise RuntimeError("Injector/host limiting; no deployment capacity conclusion: " + ", ".join(blockers))
         # Include a verified return to idle even after the final or rejected plateau.
@@ -187,11 +299,17 @@ class CapacityCampaign(Campaigns):
     def campaign(self, deployment, series):
         self.check_stop()
         self.reset(deployment)
-        block = dict(deployment=deployment, series=series, targets=[], completed=False)
-        self.manifest["blocks"].append(block)
+        block = next((b for b in self.manifest["blocks"] if getattr(self, "resuming", False)
+                      and b["deployment"] == deployment and b["series"] == series
+                      and not b["completed"]), None)
+        if block is None:
+            block = dict(deployment=deployment, series=series, targets=[], completed=False)
+            self.manifest["blocks"].append(block)
         self.event("capacity_block_start", deployment=deployment, series=series)
 
         def measure(users):
+            if getattr(self, "resuming", False) and users in self.samples(deployment, series):
+                return
             block["targets"].append(users)
             self.event("capacity_target", deployment=deployment, series=series, users=users)
             self.measure(deployment, series, users)

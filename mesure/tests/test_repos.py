@@ -88,6 +88,7 @@ class CampaignRestTests(unittest.TestCase):
         self.campaign.output = Path(self.folder.name)
         self.campaign.protocol = json.loads(PERFORMANCE_PROTOCOL.read_text())
         self.campaign.event = Mock()
+        self.campaign.collectors = []
         self.campaign.stop_collectors = Mock()
         self.campaign.check_stop = Mock()
         self.campaign.collect = self.collect
